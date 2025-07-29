@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ProjectDemoWebApi.Models;
-using ProjectDemoWebApi.Services;
+using ProjectDemoWebApi.Services.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,13 +15,14 @@ public class JwtTokenService : IJwtTokenService
         _config = config;
     }
 
-    public string GenerateToken(Users user)
+    public async Task<string> GenerateTokenAsync(Users user)
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? "")
-        };
+        new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? ""),
+        new Claim("userId", user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email ?? "")
+    };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -33,6 +34,8 @@ public class JwtTokenService : IJwtTokenService
             expires: DateTime.Now.AddHours(1),
             signingCredentials: creds);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
     }
+
+
 }

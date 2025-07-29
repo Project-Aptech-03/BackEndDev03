@@ -172,3 +172,4 @@ D:\Dat\CodeProject\School\ProjectHK3\ProjectDemoWebApi\ProjectDemoWebApi\bin\Deb
 D:\Dat\CodeProject\School\ProjectHK3\ProjectDemoWebApi\ProjectDemoWebApi\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
 D:\Dat\CodeProject\School\ProjectHK3\ProjectDemoWebApi\ProjectDemoWebApi\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
 D:\Dat\CodeProject\School\ProjectHK3\ProjectDemoWebApi\ProjectDemoWebApi\bin\Debug\net9.0\StackExchange.Redis.dll
+D:\Dat\CodeProject\School\ProjectHK3\ProjectDemoWebApi\ProjectDemoWebApi\obj\Debug\net9.0\ProjectDemoWebApi.sourcelink.json

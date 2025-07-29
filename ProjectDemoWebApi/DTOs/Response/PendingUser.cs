@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
+﻿
 
-namespace ProjectDemoWebApi.DTOs.Request
+using ProjectDemoWebApi.DTOs.Request;
+
+namespace ProjectDemoWebApi.DTOs.Response
 {
     public class PendingUser
     {
         public RegisterRequest Request { get; set; }
-
-
+        public string Id { get; set; } = default!; 
         public string Otp { get; set; }
         public DateTime ExpireAt { get; set; }
     }

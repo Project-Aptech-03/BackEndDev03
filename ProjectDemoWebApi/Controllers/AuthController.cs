@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Request;
-using ProjectDemoWebApi.Services;
+using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
@@ -23,45 +24,51 @@ namespace ProjectDemoWebApi.Controllers
         {
             try
             {
-                await _userService.SendRegisterOtpAsync(request);
-                return Ok(ApiResponse<string>.Ok("OTP sent to email."));
+                var result = await _userService.SendRegisterOtpAsync(request);
+                var response = ApiResponse<OtpResultDto>.Ok(result, "Gửi OTP thành công", 200);
+                return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponse<string>.Fail(ex.Message));
+                var response = ApiResponse<object>.Fail("Gửi OTP thất bại", new { error = ex.Message }, 400);
+                return StatusCode(response.StatusCode, response);
             }
         }
 
-        // Xác thực OTP và đăng ký người dùng
+
         [HttpPost("register/verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyRegisterRequest request)
         {
             try
             {
-                await _userService.VerifyRegisterAsync(request);
-                return Ok(ApiResponse<string>.Ok("User registered successfully."));
+                 var result = await _userService.VerifyRegisterAsync(request);
+                var response = ApiResponse<RegisterResultDto>.Ok(result, "Đăng ký thành công", 200);
+                return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)
             {
-                return BadRequest(ApiResponse<string>.Fail(ex.Message));
+                var response = ApiResponse<object>.Fail("Xác minh OTP thất bại", new { error = ex.Message }, 400);
+                return StatusCode(response.StatusCode, response);
             }
         }
 
-        //// Đăng nhập
-        //[HttpPost("login")]
-        //public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return BadRequest(ApiResponse<string>.Fail("Invalid request."));
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<string>.Fail("Yêu cầu không hợp lệ."));
 
-        //    var valid = await _userService.LoginAsync(request);
-        //    if (!valid)
-        //        return Unauthorized(ApiResponse<string>.Fail("Invalid email or password."));
+            var result = await _userService.LoginAsync(request);
 
-        //    var user = await _userService.GetByEmailAsync(request.Email);
-        //    var token = _jwtTokenService.GenerateToken(user);
+            if (!result.Success)
+                return Unauthorized(ApiResponse<string>.Fail(result.ErrorMessage));
 
-        //    return Ok(ApiResponse<string>.Ok(token, "Login successful!"));
-        //}
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                token = result.Token,
+                expiresIn = 3600
+            }, "Đăng nhập thành công!"));
+        }
+
     }
 }

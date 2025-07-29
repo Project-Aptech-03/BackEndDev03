@@ -1,4 +1,4 @@
-﻿namespace ProjectDemoWebApi.Services
+﻿namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IEmailService
     {

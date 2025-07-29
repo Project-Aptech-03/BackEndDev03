@@ -9,5 +9,6 @@ namespace ProjectDemoWebApi.Models
         public DateTime DateOfBirth { get; set; }
         public string? Address { get; set; }
         
+        
     }
 }

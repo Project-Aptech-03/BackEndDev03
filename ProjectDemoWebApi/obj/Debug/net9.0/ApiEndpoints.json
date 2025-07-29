@@ -1,6 +1,22 @@
 [
   {
     "ContainingType": "ProjectDemoWebApi.Controllers.AuthController",
+    "Method": "Login",
+    "RelativePath": "api/Auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "ProjectDemoWebApi.DTOs.Request.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ProjectDemoWebApi.Controllers.AuthController",
     "Method": "SendOtp",
     "RelativePath": "api/Auth/register/send-otp",
     "HttpMethod": "POST",

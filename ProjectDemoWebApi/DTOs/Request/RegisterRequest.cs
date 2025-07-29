@@ -4,34 +4,34 @@ namespace ProjectDemoWebApi.DTOs.Request
 {
     public class RegisterRequest
     {
+        [Required(ErrorMessage = "Email không được để trống.")]
+        [RegularExpression(@"^[\w\.\-]+@(fpt\.edu\.vn|gmail\.com)$", ErrorMessage = "Chỉ cho phép email @fpt.edu.vn hoặc @gmail.com.")]
+        public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Email is required.")]
-        [EmailAddress(ErrorMessage = "Invalid email format.")]
-        public string? Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required.")]
+        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [DataType(DataType.Password)]
-        public string? Password { get; set; }
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
+        public string Password { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "First name is required.")]
-        [MaxLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
-        public string? FirstName { get; set; }
+        [Required(ErrorMessage = "Họ không được để trống.")]
+        [StringLength(50, ErrorMessage = "Họ không được vượt quá 50 ký tự.")]
+        public string FirstName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Tên không được để trống.")]
+        [StringLength(50, ErrorMessage = "Tên không được vượt quá 50 ký tự.")]
+        public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Last name is required.")]
-        [MaxLength(50, ErrorMessage = "Last name cannot exceed 50 characters.")]
-        public string? LastName { get; set; }
+        [Required(ErrorMessage = "Địa chỉ không được để trống.")]
+        [StringLength(200, ErrorMessage = "Địa chỉ không được vượt quá 200 ký tự.")]
+        public string Address { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Address is requited.")]
-        [MaxLength(200, ErrorMessage = "Address cannot exceed 200 characters.")]
-        public string? Address { get; set; }
-
-        [Required(ErrorMessage = "Date of birth is required.")]
+        [Required(ErrorMessage = "Ngày sinh không được để trống.")]
+        [DataType(DataType.Date, ErrorMessage = "Ngày sinh không hợp lệ.")]
         public DateTime DateOfBirth { get; set; }
 
-        [Required(ErrorMessage = "Phone number is required.")]
-        [Phone(ErrorMessage = "Invalid phone number format.")]
-        public string? PhoneNumber { get; set; }
+        [Required(ErrorMessage = "Số điện thoại không được để trống.")]
+        [Phone(ErrorMessage = "Số điện thoại không đúng định dạng.")]
+        public string PhoneNumber { get; set; } = string.Empty;
     }
-
 }
