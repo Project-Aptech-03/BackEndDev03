@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Repositories
@@ -6,16 +7,19 @@ namespace ProjectDemoWebApi.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly UserManager<Users> _userManager;
+        private readonly SignInManager<Users> _signInManager;
 
-        public UserRepository(UserManager<Users> userManager)
+        public UserRepository(UserManager<Users> userManager, SignInManager<Users> signInManager)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public async Task<Users> GetByEmailAsync(string email)
         {
-            return await _userManager.FindByEmailAsync(email);
+            return await _userManager.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
         }
+
 
         public async Task CreateUserAsync(Users user, string password)
         {
@@ -25,11 +29,13 @@ namespace ProjectDemoWebApi.Repositories
                 throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
             }
         }
-
         public async Task<bool> CheckPasswordAsync(Users user, string password)
         {
-            return await _userManager.CheckPasswordAsync(user, password);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
+            return result.Succeeded;
         }
+
+
 
     }
 }

@@ -4,11 +4,11 @@ namespace ProjectDemoWebApi.DTOs.Request
 {
     public class LoginRequest
     {
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "Email không được để trống.")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         public string Email { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
