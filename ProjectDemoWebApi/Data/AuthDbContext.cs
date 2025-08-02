@@ -11,10 +11,5 @@ namespace ProjectDemoWebApi.Data
             : base(options)
         {
         }
-        //protected override void OnModelCreating(ModelBuilder builder)
-        //{
-        //    base.OnModelCreating(builder);
-        //    // Additional model configuration can go here
-        //}
     }
 }

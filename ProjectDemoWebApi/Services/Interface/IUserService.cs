@@ -1,5 +1,4 @@
-﻿using ProjectDemoWebApi.DTOs.Request;
-using ProjectDemoWebApi.DTOs.Response;
+﻿using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Services.Interface
@@ -9,7 +8,7 @@ namespace ProjectDemoWebApi.Services.Interface
         Task<OtpResultDto>SendRegisterOtpAsync(RegisterRequest request);
         Task<RegisterResultDto>VerifyRegisterAsync(VerifyRegisterRequest request);
 
-        Task<LoginResult> LoginAsync(LoginRequest request);
+        Task<LoginResultDto> LoginAsync(LoginRequest request);
 
 
 

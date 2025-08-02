@@ -1,6 +1,6 @@
-﻿namespace ProjectDemoWebApi.DTOs.Response
+﻿namespace ProjectDemoWebApi.DTOs.Auth
 {
-    public class LoginResult
+    public class LoginResultDto
     {
         public bool Success { get; set; }
         public string Token { get; set; }
