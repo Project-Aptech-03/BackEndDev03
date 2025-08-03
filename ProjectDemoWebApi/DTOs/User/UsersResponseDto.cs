@@ -1,4 +1,4 @@
-﻿namespace ProjectDemoWebApi.DTOs.Response
+﻿namespace ProjectDemoWebApi.DTOs.User
 {
     public class UsersResponseDto
     {

@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Caching.Distributed;
-using ProjectDemoWebApi.DTOs.Request;
+using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Response;
 using ProjectDemoWebApi.Models;
-using ProjectDemoWebApi.Repositories;
+using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
 using System.Text.Json;
 
@@ -161,7 +161,7 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<LoginResult> LoginAsync(LoginRequest request)
+    public async Task<LoginResultDto> LoginAsync(LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email.Trim().ToLower());
         var roles = await _userManager.GetRolesAsync(user);
@@ -170,7 +170,7 @@ public class UserService : IUserService
 
         if (user == null)
         {
-            return new LoginResult
+            return new LoginResultDto
             {
                 Success = false,
                 ErrorMessage = "Email chưa được đăng ký."
@@ -180,14 +180,14 @@ public class UserService : IUserService
         var isValidPassword = await _userRepository.CheckPasswordAsync(user, request.Password);
         if (!isValidPassword)
         {
-            return new LoginResult
+            return new LoginResultDto
             {
                 Success = false,
                 ErrorMessage = "Mật khẩu không đúng."
             };
         }
         
-        return new LoginResult
+        return new LoginResultDto
         {
             Success = true,
             Token = token,

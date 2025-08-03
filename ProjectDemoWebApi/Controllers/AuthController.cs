@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProjectDemoWebApi.DTOs.Request;
+using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Response;
 using ProjectDemoWebApi.Services.Interface;
 

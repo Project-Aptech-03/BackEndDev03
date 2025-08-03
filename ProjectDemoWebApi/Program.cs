@@ -7,6 +7,7 @@ using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.Mappings;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories;
+using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using System.Text;
@@ -20,7 +21,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3003")
+            policy.WithOrigins("http://localhost:3000")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
@@ -38,6 +39,8 @@ builder.Services.AddScoped<IEmailSender, EmailService>();
 // DbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AppConnection")));
 
 builder.Services.AddAuthorization();
 
@@ -58,6 +61,14 @@ builder.Services.AddScoped<IRoleSeederService, RoleSeederService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+// product
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+// upload 
+builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
+
 
 // Jwt 
 builder.Services.AddAuthentication(options =>

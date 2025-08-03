@@ -19,7 +19,14 @@ namespace ProjectDemoWebApi.Services
             foreach (var role in roles)
             {
                 if (!await _roleManager.RoleExistsAsync(role))
-                    await _roleManager.CreateAsync(new IdentityRole(role));
+                {
+                    var result = await _roleManager.CreateAsync(new IdentityRole(role));
+                    if (!result.Succeeded)
+                    {
+                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        throw new Exception($"Không thể tạo role '{role}': {errors}");
+                    }
+                }
             }
         }
     }

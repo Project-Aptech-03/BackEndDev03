@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Repositories.Interface;
 
 namespace ProjectDemoWebApi.Repositories
 {

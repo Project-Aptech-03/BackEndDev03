@@ -1,6 +1,6 @@
 ﻿
 
-using ProjectDemoWebApi.DTOs.Request;
+using ProjectDemoWebApi.DTOs.Auth;
 
 namespace ProjectDemoWebApi.DTOs.Response
 {
