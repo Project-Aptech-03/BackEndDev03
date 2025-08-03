@@ -43,30 +43,41 @@ namespace ProjectDemoWebApi.Controllers
         // POST: api/products
         [HttpPost]
         public async Task<IActionResult> Create(
-            [FromForm] CreateProductDto request,
-            [FromForm] IFormFile? image,
-            CancellationToken cancellationToken)
+    [FromForm] CreateProductDto request,
+    CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            string imageUrl = string.Empty;
-
-            if (image != null)
+            try
             {
-                imageUrl = await _googleCloudStorageService.UploadFileAsync(image, "products", cancellationToken);
+                string imageUrl = null;
+
+                // Xử lý upload ảnh nếu có
+                if (request.ImageUrl != null && request.ImageUrl.Length > 0)
+                {
+                    imageUrl = await _googleCloudStorageService.UploadFileAsync(
+                        request.ImageUrl,
+                        "products",
+                        cancellationToken);
+                }
+
+                var product = new Product
+                {
+                    Name = request.Name,
+                    Price = request.Price,
+                    Description = request.Description,
+                    ImageUrl = imageUrl
+                };
+
+                var created = await _productService.CreateProductAsync(product, cancellationToken);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-
-            var product = new Product
+            catch (Exception ex)
             {
-                Name = request.Name,
-                Price = request.Price,
-                Description = request.Description,
-                ImageUrl = imageUrl
-            };
-
-            var created = await _productService.CreateProductAsync(product, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+                // Ghi log lỗi ở đây
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/products/{id}
