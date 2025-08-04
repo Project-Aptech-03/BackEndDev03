@@ -1,20 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.Product
 {
     public class UpdateProductDto
     {
-        [Key]
-        [Required]
-        public int Id { get; set; }
-        [Required(ErrorMessage = "Tên sản phẩm là bắt buộc.")]
         public string Name { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Giá sản phẩm là bắt buộc.")]
-        [Range(0, double.MaxValue, ErrorMessage = "Giá sản phẩm phải lớn hơn hoặc bằng 0.")]
+
+        
         public decimal Price { get; set; }
-        [Required(ErrorMessage = "Mô tả sản phẩm là bắt buộc.")]
+
         public string Description { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Hình ảnh sản phẩm là bắt buộc.")]
-        public string ImageUrl { get; set; } = string.Empty;
+
+        public List<IFormFile>? NewImages { get; set; } = new();
+        public List<int>? ExistingImageIds { get; set; } = new();
+        public int? MainImageId { get; set; }
     }
+
+
 }

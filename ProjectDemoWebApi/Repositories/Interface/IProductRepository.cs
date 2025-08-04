@@ -10,5 +10,7 @@ namespace ProjectDemoWebApi.Repositories.Interface
         void Update(Product product);
         void Delete(Product product);
         Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task AddProductImagesAsync(List<ProductImage> images, CancellationToken cancellationToken);
+
     }
 }

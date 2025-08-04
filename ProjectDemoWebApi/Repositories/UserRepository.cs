@@ -7,36 +7,16 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly UserManager<Users> _userManager;
-        private readonly SignInManager<Users> _signInManager;
-
-        public UserRepository(UserManager<Users> userManager, SignInManager<Users> signInManager)
+    readonly UserManager<Users> _userManager;
+    
+    public UserRepository(UserManager<Users> userManager)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
         }
 
-        public async Task<Users> GetByEmailAsync(string email)
+        public async Task<List<Users>> GetAllUsersAsync(CancellationToken cancellationToken = default)
         {
-            return await _userManager.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
+            return await _userManager.Users.AsNoTracking().ToListAsync(cancellationToken);
         }
-
-
-        public async Task CreateUserAsync(Users user, string password)
-        {
-            var result = await _userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-            {
-                throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
-        }
-        public async Task<bool> CheckPasswordAsync(Users user, string password)
-        {
-            var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
-            return result.Succeeded;
-        }
-
-
-
     }
 }

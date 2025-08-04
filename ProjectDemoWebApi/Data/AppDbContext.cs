@@ -17,6 +17,7 @@ namespace ProjectDemoWebApi.Data
         //}
         //// DbSet properties for your entities
         public DbSet<Product> Products { get; set; } = null!;
-     
+        public DbSet<ProductImage> ProductImage { get; set; } = null!;
+
     }
 }

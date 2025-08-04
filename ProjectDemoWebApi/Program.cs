@@ -58,8 +58,8 @@ builder.Services.AddIdentity<Users, IdentityRole>()
 builder.Services.AddScoped<IRoleSeederService, RoleSeederService>();
 
 
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // product
@@ -114,6 +114,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseDeveloperExceptionPage();
 app.MapControllers();
 
 app.Run();

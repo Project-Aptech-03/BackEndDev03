@@ -6,6 +6,7 @@ namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IGoogleCloudStorageService
     {
-        Task<string> UploadFileAsync(IFormFile file, string folderName, CancellationToken cancellationToken);
+        Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default);
+        Task<List<string>> UploadFilesAsync(List<IFormFile> files, string folderName, CancellationToken cancellationToken = default);
     }
 }

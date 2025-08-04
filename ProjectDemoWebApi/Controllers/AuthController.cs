@@ -9,10 +9,10 @@ namespace ProjectDemoWebApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IAuthService _userService;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public AuthController(IUserService userService, IJwtTokenService jwtTokenService)
+        public AuthController(IAuthService userService, IJwtTokenService jwtTokenService)
         {
             _userService = userService;
             _jwtTokenService = jwtTokenService;
