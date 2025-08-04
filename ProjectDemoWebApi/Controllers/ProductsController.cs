@@ -33,43 +33,13 @@ namespace ProjectDemoWebApi.Controllers
 
         // GET: api/products/{id}
         [HttpGet("{id}")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-    int id,
-    [FromForm] UpdateProductDto request,
-    [FromForm] List<IFormFile>? newImages,
-    CancellationToken cancellationToken)
+        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            var existing = await _productService.GetProductByIdAsync(id, cancellationToken);
-            if (existing == null)
+            var product = await _productService.GetProductByIdAsync(id, cancellationToken);
+            if (product == null)
                 return NotFound();
 
-            // Cập nhật các trường nếu có truyền vào, nếu không thì giữ nguyên
-            existing.Name = string.IsNullOrWhiteSpace(request.Name) ? existing.Name : request.Name;
-            existing.Price = request.Price == 0 ? existing.Price : request.Price;
-            existing.Description = string.IsNullOrWhiteSpace(request.Description) ? existing.Description : request.Description;
-
-            // Nếu có ảnh mới, cập nhật ảnh mới
-            if (request.NewImages != null && request.NewImages.Any())
-            {
-                // Xử lý thêm ảnh mới
-                await _productService.ReplaceImagesAsync(existing, request.NewImages, cancellationToken);
-            }
-
-            // Nếu có cập nhật ảnh chính
-            if (request.MainImageId != null)
-            {
-                existing.MainImageId = request.MainImageId.Value;
-            }
-
-            // Nếu có danh sách ảnh cũ giữ lại
-            if (request.ExistingImageIds != null && request.ExistingImageIds.Any())
-            {
-                await _productService.KeepExistingImagesAsync(existing, request.ExistingImageIds, cancellationToken);
-            }
-
-            await _productService.UpdateProductAsync(existing, cancellationToken);
-            return Ok(existing);
+            return Ok(product);
         }
 
         // POST: api/products
@@ -133,9 +103,8 @@ namespace ProjectDemoWebApi.Controllers
             existing.Description = request.Description;
 
             var existingImageIds = request.ExistingImageIds ?? new List<int>();
-            var mainImageId = request.MainImageId;
 
-            // Xoá ảnh không còn tồn tại trong request
+            // Xoá ảnh cũ không còn tồn tại trong request
             var imagesToRemove = existing.ProductImages
                 .Where(img => !existingImageIds.Contains(img.Id))
                 .ToList();
@@ -149,47 +118,24 @@ namespace ProjectDemoWebApi.Controllers
             // Upload ảnh mới nếu có
             if (request.NewImages != null && request.NewImages.Any())
             {
-                var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(
-                    request.NewImages, "products", cancellationToken);
+                var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(request.NewImages, "products", cancellationToken);
 
                 foreach (var url in uploadedUrls)
                 {
-                    var newImage = new ProductImage
+                    existing.ProductImages.Add(new ProductImage
                     {
                         ProductId = existing.Id,
                         ImageUrl = url,
                         IsMain = false,
-                        OrderIndex = existing.ProductImages.Count
-                    };
-                    existing.ProductImages.Add(newImage);
+                        OrderIndex = existing.ProductImages.Count // hoặc tính toán thứ tự
+                    });
                 }
             }
 
-            // Cập nhật lại IsMain và OrderIndex
-            foreach (var img in existing.ProductImages)
-            {
-                img.IsMain = mainImageId.HasValue && img.Id == mainImageId;
-            }
-
-            // Nếu không có ảnh chính nào được chỉ định, đặt ảnh đầu tiên làm chính
-            if (!existing.ProductImages.Any(i => i.IsMain) && existing.ProductImages.Any())
-            {
-                existing.ProductImages.First().IsMain = true;
-            }
-
-            // Cập nhật lại ImageUrl chính của sản phẩm
-            var mainImage = existing.ProductImages.FirstOrDefault(i => i.IsMain);
-            if (mainImage != null)
-            {
-                existing.ImageUrl = mainImage.ImageUrl;
-            }
-
-            // Cập nhật sản phẩm
             await _productService.UpdateProductAsync(existing, cancellationToken);
 
             return Ok(existing);
         }
-
 
 
 
