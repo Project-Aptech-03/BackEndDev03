@@ -9738,11 +9738,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\ProjectDemoWebApi\\ProjectDemoWebApi\\ProjectDemoWebApi.csproj",
+      "projectUniqueName": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\Project_Hk3\\ProjectDemoWebApi\\ProjectDemoWebApi.csproj",
       "projectName": "ProjectDemoWebApi",
-      "projectPath": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\ProjectDemoWebApi\\ProjectDemoWebApi\\ProjectDemoWebApi.csproj",
+      "projectPath": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\Project_Hk3\\ProjectDemoWebApi\\ProjectDemoWebApi.csproj",
       "packagesPath": "C:\\Users\\ace\\.nuget\\packages\\",
-      "outputPath": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\ProjectDemoWebApi\\ProjectDemoWebApi\\obj\\",
+      "outputPath": "D:\\Dat\\CodeProject\\School\\ProjectHK3\\Project_Hk3\\ProjectDemoWebApi\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
