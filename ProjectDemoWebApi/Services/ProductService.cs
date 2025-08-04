@@ -1,4 +1,5 @@
-﻿using ProjectDemoWebApi.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
 
@@ -55,6 +56,12 @@ namespace ProjectDemoWebApi.Services
 
             _productRepository.Delete(product);
             return await _productRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task AddProductImagesAsync(List<ProductImage> images, CancellationToken cancellationToken)
+        {
+            await _productRepository.AddProductImagesAsync(images, cancellationToken);
+            await _productRepository.SaveChangesAsync(cancellationToken);
         }
     }
 }

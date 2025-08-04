@@ -15,15 +15,15 @@ namespace ProjectDemoWebApi.Controllers
         {
             _storageService = storageService;
         }
-        [HttpPost]
-        public async Task<IActionResult> UploadImage(IFormFile file, CancellationToken cancellationToken)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded");
+        //[HttpPost]
+        //public async Task<IActionResult> UploadImage(IFormFile file, CancellationToken cancellationToken)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("No file uploaded");
 
-            var url = await _storageService.UploadFileAsync(file, "products", cancellationToken);
-            return Ok(new { imageUrl = url });
-        }
+        //    var url = await _storageService.UploadFileAsync(file, "products", cancellationToken);
+        //    return Ok(new { imageUrl = url });
+        //}
 
     }
 }

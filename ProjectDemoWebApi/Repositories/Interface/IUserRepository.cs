@@ -1,14 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
-using ProjectDemoWebApi.Models;
+﻿using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Repositories.Interface
 {
     public interface IUserRepository
     {
-        Task<Users> GetByEmailAsync(string email);
-        Task CreateUserAsync(Users user, string password);
 
-        Task<bool> CheckPasswordAsync(Users user, string password);
+        Task<List<Users>> GetAllUsersAsync(CancellationToken cancellationToken = default);
     }
-
 }

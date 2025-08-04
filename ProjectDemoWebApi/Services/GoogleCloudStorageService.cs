@@ -36,28 +36,67 @@ namespace ProjectDemoWebApi.Services
             _bucketName = config["GoogleCloud:BucketName"];
         }
 
-        public async Task<string> UploadFileAsync(IFormFile file, string folderName, CancellationToken cancellationToken = default)
+        public async Task<List<string>> UploadFilesAsync(List<IFormFile> files, string folderName, CancellationToken cancellationToken = default)
         {
-            if (file == null || file.Length == 0)
+            var uploadedUrls = new List<string>();
+
+            foreach (var file in files)
             {
-                throw new ArgumentException("File is empty", nameof(file));
+                if (file == null || file.Length == 0)
+                {
+                    continue; 
+                }
+
+                var objectName = $"{folderName}/{Guid.NewGuid()}_{file.FileName}";
+
+                using var stream = file.OpenReadStream();
+
+                await _storageClient.UploadObjectAsync(
+                    _bucketName,
+                    objectName,
+                    file.ContentType,
+                    stream,
+                    cancellationToken: cancellationToken
+                );
+
+                var url = $"https://storage.googleapis.com/{_bucketName}/{objectName}";
+                uploadedUrls.Add(url);
             }
 
-            var objectName = $"{folderName}/{Guid.NewGuid()}_{file.FileName}";
-
-            using var stream = file.OpenReadStream();
-
-            var dataObject = await _storageClient.UploadObjectAsync(
-                _bucketName,
-                objectName,
-                file.ContentType,
-                stream,
-                cancellationToken: cancellationToken
-            );
-
-            // KHÔNG gọi UpdateObjectAsync vì bucket đang bật Uniform bucket-level access
-            return $"https://storage.googleapis.com/{_bucketName}/{objectName}";
+            return uploadedUrls;
         }
+
+        public async Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(fileUrl))
+                throw new ArgumentException("File URL cannot be null or empty.", nameof(fileUrl));
+
+            try
+            {
+                // Parse đường dẫn file từ URL, ví dụ:
+                // URL: https://storage.googleapis.com/your-bucket-name/folder/filename.jpg
+                var uri = new Uri(fileUrl);
+                var filePath = uri.AbsolutePath.TrimStart('/');
+
+                // Kiểm tra bucket có khớp không
+                if (!fileUrl.Contains(_bucketName))
+                    throw new InvalidOperationException("Invalid bucket in file URL.");
+
+                // Xóa object khỏi bucket
+                await _storageClient.DeleteObjectAsync(_bucketName, filePath, cancellationToken: cancellationToken);
+            }
+            catch (Google.GoogleApiException e) when (e.Error.Code == 404)
+            {
+                // File không tồn tại, có thể đã bị xóa rồi
+                Console.WriteLine($"[DeleteFileAsync] File not found: {fileUrl}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DeleteFileAsync] Unexpected error: {ex.Message}");
+                throw;
+            }
+        }
+
 
     }
 }

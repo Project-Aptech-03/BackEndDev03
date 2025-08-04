@@ -33,6 +33,12 @@ namespace ProjectDemoWebApi.Repositories
             await _context.Products.AddAsync(product, cancellationToken);
         }
 
+        public async Task AddProductImagesAsync(List<ProductImage> images, CancellationToken cancellationToken)
+        {
+            await _context.ProductImage.AddRangeAsync(images, cancellationToken);
+        }
+
+
         public void Update(Product product)
         {
             _context.Products.Update(product);

@@ -12,7 +12,7 @@ namespace ProjectDemoWebApi.DTOs.Product
         [Required(ErrorMessage = "Mô tả sản phẩm là bắt buộc.")]
         public string Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Hình ảnh sản phẩm là bắt buộc.")]
-        public IFormFile ImageUrl { get; set; } = null!;
+        public List<IFormFile> Images { get; set; } = new();
 
     }
 }
