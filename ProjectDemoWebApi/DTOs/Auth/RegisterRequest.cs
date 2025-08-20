@@ -8,11 +8,12 @@ namespace ProjectDemoWebApi.DTOs.Auth
         [RegularExpression(@"^[\w\.\-]+@(fpt\.edu\.vn|gmail\.com)$", ErrorMessage = "Chỉ cho phép email @fpt.edu.vn hoặc @gmail.com.")]
         public string Email { get; set; } = string.Empty;
 
-
         [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
+        [RegularExpression(@"^(?=.*[A-Z]).+$", ErrorMessage = "Mật khẩu phải có ít nhất một chữ hoa (A-Z).")]
         public string Password { get; set; } = string.Empty;
+
 
         [Required(ErrorMessage = "Họ không được để trống.")]
         [StringLength(50, ErrorMessage = "Họ không được vượt quá 50 ký tự.")]

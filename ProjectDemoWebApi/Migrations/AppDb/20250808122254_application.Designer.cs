@@ -11,8 +11,8 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations.AppDb
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250804114335_v3")]
-    partial class v3
+    [Migration("20250808122254_application")]
+    partial class application
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

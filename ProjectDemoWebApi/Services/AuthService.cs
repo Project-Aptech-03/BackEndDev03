@@ -30,7 +30,6 @@ public class AuthService : IAuthService
 
     public async Task<OtpResultDto> SendRegisterOtpAsync(RegisterRequest request)
     {
-        // Kiểm tra email đã tồn tại chưa
         var existingUser = await _userRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
             throw new Exception("Email đã được sử dụng.");
@@ -46,9 +45,8 @@ public class AuthService : IAuthService
         var otp = new Random().Next(100000, 999999).ToString();
 
         var pendingUserId = Guid.NewGuid().ToString();
-        var expiresIn = 300; // 5 phút
+        var expiresIn = 300; 
 
-        // Lưu tạm vào cache
         var pendingUser = new PendingUser
         {
             Request = request,
@@ -107,11 +105,75 @@ public class AuthService : IAuthService
 
         await _emailSender.SendEmailAsync(request.Email, "Mã OTP xác minh", body);
 
-        // ✅ Trả về dữ liệu
         return new OtpResultDto
         {
             Email = request.Email,
             PendingUserId = pendingUserId,
+            ExpiresIn = expiresIn
+        };
+    }
+
+    // resend OTP
+    public async Task<OtpResultDto> ResendRegisterOtpAsync(string email)
+    {
+        var key = $"register:{email}";
+        var attemptKey = $"otp_attempt:{email}";
+
+        var json = await _cache.GetStringAsync(key);
+        if (string.IsNullOrEmpty(json))
+            throw new Exception("Không tìm thấy yêu cầu đăng ký hoặc OTP đã hết hạn.");
+
+        var pendingUser = JsonSerializer.Deserialize<PendingUser>(json);
+
+        var attemptsRaw = await _cache.GetStringAsync(attemptKey);
+        var attempts = string.IsNullOrEmpty(attemptsRaw) ? 0 : int.Parse(attemptsRaw);
+        if (attempts >= 5)
+            throw new Exception("Bạn đã gửi lại OTP quá nhiều lần. Vui lòng thử lại sau 10 phút.");
+
+        var otp = new Random().Next(100000, 999999).ToString();
+        var expiresIn = 300; // 5 phút
+
+        pendingUser.Otp = otp;
+        pendingUser.ExpireAt = DateTime.UtcNow.AddSeconds(expiresIn);
+
+        var newJson = JsonSerializer.Serialize(pendingUser);
+        await _cache.SetStringAsync(key, newJson, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(expiresIn)
+        });
+
+        await _cache.SetStringAsync(attemptKey, (attempts + 1).ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        });
+
+        // Gửi Email OTP mới
+        string body = $@"
+    <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
+        <div style='text-align:center; margin-bottom:24px;'>
+            <h2 style='color:#0d6efd; font-size:24px;'>Xác minh lại Email</h2>
+        </div>
+
+        <p style='font-size:16px; color:#333;'>Xin chào,</p>
+        <p style='font-size:16px; color:#333;'>Mã OTP mới của bạn là:</p>
+
+        <div style='margin:24px auto; text-align:center;'>
+            <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
+                {otp}
+            </div>
+        </div>
+
+        <p style='font-size:15px; color:#555;'>
+            Mã OTP này sẽ hết hạn sau <strong>5 phút</strong>.
+        </p>
+    </div>";
+
+        await _emailSender.SendEmailAsync(email, "Mã OTP mới", body);
+
+        return new OtpResultDto
+        {
+            Email = email,
+            PendingUserId = pendingUser.Id,
             ExpiresIn = expiresIn
         };
     }
@@ -136,19 +198,16 @@ public class AuthService : IAuthService
         user.UserName = user.Email;
         user.EmailConfirmed = true;
 
-        // 👉 Tạo user bằng UserManager (nếu không đã gọi sẵn qua Repository)
         var result = await _userManager.CreateAsync(user, pendingUser.Request.Password);
 
         if (!result.Succeeded)
             throw new Exception("Tạo tài khoản thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description)));
 
-        // 👉 Gán role mặc định
         await _userManager.AddToRoleAsync(user, "User");
-
         await _cache.RemoveAsync(key);
         await _cache.RemoveAsync($"otp_attempt:{request.Email}");
 
-        var accessToken = await _ijwtTokenService.GenerateTokenAsync(user);
+        var token = await _ijwtTokenService.GenerateTokenAsync(user);
         var userRoles = await _userManager.GetRolesAsync(user);
 
         return new RegisterResultDto
@@ -156,16 +215,16 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Email = user.Email!,
             Role = userRoles.FirstOrDefault() ?? "User",
-            AccessToken = accessToken
+            Token = token
         };
     }
+
+    
+
 
     public async Task<LoginResultDto> LoginAsync(LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email.Trim().ToLower());
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? "User";
-        var token = await _ijwtTokenService.GenerateTokenAsync(user);
 
         if (user == null)
         {
@@ -185,13 +244,16 @@ public class AuthService : IAuthService
                 ErrorMessage = "Mật khẩu không đúng."
             };
         }
-        
+
+        var roles = await _userManager.GetRolesAsync(user); 
+        var role = roles.FirstOrDefault() ?? "User";
+        var token = await _ijwtTokenService.GenerateTokenAsync(user);
+
         return new LoginResultDto
         {
             Success = true,
             Token = token,
-            Role = role 
+            Role = role
         };
     }
-
 }

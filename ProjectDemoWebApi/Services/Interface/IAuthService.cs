@@ -9,7 +9,7 @@ namespace ProjectDemoWebApi.Services.Interface
         Task<RegisterResultDto>VerifyRegisterAsync(VerifyRegisterRequest request);
 
         Task<LoginResultDto> LoginAsync(LoginRequest request);
-
+        Task<OtpResultDto> ResendRegisterOtpAsync(string email);
 
 
     }
