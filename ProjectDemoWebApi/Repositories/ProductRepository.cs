@@ -17,15 +17,17 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Products
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+             .Include(p => p.ProductImages)
+             .AsNoTracking()
+             .ToListAsync(cancellationToken);
         }
 
         public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.Products
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+                 .Include(p => p.ProductImages)
+                 .AsNoTracking()
+                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
         public async Task AddAsync(Product product, CancellationToken cancellationToken = default)

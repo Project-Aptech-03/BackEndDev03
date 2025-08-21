@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Response;
@@ -7,6 +8,7 @@ using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase

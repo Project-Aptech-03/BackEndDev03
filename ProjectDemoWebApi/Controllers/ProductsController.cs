@@ -1,4 +1,5 @@
 ﻿using Google.Apis.Storage.v1;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
@@ -28,6 +30,7 @@ namespace ProjectDemoWebApi.Controllers
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             var products = await _productService.GetAllProductsAsync(cancellationToken);
+            var productImage = new List<ProductImage>();
             return Ok(products);
         }
 
@@ -43,6 +46,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         // POST: api/products
+        [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateProductDto request)
         {
             if (!ModelState.IsValid)
@@ -89,57 +93,47 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
-    int id,
-    [FromForm] UpdateProductDto request,
-    CancellationToken cancellationToken)
+        int id,
+        [FromForm] UpdateProductDto request,
+        [FromForm] IFormFile? image,
+        CancellationToken cancellationToken)
         {
             var existing = await _productService.GetProductByIdAsync(id, cancellationToken);
             if (existing == null)
                 return NotFound();
 
-            // Cập nhật thông tin cơ bản
-            existing.Name = request.Name;
-            existing.Price = request.Price;
-            existing.Description = request.Description;
+            if (request.Name != null)
+                existing.Name = request.Name;
 
-            var existingImageIds = request.ExistingImageIds ?? new List<int>();
+            if (request.Description != null)
+                existing.Description = request.Description;
 
-            // Xoá ảnh cũ không còn tồn tại trong request
-            var imagesToRemove = existing.ProductImages
-                .Where(img => !existingImageIds.Contains(img.Id))
-                .ToList();
+            if (request.Price.HasValue)
+                existing.Price = request.Price.Value;
 
-            foreach (var img in imagesToRemove)
+            if (image != null)
             {
-                await _googleCloudStorageService.DeleteFileAsync(img.ImageUrl);
-                existing.ProductImages.Remove(img);
-            }
-
-            // Upload ảnh mới nếu có
-            if (request.NewImages != null && request.NewImages.Any())
-            {
-                var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(request.NewImages, "products", cancellationToken);
-
-                foreach (var url in uploadedUrls)
+                if (!string.IsNullOrEmpty(existing.ImageUrl))
                 {
-                    existing.ProductImages.Add(new ProductImage
-                    {
-                        ProductId = existing.Id,
-                        ImageUrl = url,
-                        IsMain = false,
-                        OrderIndex = existing.ProductImages.Count // hoặc tính toán thứ tự
-                    });
+                    await _googleCloudStorageService.DeleteFileAsync(existing.ImageUrl, cancellationToken);
                 }
+
+                var newImageUrl = await _googleCloudStorageService.UploadFileMainAsync(
+                    image,
+                    folderName: "products",
+                    cancellationToken
+                );
+                existing.ImageUrl = newImageUrl;
             }
 
-            await _productService.UpdateProductAsync(existing, cancellationToken);
-
-            return Ok(existing);
+            await _productService.UpdateProductAsync(existing);
+            return Ok(new
+            {
+                message = "Product updated successfully.",
+                product = existing
+            });
         }
 
-
-
-        // DELETE: api/products/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {

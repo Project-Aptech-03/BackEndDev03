@@ -8,6 +8,7 @@ namespace ProjectDemoWebApi.Services
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
+        private readonly IGoogleCloudStorageService _googleCloudStorageService;
 
         public ProductService(IProductRepository productRepository)
         {
@@ -38,11 +39,29 @@ namespace ProjectDemoWebApi.Services
             {
                 return null;
             }
+            if (!string.IsNullOrEmpty(product.Name))
+            {
+                existing.Name = product.Name;
+            }
 
-            // Update các trường (nếu có logic nào cần làm trước khi save)
-            existing.Name = product.Name;
-            existing.Description = product.Description;
-            existing.Price = product.Price;
+            if (!string.IsNullOrEmpty(product.Description))
+            {
+                existing.Description = product.Description;
+            }
+
+            if (product.Price != 0)
+            {
+                existing.Price = product.Price;
+            }
+            if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != existing.ImageUrl)
+            {
+                // Xoá ảnh cũ khỏi DB nếu cần
+                if (!string.IsNullOrEmpty(existing.ImageUrl))
+                {
+                    await _googleCloudStorageService.DeleteFileAsync(existing.ImageUrl, cancellationToken);
+                }
+                existing.ImageUrl = product.ImageUrl;
+            }
 
             _productRepository.Update(existing);
             await _productRepository.SaveChangesAsync(cancellationToken);

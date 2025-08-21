@@ -12,8 +12,8 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250720095529_v1")]
-    partial class v1
+    [Migration("20250808122136_auth")]
+    partial class auth
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -167,7 +167,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")

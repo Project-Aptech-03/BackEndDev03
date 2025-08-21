@@ -66,6 +66,28 @@ namespace ProjectDemoWebApi.Services
             return uploadedUrls;
         }
 
+        public async Task<string> UploadFileMainAsync(IFormFile file, string folderName, CancellationToken cancellationToken = default)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("Invalid file");
+
+            var objectName = $"{folderName}/{Guid.NewGuid()}_{file.FileName}";
+
+            using var stream = file.OpenReadStream();
+
+            await _storageClient.UploadObjectAsync(
+                _bucketName,
+                objectName,
+                file.ContentType,
+                stream,
+                cancellationToken: cancellationToken
+            );
+
+            var url = $"https://storage.googleapis.com/{_bucketName}/{objectName}";
+            return url;
+        }
+
+
         public async Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(fileUrl))
