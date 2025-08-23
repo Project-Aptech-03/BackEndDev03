@@ -1,109 +1,203 @@
-# eProject — Online Book Store (ASP.NET)
-
-## Team Members
-
-| Student ID   | Full Name        |
-|--------------|------------------|
-| Student1559700 | Nguyễn Minh Cường |
-| Student1477469 | Nguyễn Tiến Đạt   |
-| Student1559709 | Nguyễn Đức Sinh   |
-| Student1470125 | Lê Trương Tín     |
-| Student1545742 | Hoàng Nhật Phúc   |
+# eProject — Shradha General Book Stores (ASP.NET Core)
 
 ---
 
-## 1. Introduction
+## 👥 Team Members
 
-In today’s fast-paced IT industry, professionals are expected to continuously upgrade their technical skills and apply concepts in real-life projects. However, busy schedules and limited resources often become barriers to learning and practice.
-
-To address this, Aptech introduces **eProjects** — a synchronous learning environment that allows students to implement knowledge step by step. This project simulates real-world scenarios, helping students to:
-
-- Practice implementation in a phased, laddered approach  
-- Build larger, more robust applications  
-- Learn integration of multiple modules into a unified application  
-- Work on real-life case studies  
-- Gain industry-like experience in coding, testing, and documentation  
-
-**This eProject focuses on building an Online Book Store application using ASP.NET.**
+| Student ID   | Full Name        | Role                  |
+|--------------|-----------------|-----------------------|
+| Student1559700 | Nguyễn Minh Cường | Backend Developer     |
+| Student1477469 | Nguyễn Tiến Đạt   | Full-stack Developer  |
+| Student1559709 | Nguyễn Đức Sinh   | Database Administrator|
+| Student1470125 | Lê Trương Tín     | Frontend Developer    |
+| Student1545742 | Hoàng Nhật Phúc   | Project Manager       |
 
 ---
 
-## 2. Objectives of the Project
+## 1. 📖 Introduction
 
-- Provide exposure to a **real-life project** scenario.  
-- Develop a complete Online Book Store system using **ASP.NET MVC / ASP.NET Core**.  
-- Implement features like browsing, searching, purchasing, and managing books.  
-- Strengthen knowledge of **.NET framework, Entity Framework, and SQL Server**.  
-- Practice teamwork, problem-solving, version control, and documentation.  
+In today's digital era, **Shradha General Book Stores** have become essential platforms for readers to conveniently access diverse publications.  
 
----
+This eProject focuses on building a **comprehensive Shradha General Book Stores** using **ASP.NET Core**, combining **e-commerce functionality** with **content management**.  
 
-## 3. Problem Statement
-
-**Project Title:** Online Book Store  
-
-The application will allow customers to:  
-- Browse and search books by category, author, or keyword  
-- View detailed book information  
-- Add books to shopping cart and checkout  
-- Manage user accounts and orders  
-
-**Standards Plan:**  
-- Every code block must include meaningful comments  
-- Logic must be clear and documented  
-- Project report with synopsis, code, and documentation is mandatory  
-
-**Documentation should include:**  
-- Certificate of Completion  
-- Table of Contents  
-- Problem Definition  
-- Customer Requirement Specification  
-- Project Plan  
-- E-R Diagrams  
-- Algorithms / Flowcharts  
-- GUI Standards Document  
-- Interface Design Document  
-- Task Sheet  
-- Project Review and Monitoring Report  
-- Unit Testing Checklist  
-- Final Checklist  
+Through this project, students will:  
+- 🖥️ Develop a **full-stack web application** using ASP.NET Core  
+- 🛒 Implement **e-commerce features**: inventory, cart, payment  
+- 🗄️ Practice **database design & optimization** with SQL Server  
+- 🔗 Integrate multiple modules into a **unified application**  
+- 🔐 Gain experience in **authentication, authorization, and security**  
+- 🤝 Work collaboratively with **Git** and **Agile methodology**  
 
 ---
 
-## 4. Deliverables
+## 2. 🎯 Objectives
 
-1. **Two Status Reports** — submitted every 10 days after project start  
-   - Must include progress description, review document, issues/doubts  
-
-2. **Final Submission** — must include:  
-   - Complete documentation (soft copy)  
-   - Source code (ASP.NET project)  
-   - Project report & synopsis  
-   - Feedback form  
-
----
-
-## 5. Hardware / Software Requirements
-
-**Hardware:**  
-- Processor: Intel Pentium IV / Core i3 or higher  
-- RAM: 4 GB or higher  
-- Disk Space: 10 GB free  
-- Operating System: Windows 10 / 11  
-
-**Software:**  
-- Visual Studio 2022 (or later)  
-- .NET 6.0 / .NET 7.0 SDK  
-- ASP.NET Core MVC / ASP.NET Web API  
-- Entity Framework Core  
-- SQL Server 2019 (or later)  
-- Git (for version control)  
-- Postman (for API testing, optional)  
+- Design and implement a **complete Online Book Store system** using ASP.NET Core MVC  
+- Build a **responsive UI** across devices  
+- Implement **ASP.NET Core Identity** for authentication & authorization  
+- Create an **Admin Dashboard** for products, orders, and users  
+- Integrate **payment methods** and delivery options  
+- Add **search, filtering, categorization** features  
+- Develop **coupon/discount system**  
+- Ensure **data integrity and security**  
+- Practice the **full SDLC**: requirements → deployment  
 
 ---
 
-## 6. Notes
+## 3. ⚙️ Features & Functionalities
 
-- Ensure proper use of **Git/GitHub** for version control.  
-- Follow coding standards and naming conventions.  
-- Prepare demo video of final submission if required.  
+### 🔑 Authentication & Authorization
+- User registration & login with ASP.NET Core Identity  
+- Role-based access control: `Customer`, `Admin`, `Content Manager`  
+- Social media login  
+- Password recovery & email confirmation  
+
+### 📦 Product Catalog
+- Multi-level categories (Books, Magazines, CDs, DVDs, Utilities)  
+- Advanced search & filtering  
+- Product details with images, description, specifications  
+- Inventory management with stock tracking  
+
+### 🛍️ Shopping Experience
+- Shopping cart (persistent)  
+- Wishlist  
+- Customer addresses with delivery calculation  
+- Real-time stock validation  
+
+### 📦 Order Management
+- Multi-step checkout  
+- Payment options: **Cash on Delivery, Online Payment**  
+- Order tracking (Pending → Confirmed → Shipped → Delivered)  
+- Email notifications  
+
+### 🎟️ Promotion System
+- Coupon codes (percentage, fixed amount, free shipping)  
+- Automatic bulk discounts  
+- Coupon validation & expiration  
+
+### 🙋 Customer Support
+- FAQ management  
+- Customer queries & admin replies  
+- Return & refund processing  
+
+### 🛠️ Administration
+- Dashboard with orders, users, products overview  
+- Inventory & stock movement tracking  
+- Sales reporting & analytics  
+- System configuration  
+
+---
+
+## 4. 🏗️ Technical Architecture
+
+### 🗄️ Database Design
+- **24 normalized tables**  
+- ASP.NET Core Identity integration  
+- Optimized indexes  
+- Audit trails for critical operations  
+
+### ⚡ Backend
+- ASP.NET Core 7.0 MVC  
+- Entity Framework Core (code-first)  
+- Repository pattern + Dependency Injection  
+- AutoMapper for DTO mapping  
+- Serilog for logging  
+
+### 🎨 Frontend
+- Razor Pages + **Bootstrap 5**  
+- JavaScript / jQuery  
+- AJAX for partial updates  
+- jQuery Validation for client-side  
+
+### 🔐 Security
+- HTTPS enforcement  
+- SQL Injection prevention  
+- XSS protection  
+- CSRF tokens  
+- Password hashing  
+
+---
+
+## 5. 🗃️ Database Schema Overview
+
+The system uses **24 tables**, including:  
+
+- **Authentication**: `AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, ...  
+- **Products**: `categories`, `manufacturers`, `publishers`, `products`, `product_photos`  
+- **Orders**: `orders`, `order_items`, `shopping_cart`, `customer_addresses`  
+- **Payments & Returns**: `payments`, `product_returns`  
+- **Inventory**: `stock_movements`  
+- **Promotions**: `coupons`  
+- **Support**: `customer_queries`, `admin_replies`, `faq`  
+- **System Config**: `system_settings`  
+
+---
+
+## 6. 📦 Deliverables
+
+- **Bi-weekly Status Reports** (every 10 days)  
+  - Progress & completed features  
+  - Code review documentation  
+  - Issues & solutions  
+  - Updated timeline  
+
+- **Final Submission**  
+  - Source code + documentation  
+  - Database schema + migrations  
+  - Technical docs: architecture, API, deployment guide  
+  - User manuals  
+  - Test cases & results  
+  - Presentation + demo video  
+
+---
+
+## 7. 💻 Requirements
+
+### Development
+- CPU: Intel Core i5+  
+- RAM: 8GB+  
+- Storage: 20GB SSD  
+- OS: Windows 10/11 / macOS Big Sur+  
+
+**Tools:**  
+- IDE: Visual Studio 2022 (v17.4+)  
+- SDK: .NET 7.0  
+- DB: SQL Server 2019+  
+- Version Control: Git + GitHub/GitLab  
+- UI Design: Figma / Adobe XD  
+
+### Production
+- Web Server: IIS / Azure App Service  
+- DB: Azure SQL / SQL Server 2019  
+- Cache: Redis (optional)  
+- Media Storage: Azure Blob Storage  
+
+---
+
+## 8. 🗓️ Project Timeline
+
+| Week | Milestone |
+|------|-----------|
+| 1-2  | Requirement Analysis & Database Design |
+| 3-4  | Authentication & Authorization |
+| 5-6  | Product Catalog & Shopping Cart |
+| 7-8  | Order Processing & Payment Integration |
+| 9-10 | Admin Dashboard & Reporting |
+| 11   | Testing & Bug Fixing |
+| 12   | Documentation & Final Presentation |
+
+---
+
+## 9. 📝 Notes
+
+- Use **Git Feature Branch Workflow** with clear commit messages  
+- Follow **clean architecture principles**  
+- Ensure **responsive UI** for mobile & desktop  
+- Conduct **peer code reviews** before merging  
+- Write **unit tests** for critical logic  
+- Perform **security testing** (OWASP Top 10)  
+- Prepare **CI/CD pipeline** for deployment  
+- Record **demo video** for final submission  
+
+---
+✨ *Project: Online Book Store (ASP.NET Core, EF Core, SQL Server)*  
