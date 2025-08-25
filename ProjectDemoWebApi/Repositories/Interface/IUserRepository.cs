@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories.Interface
     {
 
         Task<List<Users>> GetAllUsersAsync(CancellationToken cancellationToken = default);
-        Task<Users?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
+        Task<Users?> GetByIdAsync(string userId, CancellationToken cancellationToken = default);
         Task<Users?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<Users?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
 

@@ -12,7 +12,7 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250824133711_authentication")]
+    [Migration("20250825145901_authentication")]
     partial class authentication
     {
         /// <inheritdoc />
@@ -167,10 +167,10 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("AvataUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -188,11 +188,11 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");

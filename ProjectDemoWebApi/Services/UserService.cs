@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
@@ -22,15 +23,71 @@ namespace ProjectDemoWebApi.Services
             _roleManager = roleManager;
         }
 
-        public async Task<List<Users>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<List<UsersResponseDto>>> GetAllUsersAsync(CancellationToken cancellationToken = default)
         {
-            return await _userRepository.GetAllUsersAsync(cancellationToken);
+            try
+            {
+                var users = await _userRepository.GetAllUsersAsync(cancellationToken);
+                var userDtos = _mapper.Map<List<UsersResponseDto>>(users);
+
+                return ApiResponse<List<UsersResponseDto>>.Ok(
+                    data: userDtos,
+                    message: "Users retrieved successfully",
+                    statusCode: 200
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<UsersResponseDto>>.Fail(
+                    "An error occurred while retrieving users.",
+                    null,
+                    500
+                );
+            }
         }
 
-        public async Task<Users?> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<UsersResponseDto?>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
         {
-            return await _userRepository.GetUserByIdAsync(userId, cancellationToken);
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return ApiResponse<UsersResponseDto?>.Fail(
+                        "User ID cannot be empty.",
+                        null,
+                        400
+                    );
+                }
+
+                var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+
+                if (user == null)
+                {
+                    return ApiResponse<UsersResponseDto?>.Fail(
+                        "User not found.",
+                        null,
+                        404
+                    );
+                }
+
+                var userDto = _mapper.Map<UsersResponseDto>(user);
+
+                return ApiResponse<UsersResponseDto?>.Ok(
+                    userDto,
+                    "User retrieved successfully.",
+                    200
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<UsersResponseDto?>.Fail(
+                    "An error occurred while retrieving the user.",
+                    null,
+                    500
+                );
+            }
         }
+
         public async Task<Users?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return await _userRepository.GetUserByUsernameAsync(username, cancellationToken);

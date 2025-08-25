@@ -256,8 +256,8 @@ public class AuthService : IAuthService
             Role = role,
             UserId = user.Id,
             Email = user.Email,
-            FullName = user.UserName
-            
+            FullName = user.FirstName + " " + user.LastName
+
         };
 
     }

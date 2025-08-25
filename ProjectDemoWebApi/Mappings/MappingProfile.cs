@@ -7,6 +7,7 @@ using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.DTOs.Payment;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Publisher;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.DTOs.ShoppingCart;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
@@ -22,6 +23,8 @@ namespace ProjectDemoWebApi.Mappings
 
             // User mappings
             CreateMap<Users, UsersResponseDto>();
+            CreateMap<UpdateUserDto, Users>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Category mappings
             CreateMap<CreateCategoryDto, Categories>();
@@ -68,10 +71,7 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreatePaymentDto, Payments>();
             CreateMap<UpdatePaymentDto, Payments>();
             CreateMap<Payments, PaymentResponseDto>();
-            // user
-            CreateMap<Users, UsersResponseDto>();
-            CreateMap<UpdateUserDto, Users>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            
 
         }
     }

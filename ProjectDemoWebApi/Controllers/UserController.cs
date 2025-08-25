@@ -115,13 +115,15 @@ namespace ProjectDemoWebApi.Controllers
                 ));
             }
 
-            var updatedUser = await _userService.GetUserByIdAsync(id, cancellationToken);
-            if (updatedUser == null)
+            var updatedUserResponse = await _userService.GetUserByIdAsync(id, cancellationToken);
+            if (updatedUserResponse == null)
                 return NotFound(ApiResponse<UsersResponseDto>.Fail("Không tìm thấy user sau khi cập nhật"));
 
+            var updatedUser = updatedUserResponse.Data;
             var responseDto = _mapper.Map<UsersResponseDto>(updatedUser);
 
             return Ok(ApiResponse<UsersResponseDto>.Ok(responseDto, "Cập nhật thành công"));
         }
+
     }
 }

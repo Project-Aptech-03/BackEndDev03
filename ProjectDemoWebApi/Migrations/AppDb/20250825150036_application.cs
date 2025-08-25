@@ -1,0 +1,663 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace ProjectDemoWebApi.Migrations.AppDb
+{
+    /// <inheritdoc />
+    public partial class application : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    category_code = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
+                    category_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Coupons",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    coupon_code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    coupon_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    discount_type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    discount_value = table.Column<decimal>(type: "decimal(8,2)", nullable: false),
+                    min_order_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false, defaultValue: 0m),
+                    max_discount_amount = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    quantity = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    start_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    end_date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    is_auto_apply = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Coupons", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    full_address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    district = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    city = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    postal_code = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    distance_km = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
+                    is_default = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerQueries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    customer_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    customer_email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    subject = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Open"),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerQueries", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FAQ",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    question = table.Column<string>(type: "text", nullable: false),
+                    answer = table.Column<string>(type: "text", nullable: false),
+                    sort_order = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FAQ", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Manufacturers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    manufacturer_code = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    manufacturer_name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Manufacturers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Publishers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    publisher_name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    publisher_address = table.Column<string>(type: "text", nullable: true),
+                    contact_info = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Publishers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SystemSettings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    setting_key = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    setting_value = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SystemSettings", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    order_number = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    delivery_address_id = table.Column<int>(type: "int", nullable: false),
+                    order_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    subtotal = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    coupon_discount_amount = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    delivery_charges = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    total_amount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    order_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    payment_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    payment_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    applied_coupons = table.Column<string>(type: "text", nullable: true),
+                    delivery_notes = table.Column<string>(type: "text", nullable: true),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_CustomerAddresses_delivery_address_id",
+                        column: x => x.delivery_address_id,
+                        principalTable: "CustomerAddresses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AdminReplies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    query_id = table.Column<int>(type: "int", nullable: false),
+                    admin_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    reply_message = table.Column<string>(type: "text", nullable: false),
+                    reply_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminReplies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminReplies_CustomerQueries_query_id",
+                        column: x => x.query_id,
+                        principalTable: "CustomerQueries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Products",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    product_code = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
+                    category_id = table.Column<int>(type: "int", nullable: false),
+                    manufacturer_id = table.Column<int>(type: "int", nullable: false),
+                    publisher_id = table.Column<int>(type: "int", nullable: true),
+                    product_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    author = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    product_type = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    pages = table.Column<int>(type: "int", nullable: true),
+                    dimensions = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    weight = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
+                    price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    stock_quantity = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Products", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Products_Categories_category_id",
+                        column: x => x.category_id,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Products_Manufacturers_manufacturer_id",
+                        column: x => x.manufacturer_id,
+                        principalTable: "Manufacturers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Products_Publishers_publisher_id",
+                        column: x => x.publisher_id,
+                        principalTable: "Publishers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Payments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    order_id = table.Column<int>(type: "int", nullable: false),
+                    payment_method = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    amount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    transaction_id = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    payment_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    payment_date = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Payments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Payments_Orders_order_id",
+                        column: x => x.order_id,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductReturns",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    return_number = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    order_id = table.Column<int>(type: "int", nullable: false),
+                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    reason = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    refund_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false, defaultValue: 0m),
+                    return_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductReturns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductReturns_Orders_order_id",
+                        column: x => x.order_id,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    order_id = table.Column<int>(type: "int", nullable: false),
+                    product_id = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    unit_price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    discount_percent = table.Column<decimal>(type: "decimal(5,2)", nullable: false, defaultValue: 0m),
+                    discount_amount = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    total_price = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    notes = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_order_id",
+                        column: x => x.order_id,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductPhotos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    product_id = table.Column<int>(type: "int", nullable: false),
+                    photo_url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductPhotos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductPhotos_Products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShoppingCart",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    product_id = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    unit_price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    added_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShoppingCart", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShoppingCart_Products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StockMovements",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    product_id = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<int>(type: "int", nullable: false),
+                    previous_stock = table.Column<int>(type: "int", nullable: false),
+                    new_stock = table.Column<int>(type: "int", nullable: false),
+                    reference_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    reference_id = table.Column<int>(type: "int", nullable: true),
+                    unit_cost = table.Column<decimal>(type: "decimal(10,2)", nullable: false, defaultValue: 0m),
+                    reason = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockMovements", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StockMovements_Products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_replies_query",
+                table: "AdminReplies",
+                column: "query_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_categories_code",
+                table: "Categories",
+                column: "category_code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_coupons_auto",
+                table: "Coupons",
+                columns: new[] { "is_auto_apply", "min_order_amount" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_coupons_code",
+                table: "Coupons",
+                column: "coupon_code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_coupons_validity",
+                table: "Coupons",
+                columns: new[] { "is_active", "start_date", "end_date" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_addresses_distance",
+                table: "CustomerAddresses",
+                column: "distance_km");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_addresses_user",
+                table: "CustomerAddresses",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_queries_customer",
+                table: "CustomerQueries",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_queries_status",
+                table: "CustomerQueries",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_faq_sort",
+                table: "FAQ",
+                column: "sort_order");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_manufacturers_code",
+                table: "Manufacturers",
+                column: "manufacturer_code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_order_items_order",
+                table: "OrderItems",
+                column: "order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_order_items_product",
+                table: "OrderItems",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_orders_customer",
+                table: "Orders",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_orders_date",
+                table: "Orders",
+                column: "order_date");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_orders_number",
+                table: "Orders",
+                column: "order_number",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_orders_payment_type",
+                table: "Orders",
+                column: "payment_type");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_orders_status",
+                table: "Orders",
+                column: "order_status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_delivery_address_id",
+                table: "Orders",
+                column: "delivery_address_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_payments_order",
+                table: "Payments",
+                column: "order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_product_photos_active",
+                table: "ProductPhotos",
+                column: "is_active");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_product_photos_product",
+                table: "ProductPhotos",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_returns_number",
+                table: "ProductReturns",
+                column: "return_number",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_returns_order",
+                table: "ProductReturns",
+                column: "order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_products_active",
+                table: "Products",
+                column: "is_active");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_products_category",
+                table: "Products",
+                column: "category_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_products_code",
+                table: "Products",
+                column: "product_code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "idx_products_manufacturer",
+                table: "Products",
+                column: "manufacturer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_publisher_id",
+                table: "Products",
+                column: "publisher_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_cart_date",
+                table: "ShoppingCart",
+                column: "added_date");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_cart_user",
+                table: "ShoppingCart",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_cart_user_product",
+                table: "ShoppingCart",
+                columns: new[] { "user_id", "product_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShoppingCart_product_id",
+                table: "ShoppingCart",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_stock_product_date",
+                table: "StockMovements",
+                columns: new[] { "product_id", "created_date" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_stock_reference",
+                table: "StockMovements",
+                columns: new[] { "reference_type", "reference_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_settings_key",
+                table: "SystemSettings",
+                column: "setting_key",
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "AdminReplies");
+
+            migrationBuilder.DropTable(
+                name: "Coupons");
+
+            migrationBuilder.DropTable(
+                name: "FAQ");
+
+            migrationBuilder.DropTable(
+                name: "OrderItems");
+
+            migrationBuilder.DropTable(
+                name: "Payments");
+
+            migrationBuilder.DropTable(
+                name: "ProductPhotos");
+
+            migrationBuilder.DropTable(
+                name: "ProductReturns");
+
+            migrationBuilder.DropTable(
+                name: "ShoppingCart");
+
+            migrationBuilder.DropTable(
+                name: "StockMovements");
+
+            migrationBuilder.DropTable(
+                name: "SystemSettings");
+
+            migrationBuilder.DropTable(
+                name: "CustomerQueries");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "CustomerAddresses");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Manufacturers");
+
+            migrationBuilder.DropTable(
+                name: "Publishers");
+        }
+    }
+}
