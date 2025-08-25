@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using ProjectDemoWebApi.DTOs.Auth;
-using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
