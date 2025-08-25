@@ -1,4 +1,4 @@
-﻿    namespace ProjectDemoWebApi.DTOs.Response
+﻿namespace ProjectDemoWebApi.DTOs.Shared
     {
     public class ApiResponse<T>
     {
