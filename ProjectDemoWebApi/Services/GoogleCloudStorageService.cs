@@ -16,12 +16,9 @@ namespace ProjectDemoWebApi.Services
         public GoogleCloudStorageService(IConfiguration config, IWebHostEnvironment env)
         {
             _config = config;
-            _env = env; // Khởi tạo biến env
+            _env = env; 
+            string rootPath = _env.ContentRootPath;
 
-            // Lấy đường dẫn thư mục gốc
-            string rootPath = _env.ContentRootPath; // Sửa thành _env
-
-            // Lấy tên file từ cấu hình
             string credentialFileName = _config["GoogleCloud:CredentialPath"];
             string credentialPath = Path.Combine(rootPath, credentialFileName);
 
@@ -46,7 +43,6 @@ namespace ProjectDemoWebApi.Services
                 {
                     continue; 
                 }
-
                 var objectName = $"{folderName}/{Guid.NewGuid()}_{file.FileName}";
 
                 using var stream = file.OpenReadStream();

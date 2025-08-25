@@ -12,15 +12,15 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250808122136_auth")]
-    partial class auth
+    [Migration("20250825145901_authentication")]
+    partial class authentication
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -167,7 +167,10 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("AvataUrl")
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -185,11 +188,11 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");

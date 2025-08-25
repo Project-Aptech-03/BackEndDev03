@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using ProjectDemoWebApi.DTOs.Auth;
-using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
@@ -13,7 +13,7 @@ public class AuthService : IAuthService
     {
         private readonly IDistributedCache _cache;
         private readonly IEmailSender _emailSender;
-        private readonly IAuthRepository _userRepository;
+        private readonly IAuthRepository _authRepository;
         private readonly IMapper _mapper;
         private readonly IJwtTokenService _ijwtTokenService;
         private readonly UserManager<Users> _userManager;
@@ -22,7 +22,7 @@ public class AuthService : IAuthService
     {
         _cache = cache;
         _emailSender = emailSender;
-        _userRepository = userRepository;
+        _authRepository = userRepository;
         _mapper = mapper;
         _ijwtTokenService = ijwtTokenService;
         _userManager = userManager;
@@ -30,7 +30,7 @@ public class AuthService : IAuthService
 
     public async Task<OtpResultDto> SendRegisterOtpAsync(RegisterRequest request)
     {
-        var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+        var existingUser = await _authRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
             throw new Exception("Email đã được sử dụng.");
 
@@ -224,7 +224,7 @@ public class AuthService : IAuthService
 
     public async Task<LoginResultDto> LoginAsync(LoginRequest request)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email.Trim().ToLower());
+        var user = await _authRepository.GetByEmailAsync(request.Email.Trim().ToLower());
 
         if (user == null)
         {
@@ -235,7 +235,7 @@ public class AuthService : IAuthService
             };
         }
 
-        var isValidPassword = await _userRepository.CheckPasswordAsync(user, request.Password);
+        var isValidPassword = await _authRepository.CheckPasswordAsync(user, request.Password);
         if (!isValidPassword)
         {
             return new LoginResultDto
@@ -253,7 +253,12 @@ public class AuthService : IAuthService
         {
             Success = true,
             Token = token,
-            Role = role
+            Role = role,
+            UserId = user.Id,
+            Email = user.Email,
+            FullName = user.FirstName + " " + user.LastName
+
         };
+
     }
 }

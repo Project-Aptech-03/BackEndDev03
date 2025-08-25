@@ -1,8 +1,10 @@
-﻿            using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Auth;
-using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Services.Interface;
+using StackExchange.Redis;
 
 namespace ProjectDemoWebApi.Controllers
 {
@@ -64,11 +66,14 @@ namespace ProjectDemoWebApi.Controllers
             if (!result.Success)
                 return Unauthorized(ApiResponse<string>.Fail(result.ErrorMessage));
 
-            return Ok(ApiResponse<object>.Ok(new
-            {
-                token = result.Token,
-                expiresIn = 3600
-            }, "Đăng nhập thành công!"));
+            var user = new Users { Id = result.UserId, Email = request.Email };
+
+            var tokenResult = await _jwtTokenService.GenerateTokenAsync(user);
+
+            result.Token = tokenResult;
+
+
+            return Ok(ApiResponse<LoginResultDto>.Ok(result, "Đăng nhập thành công!"));
         }
 
         [HttpPost("resend-otp")]
