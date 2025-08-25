@@ -19,6 +19,9 @@ namespace ProjectDemoWebApi.Mappings
 
             // user
             CreateMap<Users, UsersResponseDto>();
+            CreateMap<UpdateUserDto, Users>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         }
     }
 }

@@ -41,9 +41,9 @@ builder.Services.AddScoped<IEmailSender, EmailService>();
 
 // DbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AppConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
 
 builder.Services.AddAuthorization();
 
@@ -82,6 +82,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+// user
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 // upload 
 builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
 

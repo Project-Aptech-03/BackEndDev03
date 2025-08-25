@@ -1,4 +1,5 @@
-﻿    namespace ProjectDemoWebApi.DTOs.Response
+﻿
+namespace ProjectDemoWebApi.DTOs.Response
     {
     public class ApiResponse<T>
     {
@@ -13,6 +14,11 @@
 
         public static ApiResponse<T> Fail(string message, object? errors = null, int statusCode = 400)
             => new() { Success = false, Message = message, Errors = errors, StatusCode = statusCode };
+
+        internal static object? Ok(object value, string v)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

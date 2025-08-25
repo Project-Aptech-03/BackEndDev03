@@ -1,10 +1,11 @@
-﻿using ProjectDemoWebApi.Models;
+﻿using ProjectDemoWebApi.DTOs.Auth;
+using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IJwtTokenService
     {
-        Task<string> GenerateTokenAsync(Users user);
+        Task<TokenResultDto> GenerateTokenAsync(Users user);
     }
 
 }

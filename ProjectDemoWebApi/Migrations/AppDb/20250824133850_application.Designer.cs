@@ -11,7 +11,7 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations.AppDb
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250808122254_application")]
+    [Migration("20250824133850_application")]
     partial class application
     {
         /// <inheritdoc />
@@ -19,7 +19,7 @@ namespace ProjectDemoWebApi.Migrations.AppDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);

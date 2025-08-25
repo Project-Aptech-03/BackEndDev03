@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Services.Interface;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,7 +16,7 @@ public class JwtTokenService : IJwtTokenService
         _config = config;
     }
 
-    public async Task<string> GenerateTokenAsync(Users user)
+    public async Task<TokenResultDto> GenerateTokenAsync(Users user)
     {
         var claims = new[]
         {
@@ -27,14 +28,20 @@ public class JwtTokenService : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var expires = DateTime.UtcNow.AddHours(1);
+
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddHours(1),
+            expires: expires,
             signingCredentials: creds);
-
-        return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
+        return await Task.FromResult(new TokenResultDto
+        {
+            Token = new JwtSecurityTokenHandler().WriteToken(token),
+            ExpiresAt = expires,
+            ExpiresIn = (int)(expires - DateTime.UtcNow).TotalSeconds
+        });
     }
 
 
