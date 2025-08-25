@@ -1,8 +1,6 @@
-﻿
+﻿using ProjectDemoWebApi.DTOs.Auth;
 
-using ProjectDemoWebApi.DTOs.Auth;
-
-namespace ProjectDemoWebApi.DTOs.Response
+namespace ProjectDemoWebApi.DTOs.Shared
 {
     public class PendingUser
     {

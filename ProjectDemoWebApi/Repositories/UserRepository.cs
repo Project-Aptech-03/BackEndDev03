@@ -7,9 +7,9 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class UserRepository : IUserRepository
     {
-    readonly UserManager<Users> _userManager;
+        readonly UserManager<Users> _userManager;
     
-    public UserRepository(UserManager<Users> userManager)
+        public UserRepository(UserManager<Users> userManager)
         {
             _userManager = userManager;
         }
@@ -17,6 +17,11 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<List<Users>> GetAllUsersAsync(CancellationToken cancellationToken = default)
         {
             return await _userManager.Users.AsNoTracking().ToListAsync(cancellationToken);
+        }
+
+        public async Task<Users?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            return await _userManager.FindByIdAsync(userId);
         }
     }
 }
