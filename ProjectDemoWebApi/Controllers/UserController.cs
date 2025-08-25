@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Services.Interface;
+using System.Security.Claims;
 
 namespace ProjectDemoWebApi.Controllers
 {
@@ -23,17 +24,42 @@ namespace ProjectDemoWebApi.Controllers
             _userService = userService;
             _mapper = mapper;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
-        {
-            var users = await _userService.GetAllUsersAsync(cancellationToken);
-            var userDtos = _mapper.Map<List<UsersResponseDto>>(users);
 
-            return Ok(ApiResponse<List<UsersResponseDto>>.Ok(
-                data: userDtos,
-                message: "Lấy danh sách người dùng thành công",
-                statusCode: 200
-            ));
+        private string GetUserId()
+        {
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                ?? throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = GetUserId();
+            var result = await _userService.GetUserByIdAsync(userId);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await _userService.GetAllUsersAsync();
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUser(string id)
+        {
+            var result = await _userService.GetUserByIdAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] object updateData)
+        {
+            // This would need an UpdateUserDto
+            return Ok(new { Message = "Update profile endpoint - implement with UpdateUserDto" });
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(string id, CancellationToken cancellationToken)

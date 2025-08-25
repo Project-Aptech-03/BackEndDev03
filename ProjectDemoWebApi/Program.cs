@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectDemoWebApi.Data;
-using ProjectDemoWebApi.DTOs.Response;
-using ProjectDemoWebApi.Mappings;
+using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.Extensions;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
@@ -16,7 +16,6 @@ using ProjectDemoWebApi.Services.Interface;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 // CORS policy
 builder.Services.AddCors(options =>
@@ -31,15 +30,14 @@ builder.Services.AddCors(options =>
         });
 });
 
-//Tạo bộ nhớ lưu otp tạm thời 
+// Cache for OTP storage
 builder.Services.AddDistributedMemoryCache();
 
+// Email configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-
-// Đăng ký dịch vụ Email qua IEmailSender
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
-// DbContext
+// DbContext configuration
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -47,38 +45,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddAuthorization();
 
-// automapper
+// AutoMapper configuration
 builder.Services.AddAutoMapper(config =>
 {
     config.AddMaps(typeof(Program).Assembly);
 });
 
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();  
-
-// Đăng ký Identity
+// Identity configuration
 builder.Services.AddIdentity<Users, IdentityRole>()
     .AddEntityFrameworkStores<AuthDbContext>()
     .AddDefaultTokenProviders();
 
-//builder.Services.ConfigureApplicationCookie(
-//    options =>
-//    {
-//        options.LoginPath = "/api/auth/login";
-//        options.LogoutPath = "/api/auth/logout";
-//        options.AccessDeniedPath = "/api/auth/access-denied";
-//        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-//        options.SlidingExpiration = true;
-//    });
-// Đăng kí roles
-builder.Services.AddScoped<IRoleSeederService, RoleSeederService>();
+// Register all repositories and services using extension method
+builder.Services.AddApplicationServices();
 
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-// product
+// Keep existing legacy services for backward compatibility
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
@@ -107,18 +91,16 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 
-    // Custom lỗi
+    // Custom error handling
     options.Events = new JwtBearerEvents
     {
         OnChallenge = context =>
         {
             context.HandleResponse();
-
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
 
             var result = ApiResponse<string>.Fail("Unauthorized - Token không hợp lệ hoặc chưa đăng nhập", null, 401);
-
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         },
         OnForbidden = context =>
@@ -127,13 +109,12 @@ builder.Services.AddAuthentication(options =>
             context.Response.ContentType = "application/json";
 
             var result = ApiResponse<string>.Fail("Forbidden - Không có quyền truy cập", null, 403);
-
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         }
     };
 });
 
-
+// Controller configuration with global authorization
 builder.Services.AddControllers(config =>
 {
     var policy = new AuthorizationPolicyBuilder()
@@ -142,29 +123,29 @@ builder.Services.AddControllers(config =>
     config.Filters.Add(new AuthorizeFilter(policy));
 });
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// OpenAPI configuration
 builder.Services.AddOpenApi();
-
-
 
 var app = builder.Build();
 
+// Seed roles
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleSeederService>();
     await seeder.SeedAsync();
 }
-// Configure the HTTP request pipeline.
+
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseDeveloperExceptionPage();
 app.MapControllers();
 
 app.Run();

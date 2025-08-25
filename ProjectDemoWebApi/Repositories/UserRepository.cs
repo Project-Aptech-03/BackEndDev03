@@ -7,9 +7,9 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class UserRepository : IUserRepository
     {
-    readonly UserManager<Users> _userManager;
+        readonly UserManager<Users> _userManager;
     
-    public UserRepository(UserManager<Users> userManager)
+        public UserRepository(UserManager<Users> userManager)
         {
             _userManager = userManager;
         }

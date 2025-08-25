@@ -5,7 +5,7 @@ using ProjectDemoWebApi.Repositories.Interface;
 
 namespace ProjectDemoWebApi.Repositories
 {
-    public class ProductRepository :IProductRepository
+    public class ProductRepository : IProductRepository
     {
         private readonly AppDbContext _context;
 
@@ -14,41 +14,40 @@ namespace ProjectDemoWebApi.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Products>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Products
-             .Include(p => p.ProductImages)
+             .Include(p => p.ProductPhotos)
              .AsNoTracking()
              .ToListAsync(cancellationToken);
         }
 
-        public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Products?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.Products
-                 .Include(p => p.ProductImages)
+                 .Include(p => p.ProductPhotos)
                  .AsNoTracking()
                  .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
+        public async Task AddAsync(Products products, CancellationToken cancellationToken = default)
         {
-            await _context.Products.AddAsync(product, cancellationToken);
+            await _context.Products.AddAsync(products, cancellationToken);
         }
 
-        public async Task AddProductImagesAsync(List<ProductImage> images, CancellationToken cancellationToken)
+        public async Task AddProductImagesAsync(List<ProductPhotos> images, CancellationToken cancellationToken)
         {
-            await _context.ProductImage.AddRangeAsync(images, cancellationToken);
+            await _context.ProductPhotos.AddRangeAsync(images, cancellationToken);
         }
 
-
-        public void Update(Product product)
+        public void Update(Products products)
         {
-            _context.Products.Update(product);
+            _context.Products.Update(products);
         }
 
-        public void Delete(Product product)
+        public void Delete(Products products)
         {
-            _context.Products.Remove(product);
+            _context.Products.Remove(products);
         }
 
         public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
