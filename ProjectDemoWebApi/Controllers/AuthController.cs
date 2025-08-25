@@ -1,7 +1,7 @@
-﻿            using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Auth;
-using ProjectDemoWebApi.DTOs.Response;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers

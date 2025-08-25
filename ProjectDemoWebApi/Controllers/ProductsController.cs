@@ -1,147 +1,111 @@
-﻿using Google.Apis.Storage.v1;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ProjectDemoWebApi.DTOs.Product;
-using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
     [Authorize]
+    [Route("api/products")]
     [ApiController]
-    [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductService _productService;
-        private readonly IGoogleCloudStorageService _googleCloudStorageService;
+        private readonly IProductsService _productsService;
 
-        public ProductsController(
-            IProductService productService,
-            IGoogleCloudStorageService googleCloudStorageService)
+        public ProductsController(IProductsService productsService)
         {
-            _productService = productService;
-            _googleCloudStorageService = googleCloudStorageService;
+            _productsService = productsService;
         }
 
-        // GET: api/products
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int size = 20)
         {
-            var products = await _productService.GetAllProductsAsync(cancellationToken);
-            var productImage = new List<ProductImage>();
-            return Ok(products);
+            var result = await _productsService.GetProductsPagedAsync(page, size);
+            return StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/products/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProduct(int id)
         {
-            var product = await _productService.GetProductByIdAsync(id, cancellationToken);
-            if (product == null)
-                return NotFound();
-
-            return Ok(product);
+            var result = await _productsService.GetProductByIdAsync(id);
+            return StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/products
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] CreateProductDto request)
+        [HttpGet("code/{code}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProductByCode(string code)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var result = await _productsService.GetProductByCodeAsync(code);
+            return StatusCode(result.StatusCode, result);
+        }
 
-            if (request.Images == null || request.Images.Count == 0)
-                return BadRequest("Phải cung cấp ít nhất một hình ảnh.");
+        [HttpGet("category/{categoryId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProductsByCategory(int categoryId)
+        {
+            var result = await _productsService.GetProductsByCategoryAsync(categoryId);
+            return StatusCode(result.StatusCode, result);
+        }
 
-            var productImages = new List<ProductImage>();
-            string mainImageUrl = string.Empty;
+        [HttpGet("manufacturer/{manufacturerId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProductsByManufacturer(int manufacturerId)
+        {
+            var result = await _productsService.GetProductsByManufacturerAsync(manufacturerId);
+            return StatusCode(result.StatusCode, result);
+        }
 
-            for (int i = 0; i < request.Images.Count; i++)
-            {
-                var formFile = request.Images[i];
-                var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(
-                    new List<IFormFile> { formFile },
-                    "products");
-                var uploadedUrl = uploadedUrls.FirstOrDefault();
-                if (string.IsNullOrEmpty(uploadedUrl))
-                    return BadRequest("Không thể upload ảnh.");
-                var image = new ProductImage
-                {
-                    ImageUrl = uploadedUrl,
-                    IsMain = i == 0,
-                    OrderIndex = i
-                };
-                if (i == 0)
-                {
-                    mainImageUrl = uploadedUrl;
-                }
-                productImages.Add(image);
-            }
-            var product = new Product
-            {
-                Name = request.Name,
-                Price = request.Price,
-                Description = request.Description,
-                ImageUrl = mainImageUrl,
-                ProductImages = productImages
-            };
-            await _productService.CreateProductAsync(product);
-            return Ok(product);
+        [HttpGet("search")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SearchProducts([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest("Search term is required");
+
+            var result = await _productsService.SearchProductsAsync(q);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("low-stock")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetLowStockProducts([FromQuery] int threshold = 10)
+        {
+            var result = await _productsService.GetLowStockProductsAsync(threshold);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
+        {
+            var result = await _productsService.CreateProductAsync(createProductDto);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(
-        int id,
-        [FromForm] UpdateProductDto request,
-        [FromForm] IFormFile? image,
-        CancellationToken cancellationToken)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
         {
-            var existing = await _productService.GetProductByIdAsync(id, cancellationToken);
-            if (existing == null)
-                return NotFound();
+            var result = await _productsService.UpdateProductAsync(id, updateProductDto);
+            return StatusCode(result.StatusCode, result);
+        }
 
-            if (request.Name != null)
-                existing.Name = request.Name;
-
-            if (request.Description != null)
-                existing.Description = request.Description;
-
-            if (request.Price.HasValue)
-                existing.Price = request.Price.Value;
-
-            if (image != null)
-            {
-                if (!string.IsNullOrEmpty(existing.ImageUrl))
-                {
-                    await _googleCloudStorageService.DeleteFileAsync(existing.ImageUrl, cancellationToken);
-                }
-
-                var newImageUrl = await _googleCloudStorageService.UploadFileMainAsync(
-                    image,
-                    folderName: "products",
-                    cancellationToken
-                );
-                existing.ImageUrl = newImageUrl;
-            }
-
-            await _productService.UpdateProductAsync(existing);
-            return Ok(new
-            {
-                message = "Product updated successfully.",
-                product = existing
-            });
+        [HttpPut("{id}/stock")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateStock(int id, [FromBody] int newStock)
+        {
+            var result = await _productsService.UpdateStockAsync(id, newStock);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            var success = await _productService.DeleteProductAsync(id, cancellationToken);
-            if (!success)
-                return NotFound();
-
-            return NoContent();
+            var result = await _productsService.DeleteProductAsync(id);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }
