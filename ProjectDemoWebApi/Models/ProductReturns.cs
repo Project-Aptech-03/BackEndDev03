@@ -44,5 +44,9 @@ namespace ProjectDemoWebApi.Models
         // Navigation Properties
         [ForeignKey("OrderId")]
         public virtual Orders? Order { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public virtual Users? Customer { get; set; }
+
     }
 }

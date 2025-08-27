@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class CouponRepository : BaseRepository<Coupons>, ICouponRepository
     {
-        public CouponRepository(AppDbContext context) : base(context)
+        public CouponRepository(ApplicationDbContext context) : base(context)
         {
         }
 

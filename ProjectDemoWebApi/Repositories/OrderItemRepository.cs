@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class OrderItemRepository : BaseRepository<OrderItems>, IOrderItemRepository
     {
-        public OrderItemRepository(AppDbContext context) : base(context)
+        public OrderItemRepository(ApplicationDbContext context) : base(context)
         {
         }
 

@@ -77,5 +77,9 @@ namespace ProjectDemoWebApi.Models
         public virtual ICollection<OrderItems> OrderItems { get; set; } = new List<OrderItems>();
         public virtual ICollection<Payments> Payments { get; set; } = new List<Payments>();
         public virtual ICollection<ProductReturns> ProductReturns { get; set; } = new List<ProductReturns>();
+
+        [ForeignKey("CustomerId")]
+        public virtual Users? Customer { get; set; }
+
     }
 }

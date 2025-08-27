@@ -47,5 +47,9 @@ namespace ProjectDemoWebApi.Models
         // Note: User relationship handled by foreign key constraint only
         
         public virtual ICollection<Orders> Orders { get; set; } = new List<Orders>();
+
+        [ForeignKey("UserId")]
+        public virtual Users? User { get; set; }
+
     }
 }

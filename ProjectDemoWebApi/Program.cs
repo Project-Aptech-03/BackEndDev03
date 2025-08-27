@@ -38,9 +38,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
 // DbContext configuration
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
 
 builder.Services.AddAuthorization();
@@ -55,7 +53,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Identity configuration
 builder.Services.AddIdentity<Users, IdentityRole>()
-    .AddEntityFrameworkStores<AuthDbContext>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // Register all repositories and services using extension method

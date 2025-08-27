@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class FAQRepository : BaseRepository<FAQ>, IFAQRepository
     {
-        public FAQRepository(AppDbContext context) : base(context)
+        public FAQRepository(ApplicationDbContext context) : base(context)
         {
         }
 

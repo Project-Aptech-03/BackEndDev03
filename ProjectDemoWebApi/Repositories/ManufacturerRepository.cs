@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class ManufacturerRepository : BaseRepository<Manufacturers>, IManufacturerRepository
     {
-        public ManufacturerRepository(AppDbContext context) : base(context)
+        public ManufacturerRepository(ApplicationDbContext context) : base(context)
         {
         }
 

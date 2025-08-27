@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class CategoryRepository : BaseRepository<Categories>, ICategoryRepository
     {
-        public CategoryRepository(AppDbContext context) : base(context)
+        public CategoryRepository(ApplicationDbContext context) : base(context)
         {
         }
 

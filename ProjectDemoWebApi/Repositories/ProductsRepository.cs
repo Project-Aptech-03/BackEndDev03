@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class ProductsRepository : BaseRepository<Products>, IProductsRepository
     {
-        public ProductsRepository(AppDbContext context) : base(context)
+        public ProductsRepository(ApplicationDbContext context) : base(context)
         {
         }
 

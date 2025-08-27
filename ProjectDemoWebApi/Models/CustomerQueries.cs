@@ -43,5 +43,8 @@ namespace ProjectDemoWebApi.Models
         // Note: Customer relationship handled by foreign key constraint only
         
         public virtual ICollection<AdminReplies> AdminReplies { get; set; } = new List<AdminReplies>();
+        [ForeignKey("CustomerId")]
+        public virtual Users? Customer { get; set; }
+
     }
 }
