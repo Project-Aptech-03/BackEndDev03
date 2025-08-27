@@ -96,13 +96,9 @@ namespace ProjectDemoWebApi.Services
         {
             return await _userRepository.GetUserByEmailAsync(email, cancellationToken);
         }
-        //public async Task<IdentityResult> CreateUserAsync(, CancellationToken cancellationToken = default)
-        //{
-
-        //}
+      
         public async Task<IdentityResult> UpdateUserAsync(string id, UpdateUserDto userDto, CancellationToken cancellationToken)
         {
-            // Validate dependencies
             if (_userManager == null || _mapper == null)
                 return IdentityResult.Failed(new IdentityError { Description = "Internal service error" });
 
@@ -113,7 +109,7 @@ namespace ProjectDemoWebApi.Services
             _mapper.Map(userDto, account);
 
             var updateResult = await _userManager.UpdateAsync(account);
-            if (updateResult == null) // Check for null result
+            if (updateResult == null)
                 return IdentityResult.Failed(new IdentityError { Description = "Update operation failed unexpectedly" });
 
             if (!updateResult.Succeeded)
@@ -121,7 +117,6 @@ namespace ProjectDemoWebApi.Services
 
             if (!string.IsNullOrEmpty(userDto.Role))
             {
-                // Check if the role exists
                 var roleExists = await _roleManager.RoleExistsAsync(userDto.Role);
                 if (!roleExists)
                     return IdentityResult.Failed(new IdentityError { Description = "Vai trò không tồn tại" });

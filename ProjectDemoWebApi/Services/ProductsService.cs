@@ -326,7 +326,6 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                // Validate related entities
                 var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
                 if (category == null)
                 {

@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class CustomerQueryRepository : BaseRepository<CustomerQueries>, ICustomerQueryRepository
     {
-        public CustomerQueryRepository(AppDbContext context) : base(context)
+        public CustomerQueryRepository(ApplicationDbContext context) : base(context)
         {
         }
 

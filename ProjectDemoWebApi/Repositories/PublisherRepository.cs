@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class PublisherRepository : BaseRepository<Publishers>, IPublisherRepository
     {
-        public PublisherRepository(AppDbContext context) : base(context)
+        public PublisherRepository(ApplicationDbContext context) : base(context)
         {
         }
 

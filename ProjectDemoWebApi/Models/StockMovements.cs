@@ -51,5 +51,9 @@ namespace ProjectDemoWebApi.Models
         // Navigation Properties
         [ForeignKey("ProductId")]
         public virtual Products? Product { get; set; }
+
+        [ForeignKey("CreatedBy")]
+        public virtual Users? Creator { get; set; }
+
     }
 }

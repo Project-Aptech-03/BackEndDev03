@@ -29,6 +29,7 @@ namespace ProjectDemoWebApi.Models
         [ForeignKey("QueryId")]
         public virtual CustomerQueries? Query { get; set; }
 
-        // Note: Admin relationship handled by foreign key constraint only
+        [ForeignKey("AdminId")]
+        public virtual Users? Admin { get; set; }
     }
 }

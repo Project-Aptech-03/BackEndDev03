@@ -8,7 +8,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class SystemSettingsRepository : BaseRepository<SystemSettings>, ISystemSettingsRepository
     {
-        public SystemSettingsRepository(AppDbContext context) : base(context)
+        public SystemSettingsRepository(ApplicationDbContext context) : base(context)
         {
         }
 

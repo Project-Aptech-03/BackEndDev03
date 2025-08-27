@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class ShoppingCartRepository : BaseRepository<ShoppingCart>, IShoppingCartRepository
     {
-        public ShoppingCartRepository(AppDbContext context) : base(context)
+        public ShoppingCartRepository(ApplicationDbContext context) : base(context)
         {
         }
 
