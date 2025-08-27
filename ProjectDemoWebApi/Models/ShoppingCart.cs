@@ -33,6 +33,9 @@ namespace ProjectDemoWebApi.Models
         public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties        
+        [ForeignKey("UserId")]
+        public virtual Users? User { get; set; }
+        
         [ForeignKey("ProductId")]
         public virtual Products? Product { get; set; }
     }

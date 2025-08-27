@@ -26,5 +26,8 @@ namespace ProjectDemoWebApi.Models
         [PersonalData]
         [Column(TypeName = "nvarchar(256)")]
         public string? Address { get; set; }
+
+        // Navigation Properties
+        public virtual ICollection<ShoppingCart> ShoppingCartItems { get; set; } = new List<ShoppingCart>();
     }
 }

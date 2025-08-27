@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Services
 {
     public class RoleSeederService : IRoleSeederService
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<Roles> _roleManager;
 
-        public RoleSeederService(RoleManager<IdentityRole> roleManager)
+        public RoleSeederService(RoleManager<Roles> roleManager)
         {
             _roleManager = roleManager;
         }
@@ -20,7 +21,7 @@ namespace ProjectDemoWebApi.Services
             {
                 if (!await _roleManager.RoleExistsAsync(role))
                 {
-                    var result = await _roleManager.CreateAsync(new IdentityRole(role));
+                    var result = await _roleManager.CreateAsync(new Roles { Name = role });
                     if (!result.Succeeded)
                     {
                         var errors = string.Join(", ", result.Errors.Select(e => e.Description));

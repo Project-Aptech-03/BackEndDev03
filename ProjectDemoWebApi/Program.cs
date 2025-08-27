@@ -37,9 +37,7 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
-// DbContext configuration
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// DbContext configuration - Use only AppDbContext for everything
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AppConnection")));
 
@@ -53,9 +51,9 @@ builder.Services.AddAutoMapper(config =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Identity configuration
-builder.Services.AddIdentity<Users, IdentityRole>()
-    .AddEntityFrameworkStores<AuthDbContext>()
+// Identity configuration - use AppDbContext for everything
+builder.Services.AddIdentity<Users, Roles>()
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 // Register all repositories and services using extension method
