@@ -203,7 +203,7 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
             throw new Exception("Tạo tài khoản thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description)));
 
-        await _userManager.AddToRoleAsync(user, "Admin");
+        await _userManager.AddToRoleAsync(user, "User");
         await _cache.RemoveAsync(key);
         await _cache.RemoveAsync($"otp_attempt:{request.Email}");
 
