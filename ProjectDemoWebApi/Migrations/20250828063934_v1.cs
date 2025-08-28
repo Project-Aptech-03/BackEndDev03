@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProjectDemoWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class application : Migration
+    public partial class v1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -337,8 +337,7 @@ namespace ProjectDemoWebApi.Migrations
                         name: "FK_CustomerQueries_Users_customer_id",
                         column: x => x.customer_id,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -424,7 +423,7 @@ namespace ProjectDemoWebApi.Migrations
                         column: x => x.created_by,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -464,7 +463,7 @@ namespace ProjectDemoWebApi.Migrations
                         column: x => x.customer_id,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -492,7 +491,7 @@ namespace ProjectDemoWebApi.Migrations
                         column: x => x.admin_id,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -581,7 +580,7 @@ namespace ProjectDemoWebApi.Migrations
                         column: x => x.customer_id,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

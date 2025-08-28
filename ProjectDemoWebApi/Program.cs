@@ -52,7 +52,7 @@ builder.Services.AddAutoMapper(config =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Identity configuration
-builder.Services.AddIdentity<Users, IdentityRole>()
+builder.Services.AddIdentity<Users, Roles>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 

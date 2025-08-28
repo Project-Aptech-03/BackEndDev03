@@ -13,9 +13,9 @@ namespace ProjectDemoWebApi.Services
         readonly IUserRepository _userRepository;
         readonly IMapper _mapper;
         readonly UserManager<Users> _userManager;
-        readonly RoleManager<IdentityRole> _roleManager;
+        readonly RoleManager<Roles> _roleManager;
 
-        public UserService(IUserRepository userRepository, UserManager<Users> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
+        public UserService(IUserRepository userRepository, UserManager<Users> userManager, IMapper mapper, RoleManager<Roles> roleManager)
         {
             _userRepository = userRepository;
             _mapper = mapper;
