@@ -37,5 +37,6 @@ namespace ProjectDemoWebApi.Models
         public ICollection<StockMovements>? StockMovements { get; set; }
         public ICollection<ShoppingCart> ShoppingCartItems { get; set; }
         public ICollection<UserRole>? UserRoles { get; set; }
+       
     }
 }
