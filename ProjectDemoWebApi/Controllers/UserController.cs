@@ -5,7 +5,8 @@
     using Microsoft.AspNetCore.Mvc;
     using ProjectDemoWebApi.DTOs.Shared;
     using ProjectDemoWebApi.DTOs.User;
-    using ProjectDemoWebApi.Services.Interface;
+using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Services.Interface;
     using System.Security.Claims;
 
 namespace ProjectDemoWebApi.Controllers
@@ -33,25 +34,18 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _userService.GetAllUsersAsync();
+            var result = await _userService.GetAllUsersAsync(pageIndex, pageSize );
+
             return StatusCode(result.StatusCode, result);
         }
 
-        //[HttpGet("{id}")]
-        //[Authorize(Roles = "Admin")]
-        //public async Task<IActionResult> GetUser(string id)
-        //{
-        //    var result = await _userService.GetUserByIdAsync(id);
-        //    return StatusCode(result.StatusCode, result);
-        //}
-
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetUserById(string userId, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetUserById(string id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
         {
-            var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
+            var user = await _userService.GetUserByIdAsync(id, cancellationToken);
             if (user == null || user.Data == null)
             {
                 return NotFound(ApiResponse<string>.Fail(
@@ -62,7 +56,7 @@ namespace ProjectDemoWebApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _userService.UpdateUserAsync(userId, dto, cancellationToken);
+            var result = await _userService.UpdateUserAsync(id, dto, cancellationToken);
 
             if (!result.Succeeded)
             {
@@ -72,7 +66,7 @@ namespace ProjectDemoWebApi.Controllers
                 ));
             }
 
-            var updatedUserResponse = await _userService.GetUserByIdAsync(userId, cancellationToken);
+            var updatedUserResponse = await _userService.GetUserByIdAsync(id, cancellationToken);
             if (updatedUserResponse == null)
                 return NotFound(ApiResponse<UsersResponseDto>.Fail("Không tìm thấy user sau khi cập nhật"));
 
@@ -81,28 +75,60 @@ namespace ProjectDemoWebApi.Controllers
 
             return Ok(ApiResponse<UsersResponseDto>.Ok(responseDto, "Cập nhật thành công"));
         }
-    
-            //[HttpPost]
-            //public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto createUserRequestDto, CancellationToken cancellationToken)
-            //{
-            //    var user = _mapper.Map<ProjectDemoWebApi.Models.Users>(createUserRequestDto);
-            //    var result = await _userService.CreateUserAsync(user, createUserRequestDto.Password, cancellationToken);
-            //    if (!result.Succeeded)
-            //    {
-            //        return BadRequest(ApiResponse<string>.Fail(
-            //            message: "Tạo người dùng không thành công",
-            //            statusCode: 400
-            //        ));
-            //    }
-            //    var userDto = _mapper.Map<UsersResponseDto>(user);
-            //    return Ok(ApiResponse<UsersResponseDto>.Ok(
-            //        data: userDto,
-            //        message: "Tạo người dùng thành công",
-            //        statusCode: 201
-            //    ));
-            //}
 
-            [HttpGet("profile")]
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _userService.UpdateUserAsync(id, dto, cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(ApiResponse<UsersResponseDto>.Fail(
+                    "Cập nhật thất bại",
+                    result.Errors.Select(e => e.Description).ToList()
+                ));
+            }
+
+            var updatedUserResponse = await _userService.GetUserByIdAsync(id, cancellationToken);
+            if (updatedUserResponse == null)
+                return NotFound(ApiResponse<UsersResponseDto>.Fail("Không tìm thấy user sau khi cập nhật"));
+
+            return Ok(updatedUserResponse);
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto createUserRequestDto, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = _mapper.Map<Users>(createUserRequestDto);
+
+            var result = await _userService.CreateUserAsync(user, createUserRequestDto.Password, cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(ApiResponse<string>.Fail(
+                    message: "Tạo người dùng không thành công",
+                    statusCode: 400,
+                    errors: errors
+                ));
+            }
+
+            var userDto = _mapper.Map<UsersResponseDto>(user);
+
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id },
+                ApiResponse<UsersResponseDto>.Ok(userDto, "Tạo người dùng thành công", 201));
+        }
+
+        [HttpGet("profile")]
             public async Task<IActionResult> GetProfile()
             {
                 var userId = GetUserId();
@@ -138,6 +164,8 @@ namespace ProjectDemoWebApi.Controllers
 
                 return Ok(ApiResponse<UsersResponseDto>.Ok(responseDto, "Cập nhật thành công"));
             }
+
+
 
         }
     }

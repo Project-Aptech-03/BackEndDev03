@@ -7,8 +7,11 @@ namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IUserService
     {
-
-        Task<ApiResponse<List<UsersResponseDto>>> GetAllUsersAsync(CancellationToken cancellationToken = default);
+        Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default);
+        Task<ApiResponse<PagedResponseDto<UsersResponseDto>>> GetAllUsersAsync(
+         int pageIndex = 1,
+         int pageSize = 10,
+         CancellationToken cancellationToken = default);
         Task<ApiResponse<UsersResponseDto?>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
         Task<Users?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
         

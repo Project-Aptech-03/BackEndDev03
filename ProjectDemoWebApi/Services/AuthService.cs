@@ -203,7 +203,7 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
             throw new Exception("Tạo tài khoản thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description)));
 
-        await _userManager.AddToRoleAsync(user, "User");
+        await _userManager.AddToRoleAsync(user, "Admin");
         await _cache.RemoveAsync(key);
         await _cache.RemoveAsync($"otp_attempt:{request.Email}");
 
@@ -214,7 +214,7 @@ public class AuthService : IAuthService
         {
             UserId = user.Id,
             Email = user.Email!,
-            Role = userRoles.FirstOrDefault() ?? "User",
+            Role = userRoles.FirstOrDefault(),
             Token = token
         };
     }
@@ -246,7 +246,7 @@ public class AuthService : IAuthService
         }
 
         var roles = await _userManager.GetRolesAsync(user); 
-        var role = roles.FirstOrDefault() ?? "User";
+        var role = roles.FirstOrDefault() ?? "Admin";
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
 
         return new LoginResultDto

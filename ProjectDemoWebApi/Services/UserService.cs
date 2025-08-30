@@ -23,28 +23,46 @@ namespace ProjectDemoWebApi.Services
             _roleManager = roleManager;
         }
 
-        public async Task<ApiResponse<List<UsersResponseDto>>> GetAllUsersAsync(CancellationToken cancellationToken = default)
+        public async Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default)
+        {
+            return await _userRepository.CreateUserAsync(user, password, cancellationToken);
+        }
+
+        public async Task<ApiResponse<PagedResponseDto<UsersResponseDto>>> GetAllUsersAsync(
+         int pageIndex = 1,
+         int pageSize = 10,
+         CancellationToken cancellationToken = default)
         {
             try
             {
-                var users = await _userRepository.GetAllUsersAsync(cancellationToken);
+                var (users, totalCount) = await _userRepository.GetAllUsersdAsync(pageIndex, pageSize, cancellationToken);
+
                 var userDtos = _mapper.Map<List<UsersResponseDto>>(users);
 
-                return ApiResponse<List<UsersResponseDto>>.Ok(
-                    data: userDtos,
+                var response = new PagedResponseDto<UsersResponseDto>
+                {
+                    Items = userDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<UsersResponseDto>>.Ok(
+                    data: response,
                     message: "Users retrieved successfully",
                     statusCode: 200
                 );
             }
             catch (Exception ex)
             {
-                return ApiResponse<List<UsersResponseDto>>.Fail(
+                return ApiResponse<PagedResponseDto<UsersResponseDto>>.Fail(
                     "An error occurred while retrieving users.",
                     null,
                     500
                 );
             }
         }
+
 
         public async Task<ApiResponse<UsersResponseDto?>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default)
         {
