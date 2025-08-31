@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using ProjectDemoWebApi.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,6 +23,7 @@ namespace ProjectDemoWebApi.Models
 
         [PersonalData]
         public DateTime? DateOfBirth { get; set; }
+
 
         [PersonalData]
         [Column(TypeName = "nvarchar(256)")]

@@ -54,6 +54,32 @@ namespace ProjectDemoWebApi.Repositories
             return result;
         }
 
+        //delete user by id
+        public async Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "UserNotFound",
+                    Description = "Người dùng không tồn tại."
+                });
+            }
+            var role = await _userManager.GetRolesAsync(user);
+            if (role.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "CannotDeleteAdmin",
+                    Description = "Không thể xóa người dùng với vai trò Admin."
+                });
+            }
+            var result = await _userManager.DeleteAsync(user);
+            return result;
+        }
+
+
 
         public async Task<Users?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
         {
@@ -68,5 +94,7 @@ namespace ProjectDemoWebApi.Repositories
             return await _userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         }
         
+
+
     }
 }

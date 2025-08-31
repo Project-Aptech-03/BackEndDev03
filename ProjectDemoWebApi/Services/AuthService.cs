@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
@@ -17,8 +18,9 @@ public class AuthService : IAuthService
         private readonly IMapper _mapper;
         private readonly IJwtTokenService _ijwtTokenService;
         private readonly UserManager<Users> _userManager;
+        private readonly IConfiguration _configuration;
 
-    public AuthService(IDistributedCache cache, IEmailSender emailSender, IAuthRepository userRepository, IMapper mapper, IJwtTokenService ijwtTokenService, UserManager<Users> userManager)
+    public AuthService(IDistributedCache cache, IEmailSender emailSender, IAuthRepository userRepository, IMapper mapper, IJwtTokenService ijwtTokenService, UserManager<Users> userManager, IConfiguration configuration)
     {
         _cache = cache;
         _emailSender = emailSender;
@@ -26,6 +28,7 @@ public class AuthService : IAuthService
         _mapper = mapper;
         _ijwtTokenService = ijwtTokenService;
         _userManager = userManager;
+        _configuration = configuration;
     }
 
     public async Task<OtpResultDto> SendRegisterOtpAsync(RegisterRequest request)
@@ -220,8 +223,6 @@ public class AuthService : IAuthService
     }
 
     
-
-
     public async Task<LoginResultDto> LoginAsync(LoginRequest request)
     {
         var user = await _authRepository.GetByEmailAsync(request.Email.Trim().ToLower());
@@ -261,4 +262,63 @@ public class AuthService : IAuthService
         };
 
     }
+
+    public async Task<ApiResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        var responseMessage = "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.";
+
+        if (user == null)
+        {
+            return ApiResponse<string>.Ok(null,responseMessage);
+        }
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+        var frontendUrl = _configuration["AppSettings:FrontendUrl"];
+        var resetLink = $"{frontendUrl}/reset-password?email={dto.Email}&token={encodedToken}";
+
+        var subject = "Yêu cầu đặt lại mật khẩu";
+        var body = $@"
+        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
+            <h2 style='color: #1a73e8;'>Xin chào {user.UserName},</h2>
+            <p>Bạn vừa gửi yêu cầu <strong>đặt lại mật khẩu</strong> cho tài khoản của mình.</p>
+            <p>Vui lòng nhấn vào nút bên dưới để tiếp tục:</p>
+    
+            <div style='text-align: center; margin: 32px 0;'>
+                <a href='{resetLink}' 
+                   style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
+                    Đặt lại mật khẩu
+                </a>
+            </div>
+
+            <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
+            <br/>
+            <p style='color: #555;'>Trân trọng,<br/><strong>Đội ngũ hỗ trợ</strong></p>
+        </div>
+        ";
+
+        await _emailSender.SendEmailAsync(dto.Email, subject, body);
+        return ApiResponse<string>.Ok(responseMessage);
+    }
+
+
+    public async Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return ApiResponse<string>.Fail("Email không tồn tại");
+
+        if (dto.NewPassword != dto.ConfirmPassword)
+            return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp");
+        var decodedToken = System.Web.HttpUtility.UrlDecode(dto.Token);
+
+        var result = await _userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
+
+
+        if (!result.Succeeded)
+            return ApiResponse<string>.Fail("Đặt lại mật khẩu thất bại", result.Errors.Select(e => e.Description).ToList());
+
+        return ApiResponse<string>.Ok(null, "Đặt lại mật khẩu thành công");
+    }
+
 }
