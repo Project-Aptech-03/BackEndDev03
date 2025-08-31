@@ -22,10 +22,16 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<RegisterRequest, Users>();
 
             // User mappings
+
+            CreateMap<CreateUserRequestDto, Users>();
             CreateMap<Users, UsersResponseDto>();
             CreateMap<UpdateUserDto, Users>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            CreateMap<CreateUserRequestDto, Users>();
+
+            //profile
+            CreateMap<Users, ProfileResponseDto>();
+            CreateMap<ProfileUpdateDto, Users>();
+
 
             // Category mappings
             CreateMap<CreateCategoryDto, Categories>();

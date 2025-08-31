@@ -42,7 +42,6 @@ namespace ProjectDemoWebApi.Extensions
             // Note: ICustomerAddressService implementation needed
             
             // Keep existing services
-            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();

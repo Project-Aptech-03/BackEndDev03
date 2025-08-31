@@ -12,5 +12,7 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<Users?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
         Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default);
 
+        Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);
+
     }
 }
