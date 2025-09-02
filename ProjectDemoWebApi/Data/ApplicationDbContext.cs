@@ -205,8 +205,8 @@ namespace ProjectDemoWebApi.Data
                     .HasDefaultValueSql("GETUTCDATE()");
 
                 // Configure Users relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.User)
+                    .WithMany(u => u.CustomerAddresses)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
@@ -260,9 +260,9 @@ namespace ProjectDemoWebApi.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure Customer relationship
-                entity.HasOne<Users>()
-                    .WithMany()
-                    .HasForeignKey(d => d.CustomerId)
+                entity.HasOne(o => o.Customer)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(o => o.CustomerId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -411,8 +411,8 @@ namespace ProjectDemoWebApi.Data
                     .HasDefaultValueSql("GETUTCDATE()");
 
                 // Configure Customer relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.Customer)
+                    .WithMany(u => u.CustomerQueries)
                     .HasForeignKey(d => d.CustomerId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
@@ -432,8 +432,8 @@ namespace ProjectDemoWebApi.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure Admin relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.Admin)
+                    .WithMany(u => u.AdminReplies)
                     .HasForeignKey(d => d.AdminId)
                     .OnDelete(DeleteBehavior.Restrict);
             });

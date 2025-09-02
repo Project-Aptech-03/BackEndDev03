@@ -1,5 +1,6 @@
 using ProjectDemoWebApi.DTOs.CustomerAddress;
 using ProjectDemoWebApi.DTOs.Products;
+using ProjectDemoWebApi.DTOs.User;
 
 namespace ProjectDemoWebApi.DTOs.Order
 {
@@ -19,11 +20,14 @@ namespace ProjectDemoWebApi.DTOs.Order
         public string PaymentStatus { get; set; } = string.Empty;
         public string? AppliedCoupons { get; set; }
         public string? DeliveryNotes { get; set; }
+        public string? CancellationReason { get; set; }
+        public DateTime? CancelledDate { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
 
         // Related entities
+        public UsersResponseDto? Customer { get; set; }
         public CustomerAddressResponseDto? DeliveryAddress { get; set; }
         public List<OrderItemResponseDto> OrderItems { get; set; } = new();
         public List<PaymentResponseDto> Payments { get; set; } = new();
