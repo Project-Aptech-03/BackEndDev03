@@ -60,17 +60,17 @@ builder.Services.AddIdentity<Users, Roles>()
 builder.Services.AddApplicationServices();
 
 // Keep existing legacy services for backward compatibility
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<IProductService, ProductService>();
+//builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // user
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<IAuthService, AuthService>();
+//builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+//builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
 // upload 
-builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
+//builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
 
 // Jwt 
 builder.Services.AddAuthentication(options =>
