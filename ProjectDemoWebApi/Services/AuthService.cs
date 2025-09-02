@@ -8,7 +8,9 @@ using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
+using System.Net;
 using System.Text.Json;
+using System.Web;
 
 public class AuthService : IAuthService
     {
@@ -19,7 +21,6 @@ public class AuthService : IAuthService
         private readonly IJwtTokenService _ijwtTokenService;
         private readonly UserManager<Users> _userManager;
         private readonly IConfiguration _configuration;
-
     public AuthService(IDistributedCache cache, IEmailSender emailSender, IAuthRepository userRepository, IMapper mapper, IJwtTokenService ijwtTokenService, UserManager<Users> userManager, IConfiguration configuration)
     {
         _cache = cache;
@@ -69,7 +70,6 @@ public class AuthService : IAuthService
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         });
 
-        // Gửi Email OTP
         string body = $@"
         <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
             <div style='text-align:center; margin-bottom:24px;'>
@@ -270,32 +270,34 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            return ApiResponse<string>.Ok(null,responseMessage);
+            return ApiResponse<string>.Ok(null, responseMessage);
         }
+        var frontendUrl = _configuration["AppSettings:FrontendUrl"].TrimEnd('/');
+
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        var encodedToken = System.Web.HttpUtility.UrlEncode(token);
-        var frontendUrl = _configuration["AppSettings:FrontendUrl"];
-        var resetLink = $"{frontendUrl}/reset-password?email={dto.Email}&token={encodedToken}";
+        var encodedToken = HttpUtility.UrlEncode(token);
+
+        var resetLink = $"{frontendUrl}/reset-password?email={WebUtility.UrlEncode(user.Email)}&token={encodedToken}";
 
         var subject = "Yêu cầu đặt lại mật khẩu";
         var body = $@"
-        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
-            <h2 style='color: #1a73e8;'>Xin chào {user.UserName},</h2>
-            <p>Bạn vừa gửi yêu cầu <strong>đặt lại mật khẩu</strong> cho tài khoản của mình.</p>
-            <p>Vui lòng nhấn vào nút bên dưới để tiếp tục:</p>
-    
-            <div style='text-align: center; margin: 32px 0;'>
-                <a href='{resetLink}' 
-                   style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
-                    Đặt lại mật khẩu
-                </a>
-            </div>
+    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
+        <h2 style='color: #1a73e8;'>Xin chào {user.UserName},</h2>
+        <p>Bạn vừa gửi yêu cầu <strong>đặt lại mật khẩu</strong> cho tài khoản của mình.</p>
+        <p>Vui lòng nhấn vào nút bên dưới để tiếp tục:</p>
 
-            <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
-            <br/>
-            <p style='color: #555;'>Trân trọng,<br/><strong>Đội ngũ hỗ trợ</strong></p>
+        <div style='text-align: center; margin: 32px 0;'>
+            <a href='{resetLink}' 
+               style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
+                Đặt lại mật khẩu
+            </a>
         </div>
-        ";
+
+        <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
+        <br/>
+        <p style='color: #555;'>Trân trọng,<br/><strong>Đội ngũ hỗ trợ</strong></p>
+    </div>
+    ";
 
         await _emailSender.SendEmailAsync(dto.Email, subject, body);
         return ApiResponse<string>.Ok(responseMessage);
@@ -310,15 +312,15 @@ public class AuthService : IAuthService
 
         if (dto.NewPassword != dto.ConfirmPassword)
             return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp");
-        var decodedToken = System.Web.HttpUtility.UrlDecode(dto.Token);
+        var token = dto.Token;
 
-        var result = await _userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
-
+        var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
 
         if (!result.Succeeded)
             return ApiResponse<string>.Fail("Đặt lại mật khẩu thất bại", result.Errors.Select(e => e.Description).ToList());
 
         return ApiResponse<string>.Ok(null, "Đặt lại mật khẩu thành công");
     }
+
 
 }
