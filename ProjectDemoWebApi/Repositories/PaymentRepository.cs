@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class PaymentRepository : BaseRepository<Payments>, IPaymentRepository
     {
-        public PaymentRepository(AppDbContext context) : base(context)
+        public PaymentRepository(ApplicationDbContext context) : base(context)
         {
         }
 

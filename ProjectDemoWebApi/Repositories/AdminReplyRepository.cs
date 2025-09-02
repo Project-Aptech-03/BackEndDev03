@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class AdminReplyRepository : BaseRepository<AdminReplies>, IAdminReplyRepository
     {
-        public AdminReplyRepository(AppDbContext context) : base(context)
+        public AdminReplyRepository(ApplicationDbContext context) : base(context)
         {
         }
 

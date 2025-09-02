@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class ProductsRepository : BaseRepository<Products>, IProductsRepository
     {
-        public ProductsRepository(AppDbContext context) : base(context)
+        public ProductsRepository(ApplicationDbContext context) : base(context)
         {
         }
 
@@ -135,6 +135,12 @@ namespace ProjectDemoWebApi.Repositories
             await _dbSet
                 .Where(p => p.Id == productId)
                 .ExecuteUpdateAsync(p => p.SetProperty(x => x.StockQuantity, newStock), cancellationToken);
+        }
+
+        public async Task<Products?> GetByIdNoTrackingAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
     }
 }

@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using StackExchange.Redis;
 
@@ -44,7 +46,7 @@ namespace ProjectDemoWebApi.Controllers
         {
             try
             {
-                 var result = await _authService.VerifyRegisterAsync(request);
+                var result = await _authService.VerifyRegisterAsync(request);
                 var response = ApiResponse<RegisterResultDto>.Ok(result, "Đăng ký thành công", 200);
                 return StatusCode(response.StatusCode, response);
             }
@@ -99,5 +101,33 @@ namespace ProjectDemoWebApi.Controllers
             }
         }
 
+
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            var result = await _authService.ForgotPasswordAsync(dto);
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
     }
 }
+
+

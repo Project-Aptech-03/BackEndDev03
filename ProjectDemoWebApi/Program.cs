@@ -38,9 +38,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
 // DbContext configuration
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
 
 builder.Services.AddAuthorization();
@@ -54,23 +52,25 @@ builder.Services.AddAutoMapper(config =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Identity configuration
-builder.Services.AddIdentity<Users, IdentityRole>()
-    .AddEntityFrameworkStores<AuthDbContext>()
+builder.Services.AddIdentity<Users, Roles>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
 // Keep existing legacy services for backward compatibility
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<IProductService, ProductService>();
+//builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // user
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<IAuthService, AuthService>();
+//builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+//builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
 // upload 
-builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
+//builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
 
 // Jwt 
 builder.Services.AddAuthentication(options =>

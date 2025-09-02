@@ -4,6 +4,7 @@ namespace ProjectDemoWebApi.Repositories.Interface
 {
     public interface IOrderRepository : IBaseRepository<Orders>
     {
+        Task<IEnumerable<Orders>> GetAllOrdersWithDetailsAsync(CancellationToken cancellationToken = default);
         Task<Orders?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default);
         Task<Orders?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default);
         Task<IEnumerable<Orders>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default);

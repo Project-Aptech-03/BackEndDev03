@@ -59,6 +59,12 @@ namespace ProjectDemoWebApi.Models
         [Column("delivery_notes", TypeName = "text")]
         public string? DeliveryNotes { get; set; }
 
+        [Column("cancellation_reason", TypeName = "text")]
+        public string? CancellationReason { get; set; }
+
+        [Column("cancelled_date")]
+        public DateTime? CancelledDate { get; set; }
+
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
@@ -77,5 +83,9 @@ namespace ProjectDemoWebApi.Models
         public virtual ICollection<OrderItems> OrderItems { get; set; } = new List<OrderItems>();
         public virtual ICollection<Payments> Payments { get; set; } = new List<Payments>();
         public virtual ICollection<ProductReturns> ProductReturns { get; set; } = new List<ProductReturns>();
+
+        [ForeignKey("CustomerId")]
+        public virtual Users? Customer { get; set; }
+
     }
 }

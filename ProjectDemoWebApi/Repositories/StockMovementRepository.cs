@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class StockMovementRepository : BaseRepository<StockMovements>, IStockMovementRepository
     {
-        public StockMovementRepository(AppDbContext context) : base(context)
+        public StockMovementRepository(ApplicationDbContext context) : base(context)
         {
         }
 

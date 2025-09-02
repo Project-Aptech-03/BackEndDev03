@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Repositories
 {
     public class CustomerAddressRepository : BaseRepository<CustomerAddresses>, ICustomerAddressRepository
     {
-        public CustomerAddressRepository(AppDbContext context) : base(context)
+        public CustomerAddressRepository(ApplicationDbContext context) : base(context)
         {
         }
 

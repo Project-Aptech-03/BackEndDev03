@@ -1,11 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Data
 {
-    public class AppDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<Users, Roles, string, IdentityUserClaim<string>, UserRole, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
@@ -33,8 +35,55 @@ namespace ProjectDemoWebApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Ignore Users entity since it's managed by AuthDbContext
-            modelBuilder.Ignore<Users>();
+            // Configure UserRole relationships properly
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.RoleId });
+
+                entity.HasOne<Users>()
+                    .WithMany()
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired();
+
+                entity.HasOne<Roles>()
+                    .WithMany()
+                    .HasForeignKey(ur => ur.RoleId)
+                    .IsRequired();
+            });
+
+            // Configure ShoppingCart relationship with Users
+            modelBuilder.Entity<ShoppingCart>(entity =>
+            {
+                entity.HasIndex(e => e.UserId)
+                    .HasDatabaseName("idx_cart_user");
+
+                entity.HasIndex(e => new { e.UserId, e.ProductId })
+                    .IsUnique()
+                    .HasDatabaseName("idx_cart_user_product");
+
+                entity.HasIndex(e => e.AddedDate)
+                    .HasDatabaseName("idx_cart_date");
+
+                entity.Property(e => e.Quantity)
+                    .HasDefaultValue(1);
+
+                entity.Property(e => e.AddedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.UpdatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Product)
+                    .WithMany(p => p.ShoppingCartItems)
+                    .HasForeignKey(d => d.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure Users relationship properly
+                entity.HasOne(d => d.User)
+                    .WithMany(u => u.ShoppingCartItems)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
             // Configure Categories
             modelBuilder.Entity<Categories>(entity =>
@@ -137,37 +186,6 @@ namespace ProjectDemoWebApi.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure ShoppingCart
-            modelBuilder.Entity<ShoppingCart>(entity =>
-            {
-                entity.HasIndex(e => e.UserId)
-                    .HasDatabaseName("idx_cart_user");
-
-                entity.HasIndex(e => new { e.UserId, e.ProductId })
-                    .IsUnique()
-                    .HasDatabaseName("idx_cart_user_product");
-
-                entity.HasIndex(e => e.AddedDate)
-                    .HasDatabaseName("idx_cart_date");
-
-                entity.Property(e => e.Quantity)
-                    .HasDefaultValue(1);
-
-                entity.Property(e => e.AddedDate)
-                    .HasDefaultValueSql("GETUTCDATE()");
-
-                entity.Property(e => e.UpdatedDate)
-                    .HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(d => d.Product)
-                    .WithMany(p => p.ShoppingCartItems)
-                    .HasForeignKey(d => d.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                // Note: Users relationship will be handled by foreign key constraint only
-                // since Users entity is managed by AuthDbContext
-            });
-
             // Configure CustomerAddresses
             modelBuilder.Entity<CustomerAddresses>(entity =>
             {
@@ -185,6 +203,12 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.CreatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure Users relationship
+                entity.HasOne(d => d.User)
+                    .WithMany(u => u.CustomerAddresses)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure Orders
@@ -233,6 +257,12 @@ namespace ProjectDemoWebApi.Data
                 entity.HasOne(d => d.DeliveryAddress)
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.DeliveryAddressId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Configure Customer relationship
+                entity.HasOne(o => o.Customer)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(o => o.CustomerId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -379,6 +409,12 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.CreatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure Customer relationship
+                entity.HasOne(d => d.Customer)
+                    .WithMany(u => u.CustomerQueries)
+                    .HasForeignKey(d => d.CustomerId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             // Configure AdminReplies
@@ -394,6 +430,12 @@ namespace ProjectDemoWebApi.Data
                     .WithMany(p => p.AdminReplies)
                     .HasForeignKey(d => d.QueryId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Configure Admin relationship
+                entity.HasOne(d => d.Admin)
+                    .WithMany(u => u.AdminReplies)
+                    .HasForeignKey(d => d.AdminId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Configure FAQ
