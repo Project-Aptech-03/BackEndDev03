@@ -19,7 +19,7 @@ namespace ProjectDemoWebApi.Models
 
         [PersonalData]
         [Column(TypeName = "nvarchar(256)")]
-        public string? AvataUrl { get; set; }
+        public string? AvatarUrl { get; set; }
 
         [PersonalData]
         public DateTime? DateOfBirth { get; set; }
