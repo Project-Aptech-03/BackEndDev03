@@ -4,6 +4,7 @@ namespace ProjectDemoWebApi.DTOs.CustomerAddress
     {
         public int Id { get; set; }
         public string UserId { get; set; } = string.Empty;
+        public string AddressName { get; set; } = string.Empty;
         public string FullAddress { get; set; } = string.Empty;
         public string? District { get; set; }
         public string? City { get; set; }
@@ -12,6 +13,6 @@ namespace ProjectDemoWebApi.DTOs.CustomerAddress
         public bool IsDefault { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string DisplayAddress => $"{FullAddress}, {District}, {City} {PostalCode}".Trim(' ', ',');
+        public string DisplayAddress => $"{AddressName}: {FullAddress}, {District}, {City} {PostalCode}".Trim(' ', ',', ':');
     }
 }

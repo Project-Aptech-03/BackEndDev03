@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.Products
 {
-    public class UpdateProductsDto
+    public class UpdateProductDto
     {
         [StringLength(255, ErrorMessage = "Product name cannot exceed 255 characters.")]
         public string? ProductName { get; set; }
@@ -28,7 +28,7 @@ namespace ProjectDemoWebApi.DTOs.Products
         [StringLength(50, ErrorMessage = "Dimensions cannot exceed 50 characters.")]
         public string? Dimensions { get; set; }
 
-        [Range(0.01, 999.99, ErrorMessage = "Weight must be between 0.01 and 999.99 kg.")]
+        [Range(0.01, 9999.99, ErrorMessage = "Weight must be between 0.01 and 9999.99 kg.")]
         public decimal? Weight { get; set; }
 
         [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
@@ -38,7 +38,5 @@ namespace ProjectDemoWebApi.DTOs.Products
         public int? StockQuantity { get; set; }
 
         public bool? IsActive { get; set; }
-
-        public List<IFormFile>? Photos { get; set; }
     }
 }

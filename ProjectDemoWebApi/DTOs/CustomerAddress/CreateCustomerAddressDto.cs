@@ -4,20 +4,24 @@ namespace ProjectDemoWebApi.DTOs.CustomerAddress
 {
     public class CreateCustomerAddressDto
     {
-        [Required(ErrorMessage = "Full address cannot be empty.")]
-        [StringLength(500, ErrorMessage = "Full address cannot exceed 500 characters.")]
+        [Required(ErrorMessage = "Tên ??a ch? không ???c ?? tr?ng.")]
+        [StringLength(100, ErrorMessage = "Tên ??a ch? không ???c v??t quá 100 ký t?.")]
+        public string AddressName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "??a ch? ??y ?? không ???c ?? tr?ng.")]
+        [StringLength(500, ErrorMessage = "??a ch? không ???c v??t quá 500 ký t?.")]
         public string FullAddress { get; set; } = string.Empty;
 
-        [StringLength(100, ErrorMessage = "District cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Qu?n/Huy?n không ???c v??t quá 100 ký t?.")]
         public string? District { get; set; }
 
-        [StringLength(100, ErrorMessage = "City cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Thành ph? không ???c v??t quá 100 ký t?.")]
         public string? City { get; set; }
 
-        [StringLength(10, ErrorMessage = "Postal code cannot exceed 10 characters.")]
+        [StringLength(10, ErrorMessage = "Mã b?u ?i?n không ???c v??t quá 10 ký t?.")]
         public string? PostalCode { get; set; }
 
-        [Range(0, 999.99, ErrorMessage = "Distance must be between 0 and 999.99 km.")]
+        [Range(0, 999.99, ErrorMessage = "Kho?ng cách ph?i t? 0 ??n 999.99 km.")]
         public decimal? DistanceKm { get; set; }
 
         public bool IsDefault { get; set; } = false;

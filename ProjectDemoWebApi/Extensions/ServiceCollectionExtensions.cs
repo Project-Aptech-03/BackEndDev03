@@ -16,6 +16,7 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
             services.AddScoped<IPublisherRepository, PublisherRepository>();
             services.AddScoped<IProductsRepository, ProductsRepository>();
+            services.AddScoped<IProductPhotosRepository, ProductPhotosRepository>();
             services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
             services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
@@ -34,25 +35,25 @@ namespace ProjectDemoWebApi.Extensions
 
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
-            // Business service registrations
+            // Core Auth & User Services
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<IRoleSeederService, RoleSeederService>();
+
+            // Business Domain Services
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IManufacturerService, ManufacturerService>();
             services.AddScoped<IProductsService, ProductsService>();
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
+            services.AddScoped<ICustomerAddressService, CustomerAddressService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICouponService, CouponService>();
-            // Note: ICustomerAddressService implementation needed
 
-            // Keep existing services
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IUserService, UserService>();
+            // Infrastructure Services
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IJwtTokenService, JwtTokenService>();
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
-            services.AddScoped<IRoleSeederService, RoleSeederService>();
 
-            // 
-            services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             return services;
         }
 

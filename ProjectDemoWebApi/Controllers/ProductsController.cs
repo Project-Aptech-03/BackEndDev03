@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
-    [Authorize]
     [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
@@ -18,31 +17,13 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int size = 20)
+        public async Task<IActionResult> GetAllProducts()
         {
-            var result = await _productsService.GetProductsPagedAsync(page, size);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        [HttpGet("{id}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetProduct(int id)
-        {
-            var result = await _productsService.GetProductByIdAsync(id);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        [HttpGet("code/{code}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetProductByCode(string code)
-        {
-            var result = await _productsService.GetProductByCodeAsync(code);
+            var result = await _productsService.GetAllProductsAsync();
             return StatusCode(result.StatusCode, result);
         }
 
         [HttpGet("category/{categoryId}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetProductsByCategory(int categoryId)
         {
             var result = await _productsService.GetProductsByCategoryAsync(categoryId);
@@ -50,21 +31,9 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet("manufacturer/{manufacturerId}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetProductsByManufacturer(int manufacturerId)
         {
             var result = await _productsService.GetProductsByManufacturerAsync(manufacturerId);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        [HttpGet("search")]
-        [AllowAnonymous]
-        public async Task<IActionResult> SearchProducts([FromQuery] string q)
-        {
-            if (string.IsNullOrWhiteSpace(q))
-                return BadRequest("Search term is required");
-
-            var result = await _productsService.SearchProductsAsync(q);
             return StatusCode(result.StatusCode, result);
         }
 
@@ -77,18 +46,22 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto createProductDto, CancellationToken cancellationToken = default)
         {
-            var result = await _productsService.CreateProductAsync(createProductDto);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _productsService.CreateProductAsync(createProductDto, cancellationToken);
             return StatusCode(result.StatusCode, result);
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto updateProductDto, CancellationToken cancellationToken = default)
         {
-            var result = await _productsService.UpdateProductAsync(id, updateProductDto);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _productsService.UpdateProductAsync(id, updateProductDto, cancellationToken);
             return StatusCode(result.StatusCode, result);
         }
 

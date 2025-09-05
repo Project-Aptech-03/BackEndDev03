@@ -15,6 +15,11 @@ namespace ProjectDemoWebApi.Models
         public string UserId { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(100)]
+        [Column("address_name")]
+        public string AddressName { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(500)]
         [Column("full_address")]
         public string FullAddress { get; set; } = string.Empty;

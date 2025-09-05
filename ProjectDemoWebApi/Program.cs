@@ -9,8 +9,6 @@ using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Extensions;
 using ProjectDemoWebApi.Models;
-using ProjectDemoWebApi.Repositories;
-using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using System.Text;
@@ -59,20 +57,8 @@ builder.Services.AddIdentity<Users, Roles>()
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
-// Keep existing legacy services for backward compatibility
-//builder.Services.AddScoped<IUserRepository, UserRepository>();
-//builder.Services.AddScoped<IProductService, ProductService>();
-//builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-// user
-//builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-//builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IUserRepository, UserRepository>();
-// upload 
-//builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
-
-// Jwt 
+// Jwt
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -100,7 +86,7 @@ builder.Services.AddAuthentication(options =>
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
 
-            var result = ApiResponse<string>.Fail("Unauthorized - Token không hợp lệ hoặc chưa đăng nhập", null, 401);
+            var result = ApiResponse<string>.Fail("Unauthorized - Invalid token or not logged in", null, 401);
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         },
         OnForbidden = context =>
@@ -108,7 +94,7 @@ builder.Services.AddAuthentication(options =>
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             context.Response.ContentType = "application/json";
 
-            var result = ApiResponse<string>.Fail("Forbidden - Không có quyền truy cập", null, 403);
+            var result = ApiResponse<string>.Fail("Forbidden - No access rights", null, 403);
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         }
     };
