@@ -69,6 +69,40 @@ namespace ProjectDemoWebApi.Repositories
 
             return (items, totalCount);
         }
+        public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedIncludeAsync(
+        int pageNumber,
+        int pageSize,
+        Expression<Func<T, bool>>? predicate = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<T, object>>[] includes)
+            {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var query = _dbSet.AsNoTracking().AsQueryable();
+
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
 
         public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
