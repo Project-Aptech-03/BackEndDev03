@@ -1,4 +1,6 @@
 using AutoMapper;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
@@ -16,6 +18,7 @@ namespace ProjectDemoWebApi.Services
         private readonly IStockMovementRepository _stockMovementRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<ProductsService> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public ProductsService(
             IProductsRepository productsRepository,
@@ -23,6 +26,7 @@ namespace ProjectDemoWebApi.Services
             IManufacturerRepository manufacturerRepository,
             IPublisherRepository publisherRepository,
             IStockMovementRepository stockMovementRepository,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<ProductsService> logger,
             IMapper mapper)
         {
@@ -33,6 +37,7 @@ namespace ProjectDemoWebApi.Services
             _stockMovementRepository = stockMovementRepository ?? throw new ArgumentNullException(nameof(stockMovementRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         public async Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetAllProductsAsync(CancellationToken cancellationToken = default)
@@ -329,7 +334,7 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                var category = await _productsRepository.GetByCategoryAsync(createProductDto.CategoryId, cancellationToken);
+                var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
                 if (category == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -339,7 +344,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                var manufacturer = await _productsRepository.GetByManufacturerAsync(createProductDto.ManufacturerId, cancellationToken);
+                var manufacturer = await _manufacturerRepository.GetByIdAsync(createProductDto.ManufacturerId, cancellationToken);
                 if (manufacturer == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -351,7 +356,7 @@ namespace ProjectDemoWebApi.Services
 
                 if (createProductDto.PublisherId.HasValue)
                 {
-                    var publisher = await _productsRepository.GetByPublisherAsync(createProductDto.PublisherId.Value, cancellationToken);
+                    var publisher = await _publisherRepository.GetByIdAsync(createProductDto.PublisherId.Value, cancellationToken);
                     if (publisher == null)
                     {
                         return ApiResponse<ProductsResponseDto>.Fail(
@@ -379,6 +384,16 @@ namespace ProjectDemoWebApi.Services
                 await _productsRepository.SaveChangesAsync(cancellationToken);
 
                 // Add initial stock movement
+                var createdByUserId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(createdByUserId))
+                {
+                    return ApiResponse<ProductsResponseDto>.Fail(
+                        "Unable to determine current user for stock movement.",
+                        null,
+                        500
+                    );
+                }
+
                 await _stockMovementRepository.AddStockMovementAsync(
                     product.Id, 
                     product.StockQuantity, 
@@ -388,7 +403,7 @@ namespace ProjectDemoWebApi.Services
                     null, 
                     0, 
                     "Initial stock", 
-                    "System", 
+                    createdByUserId, 
                     cancellationToken);
                 
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
@@ -512,6 +527,16 @@ namespace ProjectDemoWebApi.Services
                     product.StockQuantity = updateProductDto.StockQuantity.Value;
                     
                     // Add stock movement record
+                    var createdByUserId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (string.IsNullOrWhiteSpace(createdByUserId))
+                    {
+                        return ApiResponse<ProductsResponseDto?>.Fail(
+                            "Unable to determine current user for stock movement.",
+                            null,
+                            500
+                        );
+                    }
+
                     await _stockMovementRepository.AddStockMovementAsync(
                         product.Id, 
                         updateProductDto.StockQuantity.Value - previousStock, 
@@ -521,7 +546,7 @@ namespace ProjectDemoWebApi.Services
                         null, 
                         0, 
                         "Stock adjustment", 
-                        "System", 
+                        createdByUserId, 
                         cancellationToken);
                 }
                 
@@ -630,6 +655,16 @@ namespace ProjectDemoWebApi.Services
                 await _productsRepository.UpdateStockAsync(productId, newStock, cancellationToken);
                 
                 // Add stock movement record
+                var createdByUserId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(createdByUserId))
+                {
+                    return ApiResponse<bool>.Fail(
+                        "Unable to determine current user for stock movement.",
+                        false,
+                        500
+                    );
+                }
+
                 await _stockMovementRepository.AddStockMovementAsync(
                     productId, 
                     newStock - previousStock, 
@@ -639,7 +674,7 @@ namespace ProjectDemoWebApi.Services
                     null, 
                     0, 
                     "Stock update", 
-                    "System", 
+                    createdByUserId, 
                     cancellationToken);
 
                 await _productsRepository.SaveChangesAsync(cancellationToken);
