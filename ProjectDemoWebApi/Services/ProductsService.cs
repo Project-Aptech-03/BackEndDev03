@@ -1,9 +1,11 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
+using System.Security.Claims;
 
 namespace ProjectDemoWebApi.Services
 {
@@ -16,7 +18,8 @@ namespace ProjectDemoWebApi.Services
         private readonly IStockMovementRepository _stockMovementRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<ProductsService> _logger;
-
+        private readonly IHttpContextAccessor _httpContectAccessor;
+        private readonly IGoogleCloudStorageService _googleCloudStorageService;
         public ProductsService(
             IProductsRepository productsRepository,
             ICategoryRepository categoryRepository,
@@ -24,7 +27,9 @@ namespace ProjectDemoWebApi.Services
             IPublisherRepository publisherRepository,
             IStockMovementRepository stockMovementRepository,
             ILogger<ProductsService> logger,
-            IMapper mapper)
+            IHttpContextAccessor httpContextAccessor,
+            IMapper mapper,
+            IGoogleCloudStorageService googleCloudStorageService)
         {
             _productsRepository = productsRepository ?? throw new ArgumentNullException(nameof(productsRepository));
             _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
@@ -33,6 +38,8 @@ namespace ProjectDemoWebApi.Services
             _stockMovementRepository = stockMovementRepository ?? throw new ArgumentNullException(nameof(stockMovementRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _httpContectAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(_httpContectAccessor));
+            _googleCloudStorageService = googleCloudStorageService;
         }
 
         public async Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetAllProductsAsync(CancellationToken cancellationToken = default)
@@ -57,6 +64,405 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
+
+
+        //getAllProduct
+        public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
+         int pageNumber,
+         int pageSize,
+         CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (pageNumber <= 0)
+                    pageNumber = 1;
+
+                if (pageSize <= 0 || pageSize > 100)
+                    pageSize = 20;
+
+                var (products, totalCount) = await _productsRepository
+                    .GetPagedIncludeAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken,
+                        p => p.Category,
+                        p => p.Manufacturer,
+                        p => p.Publisher);
+
+                var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
+
+                var response = new PagedResponseDto<ProductsResponseDto>
+                {
+                    Items = productDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Ok(
+                    response,
+                    "Products retrieved successfully.",
+                    200
+                );
+            }
+            catch (Exception)
+            {
+                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
+                    "An error occurred while retrieving products.",
+                    new PagedResponseDto<ProductsResponseDto>(),
+                    500
+                );
+            }
+        }
+
+        //public async Task<ApiResponse<ProductsResponseDto>> CreateProductAsync(CreateProductsDto createProductDto, CancellationToken cancellationToken = default)
+        //{
+        //    try
+        //    {
+        //        var category = await _productsRepository.GetByCategoryAsync(createProductDto.CategoryId, cancellationToken);
+        //        if (category == null)
+        //        {
+        //            return ApiResponse<ProductsResponseDto>.Fail(
+        //                "Invalid category ID.",
+        //                null,
+        //                400
+        //            );
+        //        }
+
+        //        var manufacturer = await _productsRepository.GetByManufacturerAsync(createProductDto.ManufacturerId, cancellationToken);
+        //        if (manufacturer == null)
+        //        {
+        //            return ApiResponse<ProductsResponseDto>.Fail(
+        //                "Invalid manufacturer ID.",
+        //                null,
+        //                400
+        //            );
+        //        }
+
+        //        if (createProductDto.PublisherId.HasValue)
+        //        {
+        //            var publisher = await _productsRepository.GetByPublisherAsync(createProductDto.PublisherId.Value, cancellationToken);
+        //            if (publisher == null)
+        //            {
+        //                return ApiResponse<ProductsResponseDto>.Fail(
+        //                    "Invalid publisher ID.",
+        //                    null,
+        //                    400
+        //                );
+        //            }
+        //        }
+
+        //        var codeExists = await _productsRepository.IsProductCodeExistsAsync(createProductDto.ProductCode, null, cancellationToken);
+        //        if (codeExists)
+        //        {
+        //            return ApiResponse<ProductsResponseDto>.Fail(
+        //                "Product code already exists.",
+        //                null,
+        //                409
+        //            );
+        //        }
+
+        //        var product = _mapper.Map<Products>(createProductDto);
+        //        product.CreatedDate = DateTime.UtcNow;
+
+        //        await _productsRepository.AddAsync(product, cancellationToken);
+        //        await _productsRepository.SaveChangesAsync(cancellationToken);
+
+        //        // Add initial stock movement
+        //        await _stockMovementRepository.AddStockMovementAsync(
+        //            product.Id,
+        //            product.StockQuantity,
+        //            0,
+        //            product.StockQuantity,
+        //            "INITIAL",
+        //            null,
+        //            0,
+        //            "Initial stock",
+        //            "System",
+        //            cancellationToken);
+
+        //        await _stockMovementRepository.SaveChangesAsync(cancellationToken);
+
+        //        var productDto = _mapper.Map<ProductsResponseDto>(product);
+
+        //        return ApiResponse<ProductsResponseDto>.Ok(
+        //            productDto,
+        //            "Product created successfully.",
+        //            201
+        //        );
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error occurred while creating product");
+
+        //        return ApiResponse<ProductsResponseDto>.Fail(
+        //            $"An error occurred while creating the product. Details: {ex.Message}",
+        //            null,
+        //            500
+        //        );
+        //    }
+
+        //}
+
+        public async Task<ApiResponse<ProductsResponseDto>> CreateProductAsync(CreateProductsDto createProductDto, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 1. Validate Category
+                var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
+                if (category == null)
+                {
+                    return ApiResponse<ProductsResponseDto>.Fail(
+                        "Invalid category ID.",
+                        null,
+                        400
+                    );
+                }
+
+                // 2. Validate Manufacturer
+                var manufacturer = await _manufacturerRepository.GetByIdAsync(createProductDto.ManufacturerId, cancellationToken);
+                if (manufacturer == null)
+                {
+                    return ApiResponse<ProductsResponseDto>.Fail(
+                        "Invalid manufacturer ID.",
+                        null,
+                        400
+                    );
+                }
+
+                // 3. Validate Publisher (if provided)
+                if (createProductDto.PublisherId.HasValue)
+                {
+                    var publisher = await _publisherRepository.GetByIdAsync(createProductDto.PublisherId.Value, cancellationToken);
+                    if (publisher == null)
+                    {
+                        return ApiResponse<ProductsResponseDto>.Fail(
+                            "Invalid publisher ID.",
+                            null,
+                            400
+                        );
+                    }
+                }
+
+                var codeExists = await _productsRepository.IsProductCodeExistsAsync(createProductDto.ProductCode, null, cancellationToken);
+                if (codeExists)
+                {
+                    return ApiResponse<ProductsResponseDto>.Fail(
+                        "Product code already exists.",
+                        null,
+                        409
+                    );
+                }
+
+                var product = _mapper.Map<Products>(createProductDto);
+                product.CreatedDate = DateTime.UtcNow;
+                if (createProductDto.Photos != null && createProductDto.Photos.Any())
+                {
+                    var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(createProductDto.Photos, "products", cancellationToken);
+
+                    foreach (var url in uploadedUrls)
+                    {
+                        product.ProductPhotos.Add(new ProductPhotos
+                        {
+                            PhotoUrl = url,
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow
+                        });
+                    }
+                }
+                await _productsRepository.AddAsync(product, cancellationToken);
+                await _productsRepository.SaveChangesAsync(cancellationToken);
+
+                var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(createdByUserId))
+                {
+                    return ApiResponse<ProductsResponseDto>.Fail(
+                        "Unable to determine current user for stock movement.",
+                        null,
+                        500
+                    );
+                }
+
+                await _stockMovementRepository.AddStockMovementAsync(
+                    product.Id,
+                    product.StockQuantity,
+                    0,
+                    product.StockQuantity,
+                    "INITIAL",
+                    null,
+                    0,
+                    "Initial stock",
+                    createdByUserId,
+                    cancellationToken
+                );
+
+                await _stockMovementRepository.SaveChangesAsync(cancellationToken);
+
+                var productDto = _mapper.Map<ProductsResponseDto>(product);
+
+                return ApiResponse<ProductsResponseDto>.Ok(
+                    productDto,
+                    "Product created successfully.",
+                    201
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating product");
+
+                return ApiResponse<ProductsResponseDto>.Fail(
+                    $"An error occurred while creating the product. Details: {ex.Message}",
+                    null,
+                    500
+                );
+            }
+        }
+
+//     public async Task<ApiResponse<ProductsResponseDto>> UpdateProductAsync(int productId, UpdateProductsDto updateProductDto, CancellationToken cancellationToken = default)
+//{
+//    try
+//    {
+//        // 1. L?y s?n ph?m hi?n t?i
+//        var product = await _productsRepository.GetByIdAsync(productId, cancellationToken);
+//        if (product == null)
+//        {
+//            return ApiResponse<ProductsResponseDto>.Fail(
+//                "Product not found.",
+//                null,
+//                404
+//            );
+//        }
+
+//        // 2. Validate Category n?u ???c cung c?p
+//        if (updateProductDto.CategoryId.HasValue)
+//        {
+//            var category = await _categoryRepository.GetByIdAsync(updateProductDto.CategoryId.Value, cancellationToken);
+//            if (category == null)
+//            {
+//                return ApiResponse<ProductsResponseDto>.Fail(
+//                    "Invalid category ID.",
+//                    null,
+//                    400
+//                );
+//            }
+//            product.CategoryId = updateProductDto.CategoryId.Value;
+//        }
+
+//        // 3. Validate Manufacturer n?u ???c cung c?p
+//        if (updateProductDto.ManufacturerId.HasValue)
+//        {
+//            var manufacturer = await _manufacturerRepository.GetByIdAsync(updateProductDto.ManufacturerId.Value, cancellationToken);
+//            if (manufacturer == null)
+//            {
+//                return ApiResponse<ProductsResponseDto>.Fail(
+//                    "Invalid manufacturer ID.",
+//                    null,
+//                    400
+//                );
+//            }
+//            product.ManufacturerId = updateProductDto.ManufacturerId.Value;
+//        }
+
+//        // 4. Validate Publisher n?u ???c cung c?p
+//        if (updateProductDto.PublisherId.HasValue)
+//        {
+//            var publisher = await _publisherRepository.GetByIdAsync(updateProductDto.PublisherId.Value, cancellationToken);
+//            if (publisher == null)
+//            {
+//                return ApiResponse<ProductsResponseDto>.Fail(
+//                    "Invalid publisher ID.",
+//                    null,
+//                    400
+//                );
+//            }
+//            product.PublisherId = updateProductDto.PublisherId.Value;
+//        }
+
+//        // 5. Ki?m tra ProductCode trùng n?u ???c cung c?p
+//        if (!string.IsNullOrEmpty(updateProductDto.ProductCode))
+//        {
+//            var codeExists = await _productsRepository.IsProductCodeExistsAsync(updateProductDto.ProductCode, productId, cancellationToken);
+//            if (codeExists)
+//            {
+//                return ApiResponse<ProductsResponseDto>.Fail(
+//                    "Product code already exists.",
+//                    null,
+//                    409
+//                );
+//            }
+//            product.ProductCode = updateProductDto.ProductCode;
+//        }
+
+//        // 6. C?p nh?t các tr??ng khác n?u có giá tr?
+//        if (!string.IsNullOrEmpty(updateProductDto.ProductName))
+//            product.ProductName = updateProductDto.ProductName;
+
+//        if (!string.IsNullOrEmpty(updateProductDto.Description))
+//            product.Description = updateProductDto.Description;
+
+//        if (!string.IsNullOrEmpty(updateProductDto.Author))
+//            product.Author = updateProductDto.Author;
+
+//        if (!string.IsNullOrEmpty(updateProductDto.ProductType))
+//            product.ProductType = updateProductDto.ProductType;
+
+//        if (updateProductDto.Pages.HasValue)
+//            product.Pages = updateProductDto.Pages.Value;
+
+//        if (!string.IsNullOrEmpty(updateProductDto.Dimensions))
+//            product.Dimensions = updateProductDto.Dimensions;
+
+//        if (updateProductDto.Weight.HasValue)
+//            product.Weight = updateProductDto.Weight.Value;
+
+//        if (updateProductDto.Price.HasValue)
+//            product.Price = updateProductDto.Price.Value;
+
+//        if (updateProductDto.StockQuantity.HasValue)
+//            product.StockQuantity = updateProductDto.StockQuantity.Value;
+
+//        if (updateProductDto.IsActive.HasValue)
+//            product.IsActive = updateProductDto.IsActive.Value;
+
+//        product.UpdatedDate = DateTime.UtcNow;
+
+//        await _productsRepository.UpdateAsync(product, cancellationToken);
+//        await _productsRepository.SaveChangesAsync(cancellationToken);
+
+//        var productDto = _mapper.Map<ProductsResponseDto>(product);
+
+//        return ApiResponse<ProductsResponseDto>.Ok(
+//            productDto,
+//            "Product updated successfully.",
+//            200
+//        );
+//    }
+//    catch (Exception ex)
+//    {
+//        _logger.LogError(ex, "Error occurred while updating product");
+
+//        return ApiResponse<ProductsResponseDto>.Fail(
+//            $"An error occurred while updating the product. Details: {ex.Message}",
+//            null,
+//            500
+//        );
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public async Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetActiveProductsAsync(CancellationToken cancellationToken = default)
         {
@@ -325,230 +731,104 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
-        public async Task<ApiResponse<ProductsResponseDto>> CreateProductAsync(CreateProductsDto createProductDto, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var category = await _productsRepository.GetByCategoryAsync(createProductDto.CategoryId, cancellationToken);
-                if (category == null)
-                {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Invalid category ID.", 
-                        null, 
-                        400
-                    );
-                }
 
-                var manufacturer = await _productsRepository.GetByManufacturerAsync(createProductDto.ManufacturerId, cancellationToken);
-                if (manufacturer == null)
-                {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Invalid manufacturer ID.", 
-                        null, 
-                        400
-                    );
-                }
 
-                if (createProductDto.PublisherId.HasValue)
-                {
-                    var publisher = await _productsRepository.GetByPublisherAsync(createProductDto.PublisherId.Value, cancellationToken);
-                    if (publisher == null)
-                    {
-                        return ApiResponse<ProductsResponseDto>.Fail(
-                            "Invalid publisher ID.", 
-                            null, 
-                            400
-                        );
-                    }
-                }
-
-                var codeExists = await _productsRepository.IsProductCodeExistsAsync(createProductDto.ProductCode, null, cancellationToken);
-                if (codeExists)
-                {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Product code already exists.", 
-                        null, 
-                        409
-                    );
-                }
-
-                var product = _mapper.Map<Products>(createProductDto);
-                product.CreatedDate = DateTime.UtcNow;
-
-                await _productsRepository.AddAsync(product, cancellationToken);
-                await _productsRepository.SaveChangesAsync(cancellationToken);
-
-                // Add initial stock movement
-                await _stockMovementRepository.AddStockMovementAsync(
-                    product.Id, 
-                    product.StockQuantity, 
-                    0, 
-                    product.StockQuantity, 
-                    "INITIAL", 
-                    null, 
-                    0, 
-                    "Initial stock", 
-                    "System", 
-                    cancellationToken);
-                
-                await _stockMovementRepository.SaveChangesAsync(cancellationToken);
-
-                var productDto = _mapper.Map<ProductsResponseDto>(product);
-                
-                return ApiResponse<ProductsResponseDto>.Ok(
-                    productDto, 
-                    "Product created successfully.", 
-                    201
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while creating product");
-
-                return ApiResponse<ProductsResponseDto>.Fail(
-                    $"An error occurred while creating the product. Details: {ex.Message}",
-                    null,
-                    500
-                );
-            }
-
-        }
-
-        public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(int id, UpdateProductsDto updateProductDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(
+      int id,
+      UpdateProductsDto updateProductDto,
+      CancellationToken cancellationToken = default)
         {
             try
             {
                 if (id <= 0)
-                {
-                    return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Invalid product ID.", 
-                        null, 
-                        400
-                    );
-                }
+                    return ApiResponse<ProductsResponseDto?>.Fail("Invalid product ID.", null, 400);
 
-                var product = await _productsRepository.GetByIdAsync(id, cancellationToken);
-                
+                var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 if (product == null)
-                {
-                    return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Product not found.", 
-                        null, 
-                        404
-                    );
-                }
+                    return ApiResponse<ProductsResponseDto?>.Fail("Product not found.", null, 404);
 
                 var previousStock = product.StockQuantity;
 
-                // Update only provided fields
-                if (!string.IsNullOrWhiteSpace(updateProductDto.ProductName))
-                    product.ProductName = updateProductDto.ProductName;
-                
+                product.ProductCode = updateProductDto.ProductCode ?? product.ProductCode;
+                product.ProductName = updateProductDto.ProductName ?? product.ProductName;
+                product.Description = updateProductDto.Description ?? product.Description;
+                product.Author = updateProductDto.Author ?? product.Author;
+                product.ProductType = updateProductDto.ProductType ?? product.ProductType;
+                product.Pages = updateProductDto.Pages ?? product.Pages;
+                product.Dimensions = updateProductDto.Dimensions ?? product.Dimensions;
+                product.Weight = updateProductDto.Weight ?? product.Weight;
+                product.Price = updateProductDto.Price ?? product.Price;
+                product.IsActive = updateProductDto.IsActive ?? product.IsActive;
+
+                // Update Category
                 if (updateProductDto.CategoryId.HasValue)
                 {
                     var category = await _categoryRepository.GetByIdAsync(updateProductDto.CategoryId.Value, cancellationToken);
                     if (category == null)
-                    {
-                        return ApiResponse<ProductsResponseDto?>.Fail(
-                            "Invalid category ID.", 
-                            null, 
-                            400
-                        );
-                    }
-                    product.CategoryId = updateProductDto.CategoryId.Value;
+                        return ApiResponse<ProductsResponseDto?>.Fail("Invalid category ID.", null, 400);
+
+                    product.CategoryId = category.Id;
+                    product.Category = category;
                 }
 
+                // Update Manufacturer
                 if (updateProductDto.ManufacturerId.HasValue)
                 {
                     var manufacturer = await _manufacturerRepository.GetByIdAsync(updateProductDto.ManufacturerId.Value, cancellationToken);
                     if (manufacturer == null)
-                    {
-                        return ApiResponse<ProductsResponseDto?>.Fail(
-                            "Invalid manufacturer ID.", 
-                            null, 
-                            400
-                        );
-                    }
-                    product.ManufacturerId = updateProductDto.ManufacturerId.Value;
+                        return ApiResponse<ProductsResponseDto?>.Fail("Invalid manufacturer ID.", null, 400);
+
+                    product.ManufacturerId = manufacturer.Id;
+                    product.Manufacturer = manufacturer;
                 }
 
+                // Update Publisher
                 if (updateProductDto.PublisherId.HasValue)
                 {
                     var publisher = await _publisherRepository.GetByIdAsync(updateProductDto.PublisherId.Value, cancellationToken);
                     if (publisher == null)
-                    {
-                        return ApiResponse<ProductsResponseDto?>.Fail(
-                            "Invalid publisher ID.", 
-                            null, 
-                            400
-                        );
-                    }
-                    product.PublisherId = updateProductDto.PublisherId.Value;
+                        return ApiResponse<ProductsResponseDto?>.Fail("Invalid publisher ID.", null, 400);
+
+                    product.PublisherId = publisher.Id;
+                    product.Publisher = publisher;
                 }
 
-                if (!string.IsNullOrWhiteSpace(updateProductDto.Description))
-                    product.Description = updateProductDto.Description;
-                
-                if (!string.IsNullOrWhiteSpace(updateProductDto.Author))
-                    product.Author = updateProductDto.Author;
-                
-                if (!string.IsNullOrWhiteSpace(updateProductDto.ProductType))
-                    product.ProductType = updateProductDto.ProductType;
-                
-                if (updateProductDto.Pages.HasValue)
-                    product.Pages = updateProductDto.Pages.Value;
-                
-                if (!string.IsNullOrWhiteSpace(updateProductDto.Dimensions))
-                    product.Dimensions = updateProductDto.Dimensions;
-                
-                if (updateProductDto.Weight.HasValue)
-                    product.Weight = updateProductDto.Weight.Value;
-                
-                if (updateProductDto.Price.HasValue)
-                    product.Price = updateProductDto.Price.Value;
-                
-                if (updateProductDto.StockQuantity.HasValue)
+                // Update Stock
+                if (updateProductDto.StockQuantity.HasValue && updateProductDto.StockQuantity.Value != previousStock)
                 {
+                    var quantityChange = updateProductDto.StockQuantity.Value - previousStock;
                     product.StockQuantity = updateProductDto.StockQuantity.Value;
-                    
-                    // Add stock movement record
+
                     await _stockMovementRepository.AddStockMovementAsync(
-                        product.Id, 
-                        updateProductDto.StockQuantity.Value - previousStock, 
-                        previousStock, 
-                        updateProductDto.StockQuantity.Value, 
-                        "ADJUSTMENT", 
-                        null, 
-                        0, 
-                        "Stock adjustment", 
-                        "System", 
+                        product.Id,
+                        quantityChange,
+                        previousStock,
+                        product.StockQuantity,
+                        "ADJUSTMENT",
+                        null,
+                        0,
+                        "Stock adjustment",
+                        "System",
                         cancellationToken);
                 }
-                
-                if (updateProductDto.IsActive.HasValue)
-                    product.IsActive = updateProductDto.IsActive.Value;
 
-                _productsRepository.Update(product);
+                // L?u entity và stock movement
                 await _productsRepository.SaveChangesAsync(cancellationToken);
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
 
-                var productDto = _mapper.Map<ProductsResponseDto>(product);
-                
-                return ApiResponse<ProductsResponseDto?>.Ok(
-                    productDto, 
-                    "Product updated successfully.", 
-                    200
-                );
+                // Load l?i entity kèm relations ?? map DTO chu?n
+                var updatedProduct = await _productsRepository.GetByIdWithDetailsAsync(product.Id, cancellationToken);
+                var productDto = _mapper.Map<ProductsResponseDto>(updatedProduct);
+
+                return ApiResponse<ProductsResponseDto?>.Ok(productDto, "Product updated successfully.", 200);
             }
             catch (Exception ex)
             {
-                return ApiResponse<ProductsResponseDto?>.Fail(
-                    "An error occurred while updating the product.", 
-                    null, 
-                    500
-                );
+                _logger.LogError(ex, "Error occurred while updating product");
+                return ApiResponse<ProductsResponseDto?>.Fail("An error occurred while updating the product.", null, 500);
             }
         }
+
 
         public async Task<ApiResponse<bool>> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -691,50 +971,7 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
-        public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
-            int pageNumber,
-            int pageSize,
-            CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (pageNumber <= 0)
-                    pageNumber = 1;
-
-                if (pageSize <= 0 || pageSize > 100)
-                    pageSize = 20;
-
-                var (products, totalCount) = await _productsRepository
-                    .GetPagedIncludeAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken,
-                        p => p.Category,
-                        p => p.Manufacturer,
-                        p => p.Publisher);
-
-                var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
-
-                var response = new PagedResponseDto<ProductsResponseDto>
-                {
-                    Items = productDtos,
-                    TotalCount = totalCount,
-                    PageIndex = pageNumber,
-                    PageSize = pageSize
-                };
-
-                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Ok(
-                    response,
-                    "Products retrieved successfully.",
-                    200
-                );
-            }
-            catch (Exception)
-            {
-                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving products.",
-                    new PagedResponseDto<ProductsResponseDto>(),
-                    500
-                );
-            }
-        }
+     
 
     }
 }

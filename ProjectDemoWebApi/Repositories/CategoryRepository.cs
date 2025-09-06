@@ -34,5 +34,10 @@ namespace ProjectDemoWebApi.Repositories
                 
             return await query.AnyAsync(c => c.CategoryCode == categoryCode, cancellationToken);
         }
+        
+        //public async Task<Categories> GetCategoriesAsync(CancellationToken cancellationToken = default)
+        //{
+
+        //}
     }
 }

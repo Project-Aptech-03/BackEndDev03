@@ -23,17 +23,18 @@ namespace ProjectDemoWebApi.Repositories
 
         public async Task<Products?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AsNoTracking()
+            return await _dbSet
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
+                .Include(p => p.ProductPhotos)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
+
         public async Task<IEnumerable<Products>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AsNoTracking()
+            return await _dbSet
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
@@ -42,6 +43,18 @@ namespace ProjectDemoWebApi.Repositories
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
         }
+        // Dùng cho update
+        //public async Task<Products?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default)
+        //{
+        //    return await _dbSet
+        //        .Include(p => p.Category)
+        //        .Include(p => p.Manufacturer)
+        //        .Include(p => p.Publisher)
+        //        .Include(p => p.ProductPhotos)
+        //        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        //}
+
+
 
         public async Task<IEnumerable<Products>> GetActiveProductsAsync(CancellationToken cancellationToken = default)
         {
@@ -143,10 +156,11 @@ namespace ProjectDemoWebApi.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
-        public async Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default)
-        {
-            return await _context.Categories.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-        }
+        //public async Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default)
+        //{
+        //    return await _context.Categories.AsNoTracking()
+        //        .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        //}
+
     }
 }
