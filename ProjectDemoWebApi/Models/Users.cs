@@ -29,6 +29,9 @@ namespace ProjectDemoWebApi.Models
         [Column(TypeName = "nvarchar(256)")]
         public string? Address { get; set; }
 
+        [PersonalData]
+        public DateTime? CreatedAt { get; set; }
+
         public ICollection<AdminReplies>? AdminReplies { get; set; }
         public ICollection<CustomerQueries>? CustomerQueries { get; set; }
         public ICollection<CustomerAddresses>? CustomerAddresses { get; set; }

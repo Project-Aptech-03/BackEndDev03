@@ -76,7 +76,7 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
         {

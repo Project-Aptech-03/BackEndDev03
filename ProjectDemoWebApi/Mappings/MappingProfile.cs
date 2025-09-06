@@ -54,7 +54,9 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreateProductsDto, Products>();
             CreateMap<UpdateProductsDto, Products>();
             CreateMap<Products, ProductsResponseDto>();
-            CreateMap<ProductPhotos, ProductPhotoResponseDto>();
+            CreateMap<CreateProductsDto, Products>()
+                   .ForMember(dest => dest.ProductPhotos, opt => opt.Ignore());
+
 
             // Shopping Cart mappings
             CreateMap<AddToCartDto, ShoppingCart>();

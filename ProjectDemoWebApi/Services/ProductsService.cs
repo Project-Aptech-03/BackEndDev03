@@ -15,6 +15,7 @@ namespace ProjectDemoWebApi.Services
         private readonly IPublisherRepository _publisherRepository;
         private readonly IStockMovementRepository _stockMovementRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<ProductsService> _logger;
 
         public ProductsService(
             IProductsRepository productsRepository,
@@ -22,6 +23,7 @@ namespace ProjectDemoWebApi.Services
             IManufacturerRepository manufacturerRepository,
             IPublisherRepository publisherRepository,
             IStockMovementRepository stockMovementRepository,
+            ILogger<ProductsService> logger,
             IMapper mapper)
         {
             _productsRepository = productsRepository ?? throw new ArgumentNullException(nameof(productsRepository));
@@ -30,6 +32,7 @@ namespace ProjectDemoWebApi.Services
             _publisherRepository = publisherRepository ?? throw new ArgumentNullException(nameof(publisherRepository));
             _stockMovementRepository = stockMovementRepository ?? throw new ArgumentNullException(nameof(stockMovementRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetAllProductsAsync(CancellationToken cancellationToken = default)
@@ -326,7 +329,7 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
+                var category = await _productsRepository.GetByCategoryAsync(createProductDto.CategoryId, cancellationToken);
                 if (category == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -336,7 +339,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                var manufacturer = await _manufacturerRepository.GetByIdAsync(createProductDto.ManufacturerId, cancellationToken);
+                var manufacturer = await _productsRepository.GetByManufacturerAsync(createProductDto.ManufacturerId, cancellationToken);
                 if (manufacturer == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -348,7 +351,7 @@ namespace ProjectDemoWebApi.Services
 
                 if (createProductDto.PublisherId.HasValue)
                 {
-                    var publisher = await _publisherRepository.GetByIdAsync(createProductDto.PublisherId.Value, cancellationToken);
+                    var publisher = await _productsRepository.GetByPublisherAsync(createProductDto.PublisherId.Value, cancellationToken);
                     if (publisher == null)
                     {
                         return ApiResponse<ProductsResponseDto>.Fail(
@@ -359,7 +362,6 @@ namespace ProjectDemoWebApi.Services
                     }
                 }
 
-                // Check if product code already exists
                 var codeExists = await _productsRepository.IsProductCodeExistsAsync(createProductDto.ProductCode, null, cancellationToken);
                 if (codeExists)
                 {
@@ -401,12 +403,15 @@ namespace ProjectDemoWebApi.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while creating product");
+
                 return ApiResponse<ProductsResponseDto>.Fail(
-                    "An error occurred while creating the product.", 
-                    null, 
+                    $"An error occurred while creating the product. Details: {ex.Message}",
+                    null,
                     500
                 );
             }
+
         }
 
         public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(int id, UpdateProductsDto updateProductDto, CancellationToken cancellationToken = default)
@@ -686,34 +691,50 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
-
-        public async Task<ApiResponse<(IEnumerable<ProductsResponseDto> Products, int TotalCount)>> GetProductsPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
         {
             try
             {
                 if (pageNumber <= 0)
                     pageNumber = 1;
-                
+
                 if (pageSize <= 0 || pageSize > 100)
                     pageSize = 20;
 
-                var (products, totalCount) = await _productsRepository.GetPagedAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken);
-                var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-                
-                return ApiResponse<(IEnumerable<ProductsResponseDto> Products, int TotalCount)>.Ok(
-                    (productDtos, totalCount), 
-                    "Products retrieved successfully.", 
+                var (products, totalCount) = await _productsRepository
+                    .GetPagedIncludeAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken,
+                        p => p.Category,
+                        p => p.Manufacturer,
+                        p => p.Publisher);
+
+                var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
+
+                var response = new PagedResponseDto<ProductsResponseDto>
+                {
+                    Items = productDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Ok(
+                    response,
+                    "Products retrieved successfully.",
                     200
                 );
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<(IEnumerable<ProductsResponseDto> Products, int TotalCount)>.Fail(
-                    "An error occurred while retrieving products.", 
-                    (Enumerable.Empty<ProductsResponseDto>(), 0), 
+                return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
+                    "An error occurred while retrieving products.",
+                    new PagedResponseDto<ProductsResponseDto>(),
                     500
                 );
             }
         }
+
     }
 }

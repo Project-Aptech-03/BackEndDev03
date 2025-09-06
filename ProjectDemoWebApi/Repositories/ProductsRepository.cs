@@ -50,7 +50,7 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
                 .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
-                .Where(p => p.IsActive && p.StockQuantity > 0) // Include stock check
+                .Where(p => p.IsActive && p.StockQuantity > 0)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
         }
@@ -94,14 +94,14 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Products>> SearchProductsAsync(string searchTerm, CancellationToken cancellationToken = default)
         {
             var lowerSearchTerm = searchTerm.ToLower(); // Pre-convert to lower case
-            
+
             return await _dbSet.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
                 .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
                 .Where(p => p.IsActive && p.StockQuantity > 0 &&
-                           (EF.Functions.Like(p.ProductName.ToLower(), $"%{lowerSearchTerm}%") || 
+                           (EF.Functions.Like(p.ProductName.ToLower(), $"%{lowerSearchTerm}%") ||
                             EF.Functions.Like(p.ProductCode.ToLower(), $"%{lowerSearchTerm}%") ||
                             (p.Author != null && EF.Functions.Like(p.Author.ToLower(), $"%{lowerSearchTerm}%")) ||
                             (p.Description != null && EF.Functions.Like(p.Description.ToLower(), $"%{lowerSearchTerm}%"))))
@@ -112,10 +112,10 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<bool> IsProductCodeExistsAsync(string productCode, int? excludeId = null, CancellationToken cancellationToken = default)
         {
             var query = _dbSet.AsQueryable();
-            
+
             if (excludeId.HasValue)
                 query = query.Where(p => p.Id != excludeId.Value);
-                
+
             return await query.AnyAsync(p => p.ProductCode == productCode, cancellationToken);
         }
 
@@ -141,6 +141,12 @@ namespace ProjectDemoWebApi.Repositories
         {
             return await _dbSet.AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        }
+
+        public async Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Categories.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
     }
 }

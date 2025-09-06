@@ -16,5 +16,6 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<IEnumerable<Products>> GetLowStockProductsAsync(int threshold = 10, CancellationToken cancellationToken = default);
         Task UpdateStockAsync(int productId, int newStock, CancellationToken cancellationToken = default);
         Task<Products?> GetByIdNoTrackingAsync(int id, CancellationToken cancellationToken = default);
+        Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default);
     }
 }
