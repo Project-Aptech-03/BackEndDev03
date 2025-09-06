@@ -329,7 +329,7 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                var category = await _productsRepository.GetByCategoryAsync(createProductDto.CategoryId, cancellationToken);
+                var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
                 if (category == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -339,7 +339,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                var manufacturer = await _productsRepository.GetByManufacturerAsync(createProductDto.ManufacturerId, cancellationToken);
+                var manufacturer = await _manufacturerRepository.GetByIdAsync(createProductDto.ManufacturerId, cancellationToken);
                 if (manufacturer == null)
                 {
                     return ApiResponse<ProductsResponseDto>.Fail(
@@ -351,7 +351,7 @@ namespace ProjectDemoWebApi.Services
 
                 if (createProductDto.PublisherId.HasValue)
                 {
-                    var publisher = await _productsRepository.GetByPublisherAsync(createProductDto.PublisherId.Value, cancellationToken);
+                    var publisher = await _publisherRepository.GetByIdAsync(createProductDto.PublisherId.Value, cancellationToken);
                     if (publisher == null)
                     {
                         return ApiResponse<ProductsResponseDto>.Fail(

@@ -78,7 +78,7 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductsDto createProductDto)
         {
             var result = await _productsService.CreateProductAsync(createProductDto);
             return StatusCode(result.StatusCode, result);
@@ -86,7 +86,7 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductsDto updateProductDto)
         {
             var result = await _productsService.UpdateProductAsync(id, updateProductDto);
             return StatusCode(result.StatusCode, result);
