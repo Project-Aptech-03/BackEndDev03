@@ -813,6 +813,22 @@ namespace ProjectDemoWebApi.Services
                         cancellationToken);
                 }
 
+                // Upload and append new photos if provided
+                if (updateProductDto.Photos != null && updateProductDto.Photos.Any())
+                {
+                    var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(updateProductDto.Photos, "products", cancellationToken);
+
+                    foreach (var url in uploadedUrls)
+                    {
+                        product.ProductPhotos.Add(new ProductPhotos
+                        {
+                            PhotoUrl = url,
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow
+                        });
+                    }
+                }
+
                 // L?u entity v� stock movement
                 await _productsRepository.SaveChangesAsync(cancellationToken);
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
