@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
@@ -859,7 +860,6 @@ namespace ProjectDemoWebApi.Services
                         400
                     );
                 }
-
                 var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 
                 if (product == null)
@@ -870,25 +870,29 @@ namespace ProjectDemoWebApi.Services
                         404
                     );
                 }
+                // Capture photo URLs first
+                var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
 
-                // Delete photos from storage if any
-                if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                try
                 {
-                    foreach (var photo in product.ProductPhotos)
-                    {
-                        try
-                        {
-                            await _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken);
-                        }
-                        catch
-                        {
-                            // Ignore storage deletion failures to allow DB delete to proceed
-                        }
-                    }
+                    _productsRepository.Delete(product);
+                    await _productsRepository.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException)
+                {
+                    return ApiResponse<bool>.Fail(
+                        "Cannot delete product due to existing references (e.g., orders).",
+                        false,
+                        409
+                    );
                 }
 
-                _productsRepository.Delete(product);
-                await _productsRepository.SaveChangesAsync(cancellationToken);
+                // Best-effort delete files from storage after DB deletion
+                foreach (var url in photoUrls)
+                {
+                    try { await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken); }
+                    catch { /* ignore */ }
+                }
                 
                 return ApiResponse<bool>.Ok(
                     true, 
@@ -920,6 +924,7 @@ namespace ProjectDemoWebApi.Services
                 }
 
                 int deletedCount = 0;
+                int deactivatedCount = 0;
                 foreach (var productId in ids.Distinct())
                 {
                     if (productId <= 0) continue;
@@ -927,32 +932,47 @@ namespace ProjectDemoWebApi.Services
                     var product = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
                     if (product == null) continue;
 
-                    if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                    var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
+
+                    try
                     {
-                        foreach (var photo in product.ProductPhotos)
+                        _productsRepository.Delete(product);
+                        await _productsRepository.SaveChangesAsync(cancellationToken);
+
+                        // DB delete ok -> delete storage
+                        foreach (var url in photoUrls)
                         {
-                            try
-                            {
-                                await _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken);
-                            }
-                            catch
-                            {
-                                // Ignore storage deletion failures
-                            }
+                            try { await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken); } catch { }
+                        }
+
+                        deletedCount++;
+                    }
+                    catch (DbUpdateException)
+                    {
+                        // Fallback to soft delete (deactivate)
+                        var current = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
+                        if (current != null)
+                        {
+                            current.IsActive = false;
+                            await _productsRepository.SaveChangesAsync(cancellationToken);
+                            deactivatedCount++;
                         }
                     }
-
-                    _productsRepository.Delete(product);
-                    deletedCount++;
+                    catch
+                    {
+                        // Ignore and continue with next id
+                    }
                 }
 
-                await _productsRepository.SaveChangesAsync(cancellationToken);
+                var message = deletedCount > 0 && deactivatedCount > 0
+                    ? "Some products were deleted, others were deactivated due to references."
+                    : deletedCount > 0
+                        ? "Products deleted successfully."
+                        : deactivatedCount > 0
+                            ? "Products could not be deleted; deactivated instead due to references."
+                            : "No products deleted.";
 
-                return ApiResponse<int>.Ok(
-                    deletedCount,
-                    "Products deleted successfully.",
-                    200
-                );
+                return ApiResponse<int>.Ok(deletedCount, message, 200);
             }
             catch (Exception)
             {

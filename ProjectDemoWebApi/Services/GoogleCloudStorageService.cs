@@ -1,4 +1,4 @@
-﻿using DotNetEnv;
+using DotNetEnv;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using ProjectDemoWebApi.Services.Interface;
@@ -91,17 +91,22 @@ namespace ProjectDemoWebApi.Services
 
             try
             {
-                // Parse đường dẫn file từ URL, ví dụ:
-                // URL: https://storage.googleapis.com/your-bucket-name/folder/filename.jpg
+                // Parse object name from public URL variants
+                // e.g. https://storage.googleapis.com/{bucket}/{object}
+                // or   https://{bucket}.storage.googleapis.com/{object}
                 var uri = new Uri(fileUrl);
-                var filePath = uri.AbsolutePath.TrimStart('/');
+                var absolutePath = uri.AbsolutePath.TrimStart('/');
 
-                // Kiểm tra bucket có khớp không
-                if (!fileUrl.Contains(_bucketName))
+                // Ensure URL refers to our bucket
+                if (!fileUrl.Contains(_bucketName, StringComparison.Ordinal))
                     throw new InvalidOperationException("Invalid bucket in file URL.");
 
-                // Xóa object khỏi bucket
-                await _storageClient.DeleteObjectAsync(_bucketName, filePath, cancellationToken: cancellationToken);
+                // Remove bucket prefix from path if present
+                string objectName = absolutePath.StartsWith(_bucketName + "/", StringComparison.Ordinal)
+                    ? absolutePath.Substring(_bucketName.Length + 1)
+                    : absolutePath;
+
+                await _storageClient.DeleteObjectAsync(_bucketName, objectName, cancellationToken: cancellationToken);
             }
             catch (Google.GoogleApiException e) when (e.Error.Code == 404)
             {
