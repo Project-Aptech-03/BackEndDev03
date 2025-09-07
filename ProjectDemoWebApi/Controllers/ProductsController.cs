@@ -134,5 +134,14 @@ namespace ProjectDemoWebApi.Controllers
             var result = await _productsService.DeleteProductAsync(id);
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpDelete]
+        [Route("batch")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProducts([FromBody] List<int> ids)
+        {
+            var result = await _productsService.DeleteProductsAsync(ids);
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }

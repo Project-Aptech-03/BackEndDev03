@@ -860,7 +860,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                var product = await _productsRepository.GetByIdAsync(id, cancellationToken);
+                var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 
                 if (product == null)
                 {
@@ -869,6 +869,22 @@ namespace ProjectDemoWebApi.Services
                         false, 
                         404
                     );
+                }
+
+                // Delete photos from storage if any
+                if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                {
+                    foreach (var photo in product.ProductPhotos)
+                    {
+                        try
+                        {
+                            await _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken);
+                        }
+                        catch
+                        {
+                            // Ignore storage deletion failures to allow DB delete to proceed
+                        }
+                    }
                 }
 
                 _productsRepository.Delete(product);
@@ -885,6 +901,64 @@ namespace ProjectDemoWebApi.Services
                 return ApiResponse<bool>.Fail(
                     "An error occurred while deleting the product.", 
                     false, 
+                    500
+                );
+            }
+        }
+
+        public async Task<ApiResponse<int>> DeleteProductsAsync(List<int> ids, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (ids == null || ids.Count == 0)
+                {
+                    return ApiResponse<int>.Fail(
+                        "No product IDs provided.",
+                        0,
+                        400
+                    );
+                }
+
+                int deletedCount = 0;
+                foreach (var productId in ids.Distinct())
+                {
+                    if (productId <= 0) continue;
+
+                    var product = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
+                    if (product == null) continue;
+
+                    if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                    {
+                        foreach (var photo in product.ProductPhotos)
+                        {
+                            try
+                            {
+                                await _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken);
+                            }
+                            catch
+                            {
+                                // Ignore storage deletion failures
+                            }
+                        }
+                    }
+
+                    _productsRepository.Delete(product);
+                    deletedCount++;
+                }
+
+                await _productsRepository.SaveChangesAsync(cancellationToken);
+
+                return ApiResponse<int>.Ok(
+                    deletedCount,
+                    "Products deleted successfully.",
+                    200
+                );
+            }
+            catch (Exception)
+            {
+                return ApiResponse<int>.Fail(
+                    "An error occurred while deleting products.",
+                    0,
                     500
                 );
             }
