@@ -84,7 +84,8 @@ namespace ProjectDemoWebApi.Services
                     .GetPagedIncludeAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken,
                         p => p.Category,
                         p => p.Manufacturer,
-                        p => p.Publisher);
+                        p => p.Publisher,
+                        p => p.ProductPhotos);
 
                 var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
 
@@ -375,7 +376,7 @@ namespace ProjectDemoWebApi.Services
 //            product.PublisherId = updateProductDto.PublisherId.Value;
 //        }
 
-//        // 5. Ki?m tra ProductCode trùng n?u ???c cung c?p
+//        // 5. Ki?m tra ProductCode trï¿½ng n?u ???c cung c?p
 //        if (!string.IsNullOrEmpty(updateProductDto.ProductCode))
 //        {
 //            var codeExists = await _productsRepository.IsProductCodeExistsAsync(updateProductDto.ProductCode, productId, cancellationToken);
@@ -390,7 +391,7 @@ namespace ProjectDemoWebApi.Services
 //            product.ProductCode = updateProductDto.ProductCode;
 //        }
 
-//        // 6. C?p nh?t các tr??ng khác n?u có giá tr?
+//        // 6. C?p nh?t cï¿½c tr??ng khï¿½c n?u cï¿½ giï¿½ tr?
 //        if (!string.IsNullOrEmpty(updateProductDto.ProductName))
 //            product.ProductName = updateProductDto.ProductName;
 
@@ -812,11 +813,11 @@ namespace ProjectDemoWebApi.Services
                         cancellationToken);
                 }
 
-                // L?u entity và stock movement
+                // L?u entity vï¿½ stock movement
                 await _productsRepository.SaveChangesAsync(cancellationToken);
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
 
-                // Load l?i entity kèm relations ?? map DTO chu?n
+                // Load l?i entity kï¿½m relations ?? map DTO chu?n
                 var updatedProduct = await _productsRepository.GetByIdWithDetailsAsync(product.Id, cancellationToken);
                 var productDto = _mapper.Map<ProductsResponseDto>(updatedProduct);
 

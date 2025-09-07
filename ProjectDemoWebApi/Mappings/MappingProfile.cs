@@ -11,6 +11,7 @@ using ProjectDemoWebApi.DTOs.Publisher;
 using ProjectDemoWebApi.DTOs.ShoppingCart;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
+using System.Linq;
 
 namespace ProjectDemoWebApi.Mappings
 {
@@ -55,7 +56,7 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<UpdateProductsDto, Products>();
             CreateMap<ProductPhotos, ProductPhotoResponseDto>();
             CreateMap<Products, ProductsResponseDto>()
-                .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos));
+                .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos.Where(ph => ph.IsActive)));
             CreateMap<CreateProductsDto, Products>()
                    .ForMember(dest => dest.ProductPhotos, opt => opt.Ignore());
 
