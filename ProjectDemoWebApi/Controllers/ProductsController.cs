@@ -18,17 +18,7 @@ namespace ProjectDemoWebApi.Controllers
             _productsService = productsService;
         }
 
-        [HttpGet("getAll")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<IEnumerable<ProductsResponseDto>>>> GetAllProducts(CancellationToken cancellationToken)
-        {
-            var response = await _productsService.GetAllProductsAsync(cancellationToken);
-
-            if (!response.Success)
-                return StatusCode(response.StatusCode, response);
-
-            return Ok(response);
-        }
+   
 
 
         [HttpGet]
@@ -60,6 +50,22 @@ namespace ProjectDemoWebApi.Controllers
         public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
         {
             var result = await _productsService.UpdateProductAsync(id, updateProductDto);
+            return StatusCode(result.StatusCode, result);
+        }
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var result = await _productsService.DeleteProductAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete]
+        [Route("batch")]
+        [Authorize(Roles ="Admin")]
+        public async Task<IActionResult> DeleteProducts([FromBody] List<int> ids)
+        {
+            var result = await _productsService.DeleteProductsAsync(ids);
             return StatusCode(result.StatusCode, result);
         }
 
@@ -127,12 +133,6 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteProduct(int id)
-        {
-            var result = await _productsService.DeleteProductAsync(id);
-            return StatusCode(result.StatusCode, result);
-        }
+        
     }
 }

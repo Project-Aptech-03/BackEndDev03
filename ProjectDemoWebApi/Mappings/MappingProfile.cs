@@ -53,7 +53,9 @@ namespace ProjectDemoWebApi.Mappings
             // Products mappings
             CreateMap<CreateProductsDto, Products>();
             CreateMap<UpdateProductsDto, Products>();
-            CreateMap<Products, ProductsResponseDto>();
+            CreateMap<ProductPhotos, ProductPhotoResponseDto>();
+            CreateMap<Products, ProductsResponseDto>()
+                .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos.Where(ph => ph.IsActive)));
             CreateMap<CreateProductsDto, Products>()
                    .ForMember(dest => dest.ProductPhotos, opt => opt.Ignore());
 
