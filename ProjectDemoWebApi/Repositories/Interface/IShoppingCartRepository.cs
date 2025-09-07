@@ -10,5 +10,6 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<int> GetCartItemCountAsync(string userId, CancellationToken cancellationToken = default);
         Task ClearUserCartAsync(string userId, CancellationToken cancellationToken = default);
         Task RemoveExpiredCartItemsAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
+        Task<bool> ExistsProductInAnyCartAsync(int productId, CancellationToken cancellationToken = default);
     }
 }

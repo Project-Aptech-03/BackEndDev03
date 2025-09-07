@@ -64,5 +64,10 @@ namespace ProjectDemoWebApi.Repositories
                 .Where(sc => sc.UpdatedDate < cutoffDate)
                 .ExecuteDeleteAsync(cancellationToken);
         }
+
+        public async Task<bool> ExistsProductInAnyCartAsync(int productId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AnyAsync(sc => sc.ProductId == productId, cancellationToken);
+        }
     }
 }

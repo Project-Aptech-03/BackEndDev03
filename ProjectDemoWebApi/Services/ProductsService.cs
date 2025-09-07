@@ -873,19 +873,20 @@ namespace ProjectDemoWebApi.Services
                 // Capture photo URLs first
                 var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
 
-                try
-                {
-                    _productsRepository.Delete(product);
-                    await _productsRepository.SaveChangesAsync(cancellationToken);
-                }
-                catch (DbUpdateException)
+                // Reject deletion if referenced by orders or carts
+                bool hasOrderItems = product.OrderItems != null && product.OrderItems.Any();
+                bool hasCarts = product.ShoppingCartItems != null && product.ShoppingCartItems.Any();
+                if (hasOrderItems || hasCarts)
                 {
                     return ApiResponse<bool>.Fail(
-                        "Cannot delete product due to existing references (e.g., orders).",
+                        "Cannot delete product because it is referenced by orders or carts.",
                         false,
                         409
                     );
                 }
+
+                _productsRepository.Delete(product);
+                await _productsRepository.SaveChangesAsync(cancellationToken);
 
                 // Best-effort delete files from storage after DB deletion
                 foreach (var url in photoUrls)
@@ -924,7 +925,7 @@ namespace ProjectDemoWebApi.Services
                 }
 
                 int deletedCount = 0;
-                int deactivatedCount = 0;
+                List<int> blockedIds = new();
                 foreach (var productId in ids.Distinct())
                 {
                     if (productId <= 0) continue;
@@ -934,43 +935,28 @@ namespace ProjectDemoWebApi.Services
 
                     var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
 
-                    try
+                    bool hasOrderItems = product.OrderItems != null && product.OrderItems.Any();
+                    bool hasCarts = product.ShoppingCartItems != null && product.ShoppingCartItems.Any();
+                    if (hasOrderItems || hasCarts)
                     {
-                        _productsRepository.Delete(product);
-                        await _productsRepository.SaveChangesAsync(cancellationToken);
+                        blockedIds.Add(productId);
+                        continue;
+                    }
 
-                        // DB delete ok -> delete storage
-                        foreach (var url in photoUrls)
-                        {
-                            try { await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken); } catch { }
-                        }
+                    _productsRepository.Delete(product);
+                    await _productsRepository.SaveChangesAsync(cancellationToken);
 
-                        deletedCount++;
-                    }
-                    catch (DbUpdateException)
+                    foreach (var url in photoUrls)
                     {
-                        // Fallback to soft delete (deactivate)
-                        var current = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
-                        if (current != null)
-                        {
-                            current.IsActive = false;
-                            await _productsRepository.SaveChangesAsync(cancellationToken);
-                            deactivatedCount++;
-                        }
+                        try { await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken); } catch { }
                     }
-                    catch
-                    {
-                        // Ignore and continue with next id
-                    }
+
+                    deletedCount++;
                 }
 
-                var message = deletedCount > 0 && deactivatedCount > 0
-                    ? "Some products were deleted, others were deactivated due to references."
-                    : deletedCount > 0
-                        ? "Products deleted successfully."
-                        : deactivatedCount > 0
-                            ? "Products could not be deleted; deactivated instead due to references."
-                            : "No products deleted.";
+                var message = blockedIds.Count > 0
+                    ? $"Deleted {deletedCount} products. Blocked {blockedIds.Count} due to references."
+                    : (deletedCount > 0 ? "Products deleted successfully." : "No products deleted.");
 
                 return ApiResponse<int>.Ok(deletedCount, message, 200);
             }

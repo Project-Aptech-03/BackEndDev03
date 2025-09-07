@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Models;
@@ -76,7 +76,7 @@ namespace ProjectDemoWebApi.Data
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.ShoppingCartItems)
                     .HasForeignKey(d => d.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure Users relationship properly
                 entity.HasOne(d => d.User)
