@@ -29,14 +29,6 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        //[HttpPost("create")]
-        //[Authorize(Roles = "Admin")]
-        //public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
-        //{
-        //    var result = await _productsService.CreateProductAsync(createProductDto);
-        //    return StatusCode(result.StatusCode, result);
-        //}
-
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)

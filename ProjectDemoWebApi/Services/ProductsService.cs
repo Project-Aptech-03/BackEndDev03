@@ -207,6 +207,104 @@ namespace ProjectDemoWebApi.Services
         }
 
 
+  //      public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(
+  //int id,
+  //UpdateProductsDto updateProductDto,
+  //CancellationToken cancellationToken = default)
+  //      {
+  //          try
+  //          {
+  //              if (id <= 0)
+  //                  return ApiResponse<ProductsResponseDto?>.Fail("Invalid product ID.", null, 400);
+
+  //              var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
+  //              if (product == null)
+  //                  return ApiResponse<ProductsResponseDto?>.Fail("Product not found.", null, 404);
+
+  //              var previousStock = product.StockQuantity;
+
+  //              product.ProductCode = updateProductDto.ProductCode ?? product.ProductCode;
+  //              product.ProductName = updateProductDto.ProductName ?? product.ProductName;
+  //              product.Description = updateProductDto.Description ?? product.Description;
+  //              product.Author = updateProductDto.Author ?? product.Author;
+  //              product.ProductType = updateProductDto.ProductType ?? product.ProductType;
+  //              product.Pages = updateProductDto.Pages ?? product.Pages;
+  //              product.Dimensions = updateProductDto.Dimensions ?? product.Dimensions;
+  //              product.Weight = updateProductDto.Weight ?? product.Weight;
+  //              product.Price = updateProductDto.Price ?? product.Price;
+  //              product.IsActive = updateProductDto.IsActive ?? product.IsActive;
+
+  //              // Update Category
+  //              if (updateProductDto.CategoryId.HasValue)
+  //              {
+  //                  var category = await _categoryRepository.GetByIdAsync(updateProductDto.CategoryId.Value, cancellationToken);
+  //                  if (category == null)
+  //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid category ID.", null, 400);
+
+  //                  product.CategoryId = category.Id;
+  //                  product.Category = category;
+  //              }
+
+  //              // Update Manufacturer
+  //              if (updateProductDto.ManufacturerId.HasValue)
+  //              {
+  //                  var manufacturer = await _manufacturerRepository.GetByIdAsync(updateProductDto.ManufacturerId.Value, cancellationToken);
+  //                  if (manufacturer == null)
+  //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid manufacturer ID.", null, 400);
+
+  //                  product.ManufacturerId = manufacturer.Id;
+  //                  product.Manufacturer = manufacturer;
+  //              }
+
+  //              // Update Publisher
+  //              if (updateProductDto.PublisherId.HasValue)
+  //              {
+  //                  var publisher = await _publisherRepository.GetByIdAsync(updateProductDto.PublisherId.Value, cancellationToken);
+  //                  if (publisher == null)
+  //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid publisher ID.", null, 400);
+
+  //                  product.PublisherId = publisher.Id;
+  //                  product.Publisher = publisher;
+  //              }
+
+  //              // Update Stock
+  //              if (updateProductDto.StockQuantity.HasValue && updateProductDto.StockQuantity.Value != previousStock)
+  //              {
+  //                  var quantityChange = updateProductDto.StockQuantity.Value - previousStock;
+  //                  product.StockQuantity = updateProductDto.StockQuantity.Value;
+
+  //                  await _stockMovementRepository.AddStockMovementAsync(
+  //                      product.Id,
+  //                      quantityChange,
+  //                      previousStock,
+  //                      product.StockQuantity,
+  //                      "ADJUSTMENT",
+  //                      null,
+  //                      0,
+  //                      "Stock adjustment",
+  //                      "System",
+  //                      cancellationToken);
+  //              }
+
+  //              // L?u entity v? stock movement
+  //              await _productsRepository.SaveChangesAsync(cancellationToken);
+  //              await _stockMovementRepository.SaveChangesAsync(cancellationToken);
+
+  //              // Load l?i entity k?m relations ?? map DTO chu?n
+  //              var updatedProduct = await _productsRepository.GetByIdWithDetailsAsync(product.Id, cancellationToken);
+  //              var productDto = _mapper.Map<ProductsResponseDto>(updatedProduct);
+
+  //              return ApiResponse<ProductsResponseDto?>.Ok(productDto, "Product updated successfully.", 200);
+  //          }
+  //          catch (Exception ex)
+  //          {
+  //              _logger.LogError(ex, "Error occurred while updating product");
+  //              return ApiResponse<ProductsResponseDto?>.Fail("An error occurred while updating the product.", null, 500);
+  //          }
+  //      }
+
+
+        // main
         public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(
       int id,
       UpdateProductsDto updateProductDto,
@@ -223,7 +321,6 @@ namespace ProjectDemoWebApi.Services
 
                 var previousStock = product.StockQuantity;
 
-                product.ProductCode = updateProductDto.ProductCode ?? product.ProductCode;
                 product.ProductName = updateProductDto.ProductName ?? product.ProductName;
                 product.Description = updateProductDto.Description ?? product.Description;
                 product.Author = updateProductDto.Author ?? product.Author;
