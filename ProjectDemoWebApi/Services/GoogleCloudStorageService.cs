@@ -94,18 +94,20 @@ namespace ProjectDemoWebApi.Services
                 // Parse đường dẫn file từ URL, ví dụ:
                 // URL: https://storage.googleapis.com/your-bucket-name/folder/filename.jpg
                 var uri = new Uri(fileUrl);
-                var filePath = uri.AbsolutePath.TrimStart('/');
+                var absolytePath = uri.AbsolutePath.TrimStart('/');
+                
 
                 // Kiểm tra bucket có khớp không
-                if (!fileUrl.Contains(_bucketName))
+                if (!fileUrl.Contains(_bucketName, StringComparison.Ordinal))
                     throw new InvalidOperationException("Invalid bucket in file URL.");
 
                 // Xóa object khỏi bucket
-                await _storageClient.DeleteObjectAsync(_bucketName, filePath, cancellationToken: cancellationToken);
+                string objectName = absolytePath.StartsWith(_bucketName + "/", StringComparison.Ordinal)
+                    ? absolytePath.Substring(_bucketName.Length + 1) : absolytePath;
+                await _storageClient.DeleteObjectAsync(_bucketName, objectName, cancellationToken: cancellationToken);
             }
             catch (Google.GoogleApiException e) when (e.Error.Code == 404)
             {
-                // File không tồn tại, có thể đã bị xóa rồi
                 Console.WriteLine($"[DeleteFileAsync] File not found: {fileUrl}");
             }
             catch (Exception ex)

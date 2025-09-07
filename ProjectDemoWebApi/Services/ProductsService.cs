@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
@@ -609,22 +610,29 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
+                try
                 {
-                    var tasks = product.ProductPhotos.Select(photo =>
-                        _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken)
-                            .ContinueWith(t =>
-                            {
-                                if (t.Exception != null)
-                                    _logger.LogError(t.Exception, "Failed to delete photo {PhotoUrl}", photo.PhotoUrl);
-                            })
-                    );
-                    await Task.WhenAll(tasks);
-                }
 
-                _productsRepository.Delete(product);
-                await _productsRepository.SaveChangesAsync(cancellationToken);
-                
+                    _productsRepository.Delete(product);
+                    await _productsRepository.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex)
+                {
+                    return ApiResponse<bool>.Fail(
+                        "Can't delete product. ",
+                        false,
+                        409
+                        );
+                }
+                foreach (var photoUrl in photoUrls)
+                {
+                    try
+                    {
+                        await _googleCloudStorageService.DeleteFileAsync(photoUrl, cancellationToken);
+                    }
+                    catch { }
+                }
                 return ApiResponse<bool>.Ok(
                     true, 
                     "Product deleted successfully.", 
@@ -641,6 +649,7 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
+       
         public async Task<ApiResponse<int>> DeleteProductsAsync(List<int> ids, CancellationToken cancellationToken = default)
         {
             try
@@ -648,50 +657,74 @@ namespace ProjectDemoWebApi.Services
                 if (ids == null || ids.Count == 0)
                 {
                     return ApiResponse<int>.Fail(
-                        "No products ids provided",
+                        "No product ids provided",
                         0,
                         400
                     );
                 }
 
-                int deletionCount = 0;
+                int deletedCount = 0;
+                int deactiveCount = 0;
 
                 foreach (var productId in ids.Distinct())
                 {
                     if (productId <= 0) continue;
 
                     var product = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
-                    if (product == null) continue; // <-- b? qua n?u product không t?n t?i
+                    if (product == null) continue;
 
-                    if (product.ProductPhotos != null && product.ProductPhotos.Any())
+                    var photoUrls = product.ProductPhotos?.Select(p => p.PhotoUrl).ToList() ?? new List<string>();
+
+                    try
                     {
-                        foreach (var photo in product.ProductPhotos)
+                        _productsRepository.Delete(product);
+                        await _productsRepository.SaveChangesAsync(cancellationToken);
+
+                        foreach (var url in photoUrls)
                         {
+                            if (string.IsNullOrWhiteSpace(url)) continue;
                             try
                             {
-                                await _googleCloudStorageService.DeleteFileAsync(photo.PhotoUrl, cancellationToken);
+                                await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken);
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogError(ex, "Failed to delete photo {PhotoUrl}", photo.PhotoUrl);
+                                _logger.LogError(ex, "[DeleteProductsAsync] Failed to delete photo {PhotoUrl}", url);
                             }
                         }
-                    }
 
-                    _productsRepository.Delete(product);
-                    deletionCount++;
+                        deletedCount++;
+                    }
+                    catch (DbUpdateException)
+                    {
+                        var current = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
+                        if (current != null)
+                        {
+                            current.IsActive = false;
+                            await _productsRepository.SaveChangesAsync(cancellationToken);
+                            deactiveCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "[DeleteProductsAsync] Unexpected error for product {ProductId}", productId);
+                    }
                 }
 
-                await _productsRepository.SaveChangesAsync(cancellationToken);
+                var message = deletedCount > 0 && deactiveCount > 0
+                    ? $"{deletedCount} products deleted, {deactiveCount} deactivated."
+                    : deletedCount > 0
+                        ? $"{deletedCount} products deleted."
+                        : deactiveCount > 0
+                            ? $"{deactiveCount} products deactivated."
+                            : "No products deleted.";
 
-                return ApiResponse<int>.Ok(
-                    deletionCount,
-                    "Products deleted successfully.",
-                    200
-                );
+                return ApiResponse<int>.Ok(deletedCount + deactiveCount, message, 200);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "[DeleteProductsAsync] Fatal error");
+
                 return ApiResponse<int>.Fail(
                     "An error occurred while deleting products.",
                     0,
@@ -699,7 +732,6 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
-
 
         public async Task<ApiResponse<bool>> UpdateStockAsync(int productId, int newStock, CancellationToken cancellationToken = default)
         {
