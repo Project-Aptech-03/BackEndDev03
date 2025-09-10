@@ -1,7 +1,9 @@
 using AutoMapper;
 using ProjectDemoWebApi.DTOs.Category;
+using ProjectDemoWebApi.DTOs.Publisher;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
 
@@ -11,58 +13,102 @@ namespace ProjectDemoWebApi.Services
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
-
-        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper)
+        private readonly ILogger<CategoryService> _logger;
+        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ILogger<CategoryService> logger)
         {
             _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger ?? throw new ArgumentNullException(nameof(_logger));
+           
         }
 
-        public async Task<ApiResponse<IEnumerable<CategoryResponseDto>>> GetAllCategoriesAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetAllCategoriesPageAsync(
+     int pageNumber = 1,
+     int pageSize = 10,
+     CancellationToken cancellationToken = default)
         {
             try
             {
-                var categories = await _categoryRepository.GetAllAsync(cancellationToken);
-                var categoryDtos = _mapper.Map<IEnumerable<CategoryResponseDto>>(categories);
-                
-                return ApiResponse<IEnumerable<CategoryResponseDto>>.Ok(
-                    categoryDtos, 
-                    "Categories retrieved successfully.", 
+                if (pageNumber <= 0) pageNumber = 1;
+                if (pageSize <= 0) pageSize = 10;
+
+                var (categories, totalCount) = await _categoryRepository.GetPagedIncludeAsync(
+                    pageNumber,
+                    pageSize,
+                    predicate: null, 
+                    cancellationToken
+                );
+
+                var categoryDtos = _mapper.Map<List<CategoryResponseDto>>(categories);
+
+                var response = new PagedResponseDto<CategoryResponseDto>
+                {
+                    Items = categoryDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<CategoryResponseDto>>.Ok(
+                    response,
+                    "Categories retrieved successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<CategoryResponseDto>>.Fail(
-                    "An error occurred while retrieving categories.", 
-                    null, 
+                _logger.LogError(ex, "Error while retrieving categories with pagination");
+                return ApiResponse<PagedResponseDto<CategoryResponseDto>>.Fail(
+                    "An error occurred while retrieving categories.",
+                    null,
                     500
                 );
             }
         }
 
-        public async Task<ApiResponse<IEnumerable<CategoryResponseDto>>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default)
+
+        
+
+        public async Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetActiveCategoriesPagedAsync(
+    int pageNumber = 1,
+    int pageSize = 10,
+    CancellationToken cancellationToken = default)
         {
             try
             {
-                var categories = await _categoryRepository.GetActiveCategoriesAsync(cancellationToken);
-                var categoryDtos = _mapper.Map<IEnumerable<CategoryResponseDto>>(categories);
-                
-                return ApiResponse<IEnumerable<CategoryResponseDto>>.Ok(
-                    categoryDtos, 
-                    "Active categories retrieved successfully.", 
+                if (pageNumber <= 0) pageNumber = 1;
+                if (pageSize <= 0) pageSize = 10;
+
+                var (categories, totalCount) = await _categoryRepository.GetActiveCategoriesPagedAsync(
+                    pageNumber, pageSize, cancellationToken);
+
+                var categoryDtos = _mapper.Map<List<CategoryResponseDto>>(categories);
+
+                var response = new PagedResponseDto<CategoryResponseDto>
+                {
+                    Items = categoryDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<CategoryResponseDto>>.Ok(
+                    response,
+                    "Active categories retrieved successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<CategoryResponseDto>>.Fail(
-                    "An error occurred while retrieving active categories.", 
-                    null, 
+                _logger.LogError(ex, "Error retrieving active categories with pagination");
+                return ApiResponse<PagedResponseDto<CategoryResponseDto>>.Fail(
+                    "An error occurred while retrieving active categories.",
+                    null,
                     500
                 );
             }
         }
+
 
         public async Task<ApiResponse<CategoryResponseDto?>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -152,7 +198,6 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                // Check if category code already exists
                 var codeExists = await _categoryRepository.IsCategoryCodeExistsAsync(createCategoryDto.CategoryCode, null, cancellationToken);
                 if (codeExists)
                 {

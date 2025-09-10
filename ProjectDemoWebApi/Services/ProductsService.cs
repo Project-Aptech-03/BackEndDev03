@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
@@ -22,6 +23,7 @@ namespace ProjectDemoWebApi.Services
         private readonly ILogger<ProductsService> _logger;
         private readonly IHttpContextAccessor _httpContectAccessor;
         private readonly IGoogleCloudStorageService _googleCloudStorageService;
+        private readonly ApplicationDbContext _applicationDbContext;
         public ProductsService(
             IProductsRepository productsRepository,
             ICategoryRepository categoryRepository,
@@ -31,7 +33,8 @@ namespace ProjectDemoWebApi.Services
             ILogger<ProductsService> logger,
             IHttpContextAccessor httpContextAccessor,
             IMapper mapper,
-            IGoogleCloudStorageService googleCloudStorageService)
+            IGoogleCloudStorageService googleCloudStorageService,
+            ApplicationDbContext applicationDbContext)
         {
             _productsRepository = productsRepository ?? throw new ArgumentNullException(nameof(productsRepository));
             _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
@@ -42,6 +45,7 @@ namespace ProjectDemoWebApi.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _httpContectAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(_httpContectAccessor));
             _googleCloudStorageService = googleCloudStorageService;
+            _applicationDbContext = applicationDbContext;
         }
 
 
@@ -772,268 +776,158 @@ namespace ProjectDemoWebApi.Services
 
         public async Task<ApiResponse<bool>> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
         {
+            if (id <= 0)
+                return ApiResponse<bool>.Fail("Invalid product ID.", false, 400);
+
             try
             {
-                if (id <= 0)
-                {
-                    return ApiResponse<bool>.Fail("Invalid product ID.", false, 400);
-                }
-
+                // Load product kèm navigation
                 var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 if (product == null)
-                {
                     return ApiResponse<bool>.Fail("Product not found.", false, 404);
-                }
 
-                // Collect photo URLs tr??c khi xóa
-                var photoUrls = product.ProductPhotos?.Where(p => !string.IsNullOrWhiteSpace(p.PhotoUrl))
-                    .Select(p => p.PhotoUrl).ToList() ?? new List<string>();
-
-                bool deleted = false;
-                bool deactivated = false;
+                var photoUrls = product.ProductPhotos?
+                    .Where(p => !string.IsNullOrWhiteSpace(p.PhotoUrl))
+                    .Select(p => p.PhotoUrl)
+                    .Distinct()
+                    .ToList() ?? new List<string>();
 
                 try
                 {
-                    // Th? xóa c?ng
+                    // Xóa product (n?u cascade trong DB thì t?t c? con s? xóa theo)
                     _productsRepository.Delete(product);
                     await _productsRepository.SaveChangesAsync(cancellationToken);
-                    deleted = true;
-                }
-                catch (DbUpdateException ex)
-                {
-                    _logger.LogWarning(ex, "Cannot hard delete product {ProductId}, trying deactivate instead", id);
 
-                    // N?u b? FK constraint ? deactivate thay vì xóa
+                    // Xóa file trên cloud (n?u có)
+                    foreach (var url in photoUrls)
+                    {
+                        try
+                        {
+                            await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to delete photo {PhotoUrl} for product {ProductId}", url, id);
+                        }
+                    }
+
+                    return ApiResponse<bool>.Ok(true, "Product deleted successfully.", 200);
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    _logger.LogWarning(dbEx, "Delete failed for product {ProductId}, fallback to deactivate.", id);
+
+                    // N?u không th? xóa c?ng thì chuy?n sang deactivate
                     if (product.IsActive)
                     {
                         product.IsActive = false;
                         _productsRepository.Update(product);
                         await _productsRepository.SaveChangesAsync(cancellationToken);
-                        deactivated = true;
-                    }
-                }
 
-                // N?u xóa c?ng thành công ? xóa luôn ?nh
-                if (deleted && photoUrls.Count > 0)
-                {
-                    foreach (var photoUrl in photoUrls.Distinct())
-                    {
-                        try
-                        {
-                            await _googleCloudStorageService.DeleteFileAsync(photoUrl, cancellationToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to delete photo {PhotoUrl} for product {ProductId}", photoUrl, id);
-                        }
+                        return ApiResponse<bool>.Ok(true, "Product could not be deleted; deactivated instead.", 200);
                     }
-                }
 
-                if (deleted)
-                {
-                    return ApiResponse<bool>.Ok(true, "Product deleted successfully.", 200);
-                }
-                else if (deactivated)
-                {
-                    return ApiResponse<bool>.Ok(true, "Product could not be deleted due to references, deactivated instead.", 200);
-                }
-                else
-                {
-                    return ApiResponse<bool>.Fail("Failed to delete or deactivate the product.", false, 409);
+                    return ApiResponse<bool>.Fail(
+                        "Cannot delete or deactivate product due to DB constraints.",
+                        false, 500);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while deleting product {ProductId}", id);
-                return ApiResponse<bool>.Fail("An error occurred while deleting the product.", false, 500);
+                return ApiResponse<bool>.Fail(
+                    $"An unexpected error occurred: {ex.InnerException?.Message ?? ex.Message}",
+                    false, 500);
             }
         }
 
 
 
+
+
         public async Task<ApiResponse<int>> DeleteProductsAsync(List<int> ids, CancellationToken cancellationToken = default)
         {
+            if (ids == null || ids.Count == 0)
+                return ApiResponse<int>.Fail("No product ids provided.", 0, 400);
+
+            var validIds = ids.Where(id => id > 0).Distinct().ToList();
+            if (validIds.Count == 0)
+                return ApiResponse<int>.Fail("No valid product ids provided.", 0, 400);
+
             try
             {
-                if (ids == null || ids.Count == 0)
-                {
-                    return ApiResponse<int>.Fail(
-                        "No product ids provided",
-                        0,
-                        400
-                    );
-                }
-
-                // Remove duplicates and invalid IDs
-                var validIds = ids.Where(id => id > 0).Distinct().ToList();
-                if (validIds.Count == 0)
-                {
-                    return ApiResponse<int>.Fail(
-                        "No valid product ids provided",
-                        0,
-                        400
-                    );
-                }
-
                 int deletedCount = 0;
                 int deactivatedCount = 0;
                 var allPhotoUrls = new List<string>();
-                var productsToDelete = new List<Products>();
-                var productsToDeactivate = new List<Products>();
 
-                // First, fetch all products and categorize them
                 foreach (var productId in validIds)
                 {
                     var product = await _productsRepository.GetByIdWithDetailsAsync(productId, cancellationToken);
                     if (product == null) continue;
 
-                    // Collect photo URLs
-                    var photoUrls = product.ProductPhotos?.Where(p => !string.IsNullOrWhiteSpace(p.PhotoUrl))
-                        .Select(p => p.PhotoUrl).ToList() ?? new List<string>();
-                    allPhotoUrls.AddRange(photoUrls);
+                    var photoUrls = product.ProductPhotos?
+                        .Where(p => !string.IsNullOrWhiteSpace(p.PhotoUrl))
+                        .Select(p => p.PhotoUrl)
+                        .Distinct()
+                        .ToList() ?? new List<string>();
 
-                    // Try to determine if product can be deleted (check for foreign key constraints)
                     try
                     {
-                        // Create a test context to check constraints
-                        var testProduct = await _productsRepository.GetByIdAsync(productId, cancellationToken);
-                        if (testProduct != null)
-                        {
-                            productsToDelete.Add(product);
-                        }
-                    }
-                    catch
-                    {
-                        productsToDeactivate.Add(product);
-                    }
-                }
-
-                // Process deletions in batch
-                if (productsToDelete.Count > 0)
-                {
-                    try
-                    {
-                        _productsRepository.DeleteRange(productsToDelete);
+                        // Th? xóa product
+                        _productsRepository.Delete(product);
                         await _productsRepository.SaveChangesAsync(cancellationToken);
-                        deletedCount = productsToDelete.Count;
-                    }
-                    catch (DbUpdateException ex)
-                    {
-                        _logger.LogWarning(ex, "Batch delete failed, falling back to individual deletion");
-                        
-                        // If batch delete fails, try individual deletions
-                        foreach (var product in productsToDelete)
-                        {
-                            try
-                            {
-                                // Reload the product to ensure it's still tracked
-                                var freshProduct = await _productsRepository.GetByIdWithDetailsAsync(product.Id, cancellationToken);
-                                if (freshProduct != null)
-                                {
-                                    _productsRepository.Delete(freshProduct);
-                                    await _productsRepository.SaveChangesAsync(cancellationToken);
-                                    deletedCount++;
-                                }
-                            }
-                            catch (DbUpdateException)
-                            {
-                                // If individual delete fails, add to deactivate list
-                                productsToDeactivate.Add(product);
-                            }
-                            catch (Exception e)
-                            {
-                                _logger.LogError(e, "Failed to delete product {ProductId}", product.Id);
-                            }
-                        }
-                    }
-                }
+                        deletedCount++;
 
-                // Process deactivations
-                if (productsToDeactivate.Count > 0)
-                {
-                    foreach (var product in productsToDeactivate)
-                    {
-                        try
-                        {
-                            // Reload product to ensure it's tracked
-                            var freshProduct = await _productsRepository.GetByIdAsync(product.Id, cancellationToken);
-                            if (freshProduct != null && freshProduct.IsActive)
-                            {
-                                freshProduct.IsActive = false;
-                                _productsRepository.Update(freshProduct);
-                                deactivatedCount++;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to deactivate product {ProductId}", product.Id);
-                        }
+                        allPhotoUrls.AddRange(photoUrls);
                     }
-
-                    if (deactivatedCount > 0)
+                    catch (DbUpdateException dbEx)
                     {
-                        try
+                        _logger.LogWarning(dbEx, "Delete failed for product {ProductId}, fallback to deactivate.", productId);
+
+                        // N?u xóa th?t b?i ? deactivate
+                        if (product.IsActive)
                         {
+                            product.IsActive = false;
+                            _productsRepository.Update(product);
                             await _productsRepository.SaveChangesAsync(cancellationToken);
+                            deactivatedCount++;
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to save deactivated products");
-                            deactivatedCount = 0;
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Unexpected error while deleting product {ProductId}", productId);
                     }
                 }
 
-                // Delete photos only after successful database operations
                 if (deletedCount > 0 && allPhotoUrls.Count > 0)
                 {
-                    foreach (var photoUrl in allPhotoUrls.Distinct())
+                    foreach (var url in allPhotoUrls.Distinct())
                     {
                         try
                         {
-                            await _googleCloudStorageService.DeleteFileAsync(photoUrl, cancellationToken);
+                            await _googleCloudStorageService.DeleteFileAsync(url, cancellationToken);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "Failed to delete photo {PhotoUrl}", photoUrl);
+                            _logger.LogWarning(ex, "Failed to delete photo {PhotoUrl}", url);
                         }
                     }
                 }
 
-                // Prepare response message
                 var totalProcessed = deletedCount + deactivatedCount;
-                string message;
-                
-                if (deletedCount > 0 && deactivatedCount > 0)
-                {
-                    message = $"{deletedCount} products deleted successfully, {deactivatedCount} products deactivated (due to existing references).";
-                }
-                else if (deletedCount > 0)
-                {
-                    message = $"{deletedCount} products deleted successfully.";
-                }
-                else if (deactivatedCount > 0)
-                {
-                    message = $"{deactivatedCount} products deactivated (could not be deleted due to existing references).";
-                }
-                else
-                {
-                    message = "No products were processed successfully.";
-                }
+                string message = totalProcessed == 0
+                    ? "No products were processed successfully."
+                    : $"{deletedCount} products deleted, {deactivatedCount} products deactivated.";
 
                 return ApiResponse<int>.Ok(totalProcessed, message, 200);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fatal error while deleting multiple products");
-
-                return ApiResponse<int>.Fail(
-                    "An unexpected error occurred while deleting products.",
-                    0,
-                    500
-                );
+                return ApiResponse<int>.Fail("An unexpected error occurred while deleting products.", 0, 500);
             }
         }
+
 
         public async Task<ApiResponse<bool>> UpdateStockAsync(int productId, int newStock, CancellationToken cancellationToken = default)
         {

@@ -163,6 +163,7 @@ namespace ProjectDemoWebApi.Data
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.PublisherId)
                     .OnDelete(DeleteBehavior.SetNull);
+
             });
 
             // Configure ProductPhotos
@@ -360,7 +361,7 @@ namespace ProjectDemoWebApi.Data
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.StockMovements)
                     .HasForeignKey(d => d.ProductId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure Coupons

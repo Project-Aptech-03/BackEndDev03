@@ -11,6 +11,7 @@ namespace ProjectDemoWebApi.Services
         private readonly StorageClient _storageClient;
         private readonly string _bucketName;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger _logger;
 
 
         public GoogleCloudStorageService(IConfiguration config, IWebHostEnvironment env)
@@ -86,36 +87,36 @@ namespace ProjectDemoWebApi.Services
 
         public async Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(fileUrl))
+            if (string.IsNullOrWhiteSpace(fileUrl))
                 throw new ArgumentException("File URL cannot be null or empty.", nameof(fileUrl));
+
+            var uri = new Uri(fileUrl);
+            var absolutePath = Uri.UnescapeDataString(uri.AbsolutePath).TrimStart('/');
+   
+            string objectName = absolutePath.StartsWith(_bucketName + "/", StringComparison.OrdinalIgnoreCase)
+                ? absolutePath.Substring(_bucketName.Length + 1)
+                : absolutePath;
+
+            if (string.IsNullOrWhiteSpace(objectName))
+                throw new InvalidOperationException("Cannot determine object name from URL: " + fileUrl);
 
             try
             {
-                // Parse đường dẫn file từ URL, ví dụ:
-                // URL: https://storage.googleapis.com/your-bucket-name/folder/filename.jpg
-                var uri = new Uri(fileUrl);
-                var absolytePath = uri.AbsolutePath.TrimStart('/');
-                
+                await _storageClient.DeleteObjectAsync(_bucketName, objectName, null, cancellationToken);
 
-                // Kiểm tra bucket có khớp không
-                if (!fileUrl.Contains(_bucketName, StringComparison.Ordinal))
-                    throw new InvalidOperationException("Invalid bucket in file URL.");
-
-                // Xóa object khỏi bucket
-                string objectName = absolytePath.StartsWith(_bucketName + "/", StringComparison.Ordinal)
-                    ? absolytePath.Substring(_bucketName.Length + 1) : absolytePath;
-                await _storageClient.DeleteObjectAsync(_bucketName, objectName, cancellationToken: cancellationToken);
+                _logger.LogInformation("Deleted: gs://{Bucket}/{Object}", _bucketName, objectName);
             }
-            catch (Google.GoogleApiException e) when (e.Error.Code == 404)
+            catch (Google.GoogleApiException e) when (e.Error?.Code == 404)
             {
-                Console.WriteLine($"[DeleteFileAsync] File not found: {fileUrl}");
+                _logger.LogWarning("[DeleteFileAsync] File not found: {Url}", fileUrl);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DeleteFileAsync] Unexpected error: {ex.Message}");
+                _logger.LogError(ex, "[DeleteFileAsync] Unexpected error while deleting {Url}", fileUrl);
                 throw;
             }
         }
+
 
 
     }

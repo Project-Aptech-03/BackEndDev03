@@ -41,6 +41,7 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICouponService, CouponService>();
+            services.AddScoped<IPublishersService, PublishersService>();
             // Note: ICustomerAddressService implementation needed
 
             // Keep existing services
