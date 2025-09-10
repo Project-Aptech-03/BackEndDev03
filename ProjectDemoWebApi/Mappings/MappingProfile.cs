@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ProjectDemoWebApi.DTOs;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.CustomerAddress;
@@ -72,7 +73,12 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreatePaymentDto, Payments>();
             CreateMap<UpdatePaymentDto, Payments>();
             CreateMap<Payments, PaymentResponseDto>();
-            
+
+            //=============faq===============
+            CreateMap<Faq, FaqDto>();
+            CreateMap<CreateFaqDto, Faq>();
+            CreateMap<UpdateFaqDto, Faq>();
+
 
         }
     }

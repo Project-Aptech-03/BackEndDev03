@@ -145,5 +145,39 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// Seed Admin + Roles
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var userManager = services.GetRequiredService<UserManager<Users>>();
+    var roleManager = services.GetRequiredService<RoleManager<Roles>>();
+
+    if (!await roleManager.RoleExistsAsync("Admin"))
+        await roleManager.CreateAsync(new Roles { Name = "Admin" });
+
+    var adminEmail = "sinhndhcmr@gmail.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        var admin = new Users
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "Sinh",
+            LastName = "Nguyen",
+            EmailConfirmed = true
+        };
+        var result = await userManager.CreateAsync(admin, "Sinhnd@89");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
+    }
+
+    var seeder = services.GetService<IRoleSeederService>();
+    if (seeder != null)
+        await seeder.SeedAsync();
+}
 
 app.Run();

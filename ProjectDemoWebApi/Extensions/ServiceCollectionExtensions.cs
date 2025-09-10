@@ -1,6 +1,8 @@
 using ProjectDemoWebApi.Repositories;
+using ProjectDemoWebApi.Repositories.Implementations;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
+using ProjectDemoWebApi.Services.Implementations;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Extensions
@@ -25,8 +27,12 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICouponRepository, CouponRepository>();
             services.AddScoped<ICustomerQueryRepository, CustomerQueryRepository>();
             services.AddScoped<IAdminReplyRepository, AdminReplyRepository>();
-            services.AddScoped<IFAQRepository, FAQRepository>();
+            
             services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
+
+            //===faq    =================
+            services.AddScoped<IFaqRepository, FaqRepository>();
+            services.AddScoped<IFaqService, FaqService>();
 
             return services;
         }
