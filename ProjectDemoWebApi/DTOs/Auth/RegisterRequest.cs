@@ -36,6 +36,6 @@ namespace ProjectDemoWebApi.DTOs.Auth
         public string PhoneNumber { get; set; } = string.Empty;
 
         [StringLength(256, ErrorMessage = "Avatar URL cannot exceed 256 characters.")]
-        public string? AvataUrl { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

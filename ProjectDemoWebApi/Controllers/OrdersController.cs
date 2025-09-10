@@ -12,14 +12,10 @@ namespace ProjectDemoWebApi.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        private readonly IPaymentVerificationService _paymentVerificationService;
-        private readonly ISePayService _sePayService;
 
-        public OrdersController(IOrderService orderService, IPaymentVerificationService paymentVerificationService, ISePayService sePayService)
+        public OrdersController(IOrderService orderService)
         {
             _orderService = orderService;
-            _paymentVerificationService = paymentVerificationService;
-            _sePayService = sePayService;
         }
 
         private string GetUserId()
@@ -52,71 +48,26 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get the 20 most recent transactions from SePay - Admin only
-        /// </summary>
-        [HttpGet("sepay-transactions")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetSePayTransactions()
-        {
-            var result = await _sePayService.GetTransactionsAsync();
-            return StatusCode(result.StatusCode, result);
-        }
-
         #endregion
 
         #region Customer Functions
 
         /// <summary>
-        /// Create an order and automatically start verification if it's a bank transfer
+        /// Create an order
         /// </summary>
         [HttpPost("checkout")]
         public async Task<IActionResult> CheckoutOrder(CreateOrderDto createOrderDto)
         {
-            var userId = GetUserId();
 
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetUserId();
             // Create the order
             var orderResult = await _orderService.CreateOrderAsync(userId, createOrderDto);
-            if (!orderResult.Success || orderResult.Data == null)
-            {
-                return StatusCode(orderResult.StatusCode, orderResult);
-            }
 
-            var order = orderResult.Data;
-
-            // If it's a bank transfer, automatically start payment verification
-            if (createOrderDto.PaymentType.Equals("Chuyển khoản", StringComparison.OrdinalIgnoreCase) ||
-                createOrderDto.PaymentType.Equals("Bank Transfer", StringComparison.OrdinalIgnoreCase))
-            {
-                var transferContent = $"DH{order.OrderNumber}";
-
-                // Start verification in the background (fire-and-forget)
-                _ = Task.Run(async () =>
-                {
-                    await _paymentVerificationService.StartVerificationAsync(
-                        order.Id,
-                        order.TotalAmount,
-                        transferContent
-                    );
-                });
-            }
-
-            return Ok(new
-            {
-                Success = true,
-                Message = createOrderDto.PaymentType.Equals("Chuyển khoản", StringComparison.OrdinalIgnoreCase)
-                    ? "Order created successfully. The system will automatically check for payment in the next 20 minutes."
-                    : "Order created successfully.",
-                Data = new
-                {
-                    Order = order,
-                    TransferContent = createOrderDto.PaymentType.Equals("Chuyển khoản", StringComparison.OrdinalIgnoreCase)
-                        ? $"DH{order.OrderNumber}"
-                        : null,
-                    AutoVerificationStarted = createOrderDto.PaymentType.Equals("Chuyển khoản", StringComparison.OrdinalIgnoreCase)
-                },
-                StatusCode = 200
-            });
+            return StatusCode(orderResult.StatusCode, orderResult);
+                
         }
 
         /// <summary>
@@ -130,26 +81,27 @@ namespace ProjectDemoWebApi.Controllers
 
             var userId = GetUserId();
 
-            // Stop verification if it's running
-            _paymentVerificationService.StopVerification(id);
-
             var result = await _orderService.CancelOrderAsync(id, userId, cancelOrderDto);
             return StatusCode(result.StatusCode, result);
         }
 
         #endregion
 
-        #region Common Functions
+        #region Order Code Generation
 
         /// <summary>
-        /// Get order by ID with full details
+        /// Get the next available order code for checkout preparation
         /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrderById(int id)
+        [HttpGet("next-order-code")]
+        public async Task<IActionResult> GetNextOrderCode()
         {
-            var result = await _orderService.GetOrderByIdAsync(id);
+            var result = await _orderService.GetNextOrderCodeAsync();
             return StatusCode(result.StatusCode, result);
         }
+
+        #endregion
+
+        #region Common Functions
 
         /// <summary>
         /// Get customer's own orders
@@ -163,24 +115,13 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// Check the order's verification status (info only)
+        /// Get order by ID with full details
         /// </summary>
-        [HttpGet("{id}/verification-status")]
-        public IActionResult GetVerificationStatus(int id)
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetOrderById(int id)
         {
-            var isVerifying = _paymentVerificationService.IsVerifying(id);
-
-            return Ok(new
-            {
-                Success = true,
-                Data = new
-                {
-                    OrderId = id,
-                    IsVerifying = isVerifying,
-                    Message = isVerifying ? "Automatically checking for payment" : "No verification currently running"
-                },
-                StatusCode = 200
-            });
+            var result = await _orderService.GetOrderByIdAsync(id);
+            return StatusCode(result.StatusCode, result);
         }
 
         #endregion

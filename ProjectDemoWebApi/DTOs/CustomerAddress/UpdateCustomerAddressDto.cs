@@ -4,22 +4,19 @@ namespace ProjectDemoWebApi.DTOs.CustomerAddress
 {
     public class UpdateCustomerAddressDto
     {
-        [StringLength(100, ErrorMessage = "Tên ??a ch? không ???c v??t quá 100 ký t?.")]
+        [StringLength(100, ErrorMessage = "Address name cannot exceed 100 characters.")]
         public string? AddressName { get; set; }
 
-        [StringLength(500, ErrorMessage = "??a ch? ??y ?? không ???c v??t quá 500 ký t?.")]
+        [StringLength(100, ErrorMessage = "Full name cannot exceed 100 characters.")]
+        public string? FullName { get; set; }
+
+        [StringLength(500, ErrorMessage = "Full address cannot exceed 500 characters.")]
         public string? FullAddress { get; set; }
 
-        [StringLength(100, ErrorMessage = "Qu?n/Huy?n không ???c v??t quá 100 ký t?.")]
-        public string? District { get; set; }
+        [StringLength(15, ErrorMessage = "Phone number cannot exceed 15 characters.")]
+        public string? PhoneNumber { get; set; }
 
-        [StringLength(100, ErrorMessage = "Thành ph? không ???c v??t quá 100 ký t?.")]
-        public string? City { get; set; }
-
-        [StringLength(10, ErrorMessage = "Mã b?u ?i?n không ???c v??t quá 10 ký t?.")]
-        public string? PostalCode { get; set; }
-
-        [Range(0, 999.99, ErrorMessage = "Kho?ng cách ph?i t? 0 ??n 999.99 km.")]
+        [Range(0, 999.99, ErrorMessage = "Distance must be between 0 and 999.99 km.")]
         public decimal? DistanceKm { get; set; }
 
         public bool? IsDefault { get; set; }

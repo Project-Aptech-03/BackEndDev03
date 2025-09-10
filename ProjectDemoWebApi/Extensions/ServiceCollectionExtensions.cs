@@ -23,7 +23,6 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderItemRepository, OrderItemRepository>();
-            services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IProductReturnRepository, ProductReturnRepository>();
             services.AddScoped<IStockMovementRepository, StockMovementRepository>();
             services.AddScoped<ICouponRepository, CouponRepository>();
@@ -89,6 +88,42 @@ namespace ProjectDemoWebApi.Extensions
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "cross-site");
             });
 
+            // Payment Services - Register HttpClient for SePayService
+            services.AddHttpClient<ISePayService, SePayService>((serviceProvider, client) =>
+            {
+                var sePaySettings = serviceProvider.GetRequiredService<IOptions<SePaySettings>>().Value;
+
+                // Check for null safety
+                if (string.IsNullOrEmpty(sePaySettings.ApiUrl))
+                {
+                    throw new InvalidOperationException("SePay ApiUrl is not configured");
+                }
+
+                if (string.IsNullOrEmpty(sePaySettings.ApiKey))
+                {
+                    throw new InvalidOperationException("SePay ApiKey is not configured");
+                }
+
+                // Configure base address
+                client.BaseAddress = new Uri(sePaySettings.ApiUrl);
+
+                // Configure timeout
+                client.Timeout = TimeSpan.FromSeconds(30);
+
+                // Configure headers
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {sePaySettings.ApiKey}");
+                client.DefaultRequestHeaders.Add("User-Agent", "SePayService/1.0");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+
+                // Add headers to avoid Cloudflare protection
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "cross-site");
+            });
+
             // Infrastructure Services
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
@@ -101,7 +136,7 @@ namespace ProjectDemoWebApi.Extensions
         {
             services.AddRepositories();
             services.AddBusinessServices();
-            
+
             return services;
         }
     }

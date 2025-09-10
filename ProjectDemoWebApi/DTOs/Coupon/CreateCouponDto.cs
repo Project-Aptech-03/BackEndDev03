@@ -4,37 +4,37 @@ namespace ProjectDemoWebApi.DTOs.Coupon
 {
     public class CreateCouponDto
     {
-        [Required(ErrorMessage = "Mã coupon không ???c ?? tr?ng.")]
-        [StringLength(50, ErrorMessage = "Mã coupon không ???c v??t quá 50 ký t?.")]
+        [Required(ErrorMessage = "Coupon code cannot be empty.")]
+        [StringLength(50, ErrorMessage = "Coupon code cannot exceed 50 characters.")]
         public string CouponCode { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Tên coupon không ???c ?? tr?ng.")]
-        [StringLength(100, ErrorMessage = "Tên coupon không ???c v??t quá 100 ký t?.")]
+        [Required(ErrorMessage = "Coupon name cannot be empty.")]
+        [StringLength(100, ErrorMessage = "Coupon name cannot exceed 100 characters.")]
         public string CouponName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Lo?i gi?m giá không ???c ?? tr?ng.")]
-        [RegularExpression("^(percentage|fixed)$", ErrorMessage = "Lo?i gi?m giá ph?i là 'percentage' ho?c 'fixed'.")]
+        [Required(ErrorMessage = "Discount type cannot be empty.")]
+        [RegularExpression("^(percentage|fixed)$", ErrorMessage = "Discount type must be 'percentage' or 'fixed'.")]
         public string DiscountType { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Giá tr? gi?m giá không ???c ?? tr?ng.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Giá tr? gi?m giá ph?i l?n h?n 0.")]
+        [Required(ErrorMessage = "Discount value cannot be empty.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Discount value must be greater than 0.")]
         public decimal DiscountValue { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "S? ti?n ??n hàng t?i thi?u ph?i l?n h?n ho?c b?ng 0.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Minimum order amount must be greater than or equal to 0.")]
         public decimal MinOrderAmount { get; set; } = 0;
 
-        [Range(0, double.MaxValue, ErrorMessage = "S? ti?n gi?m giá t?i ?a ph?i l?n h?n ho?c b?ng 0.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Maximum discount amount must be greater than or equal to 0.")]
         public decimal MaxDiscountAmount { get; set; } = 0;
 
-        [Required(ErrorMessage = "S? l??ng không ???c ?? tr?ng.")]
-        [Range(-1, int.MaxValue, ErrorMessage = "S? l??ng ph?i l?n h?n ho?c b?ng -1 (vô h?n) ho?c l?n h?n 0.")]
+        [Required(ErrorMessage = "Quantity cannot be empty.")]
+        [Range(-1, int.MaxValue, ErrorMessage = "Quantity must be greater than or equal to -1 (infinite) or greater than 0.")]
         public int Quantity { get; set; } = 1;
 
-        [Required(ErrorMessage = "Ngày b?t ??u không ???c ?? tr?ng.")]
+        [Required(ErrorMessage = "Start date cannot be empty.")]
         [DataType(DataType.DateTime)]
         public DateTime StartDate { get; set; }
 
-        [Required(ErrorMessage = "Ngày k?t thúc không ???c ?? tr?ng.")]
+        [Required(ErrorMessage = "End date cannot be empty.")]
         [DataType(DataType.DateTime)]
         public DateTime EndDate { get; set; }
 
@@ -48,21 +48,21 @@ namespace ProjectDemoWebApi.DTOs.Coupon
             if (EndDate <= StartDate)
             {
                 yield return new ValidationResult(
-                    "Ngày k?t thúc ph?i sau ngày b?t ??u.",
+                    "End date must be after start date.",
                     new[] { nameof(EndDate) });
             }
 
             if (StartDate < DateTime.Now.Date)
             {
                 yield return new ValidationResult(
-                    "Ngày b?t ??u không ???c là ngày trong quá kh?.",
+                    "Start date cannot be in the past.",
                     new[] { nameof(StartDate) });
             }
 
             if (DiscountType == "percentage" && DiscountValue > 100)
             {
                 yield return new ValidationResult(
-                    "Giá tr? gi?m giá theo ph?n tr?m không ???c v??t quá 100%.",
+                    "Percentage discount value cannot exceed 100%.",
                     new[] { nameof(DiscountValue) });
             }
         }

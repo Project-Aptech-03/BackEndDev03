@@ -256,7 +256,7 @@ namespace ProjectDemoWebApi.Data
                     .HasDefaultValueSql("GETUTCDATE()");
 
                 entity.HasOne(d => d.DeliveryAddress)
-                    .WithMany(p => p.Orders)
+                    .WithMany()
                     .HasForeignKey(d => d.DeliveryAddressId)
                     .OnDelete(DeleteBehavior.Restrict);
 
@@ -278,12 +278,6 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.Quantity)
                     .HasDefaultValue(1);
-
-                entity.Property(e => e.DiscountPercent)
-                    .HasDefaultValue(0);
-
-                entity.Property(e => e.DiscountAmount)
-                    .HasDefaultValue(0);
 
                 // Configure relationships
                 entity.HasOne(d => d.Order)

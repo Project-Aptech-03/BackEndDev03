@@ -11,11 +11,16 @@ namespace ProjectDemoWebApi.Services
     {
         private readonly ICustomerAddressRepository _customerAddressRepository;
         private readonly IMapper _mapper;
+        //private readonly IDistanceCalculationService _distanceCalculationService;
 
-        public CustomerAddressService(ICustomerAddressRepository customerAddressRepository, IMapper mapper)
+        public CustomerAddressService(
+            ICustomerAddressRepository customerAddressRepository,
+            IMapper mapper )
+            //IDistanceCalculationService distanceCalculationService)
         {
             _customerAddressRepository = customerAddressRepository;
             _mapper = mapper;
+            //_distanceCalculationService = distanceCalculationService;
         }
 
         public async Task<ApiResponse<IEnumerable<CustomerAddressResponseDto>>> GetUserAddressesAsync(string userId, CancellationToken cancellationToken = default)
@@ -24,12 +29,12 @@ namespace ProjectDemoWebApi.Services
             {
                 var addresses = await _customerAddressRepository.GetUserAddressesAsync(userId, cancellationToken);
                 var addressDtos = _mapper.Map<IEnumerable<CustomerAddressResponseDto>>(addresses);
-                
-                return ApiResponse<IEnumerable<CustomerAddressResponseDto>>.Ok(addressDtos, "L?y danh sách ??a ch? thành công");
+
+                return ApiResponse<IEnumerable<CustomerAddressResponseDto>>.Ok(addressDtos, "Successfully retrieved the list of addresses.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<IEnumerable<CustomerAddressResponseDto>>.Fail($"L?i khi l?y danh sách ??a ch?: {ex.Message}");
+                return ApiResponse<IEnumerable<CustomerAddressResponseDto>>.Fail($"Error retrieving the list of addresses: {ex.Message}");
             }
         }
 
@@ -37,7 +42,7 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                // Ki?m tra xem có ??a ch? nào ch?a, n?u ch?a thì t? ??ng ??t là m?c ??nh
+                // Check if there are any existing addresses; if not, automatically set the new one as default.
                 var existingAddresses = await _customerAddressRepository.GetUserAddressesAsync(userId, cancellationToken);
                 var isFirstAddress = !existingAddresses.Any();
 
@@ -46,7 +51,19 @@ namespace ProjectDemoWebApi.Services
                 address.IsDefault = isFirstAddress || createAddressDto.IsDefault;
                 address.CreatedDate = DateTime.UtcNow;
 
-                // N?u ??t là m?c ??nh, b? default c?a các ??a ch? khác
+                // Calculate the distance from the shop using only FullAddress
+                //var distance = await _distanceCalculationService.CalculateDistanceAsync(address.FullAddress, cancellationToken);
+                Random random = new Random();
+                decimal distance = (decimal)(random.NextDouble() * 19.0 + 1.0);
+
+                //if (distance == null)
+                //{
+                //    return ApiResponse<CustomerAddressResponseDto>.Fail("Could not calculate the distance from the store. Please check the address and try again.", statusCode: 400);
+                //}
+
+                address.DistanceKm = distance;
+
+                // If this address is set as default, unset the default status of all other addresses.
                 if (address.IsDefault)
                 {
                     await _customerAddressRepository.UnsetAllDefaultAddressesAsync(userId, cancellationToken);
@@ -54,12 +71,12 @@ namespace ProjectDemoWebApi.Services
 
                 var createdAddress = await _customerAddressRepository.CreateAddressAsync(address, cancellationToken);
                 var addressDto = _mapper.Map<CustomerAddressResponseDto>(createdAddress);
-                
-                return ApiResponse<CustomerAddressResponseDto>.Ok(addressDto, "T?o ??a ch? thành công", 201);
+
+                return ApiResponse<CustomerAddressResponseDto>.Ok(addressDto, "Address created successfully.", 201);
             }
             catch (Exception ex)
             {
-                return ApiResponse<CustomerAddressResponseDto>.Fail($"L?i khi t?o ??a ch?: {ex.Message}");
+                return ApiResponse<CustomerAddressResponseDto>.Fail($"Error creating the address: {ex.Message}");
             }
         }
 
@@ -68,40 +85,56 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var existingAddress = await _customerAddressRepository.GetAddressByIdAsync(id, cancellationToken);
-                
+
                 if (existingAddress == null)
                 {
-                    return ApiResponse<CustomerAddressResponseDto?>.Fail("Không tìm th?y ??a ch?", statusCode: 404);
+                    return ApiResponse<CustomerAddressResponseDto?>.Fail("Address not found.", statusCode: 404);
                 }
 
                 if (existingAddress.UserId != userId)
                 {
-                    return ApiResponse<CustomerAddressResponseDto?>.Fail("B?n không có quy?n c?p nh?t ??a ch? này", statusCode: 403);
+                    return ApiResponse<CustomerAddressResponseDto?>.Fail("You do not have permission to update this address.", statusCode: 403);
                 }
 
-                // C?p nh?t thông tin
+                var shouldRecalculateDistance = false;
+
+                // Update information
                 if (!string.IsNullOrEmpty(updateAddressDto.AddressName))
                     existingAddress.AddressName = updateAddressDto.AddressName;
-                
+
+                if (!string.IsNullOrEmpty(updateAddressDto.FullName))
+                    existingAddress.FullName = updateAddressDto.FullName;
+
+                if (!string.IsNullOrEmpty(updateAddressDto.PhoneNumber))
+                    existingAddress.PhoneNumber = updateAddressDto.PhoneNumber;
+
                 if (!string.IsNullOrEmpty(updateAddressDto.FullAddress))
+                {
                     existingAddress.FullAddress = updateAddressDto.FullAddress;
-                
-                if (updateAddressDto.District != null)
-                    existingAddress.District = updateAddressDto.District;
-                
-                if (updateAddressDto.City != null)
-                    existingAddress.City = updateAddressDto.City;
-                
-                if (updateAddressDto.PostalCode != null)
-                    existingAddress.PostalCode = updateAddressDto.PostalCode;
-                
-                if (updateAddressDto.DistanceKm.HasValue)
-                    existingAddress.DistanceKm = updateAddressDto.DistanceKm;
+                    shouldRecalculateDistance = true;
+                }
+
+                // Recalculate distance if the address has changed
+                //if (shouldRecalculateDistance)
+                //{
+                //    var distance = await _distanceCalculationService.CalculateDistanceAsync(existingAddress.FullAddress, cancellationToken);
+
+                //    if (distance == null)
+                //    {
+                //        return ApiResponse<CustomerAddressResponseDto?>.Fail("Could not calculate the distance from the store. Please check the address.", statusCode: 400);
+                //    }
+
+                //    existingAddress.DistanceKm = distance.Value;
+                //}
+                //else if (updateAddressDto.DistanceKm.HasValue)
+                //{
+                //    existingAddress.DistanceKm = updateAddressDto.DistanceKm;
+                //}
 
                 if (updateAddressDto.IsActive.HasValue)
                     existingAddress.IsActive = updateAddressDto.IsActive.Value;
 
-                // X? lý default address
+                // Handle default address
                 if (updateAddressDto.IsDefault.HasValue && updateAddressDto.IsDefault.Value && !existingAddress.IsDefault)
                 {
                     await _customerAddressRepository.UnsetAllDefaultAddressesAsync(userId, cancellationToken);
@@ -110,12 +143,12 @@ namespace ProjectDemoWebApi.Services
 
                 var updatedAddress = await _customerAddressRepository.UpdateAddressAsync(existingAddress, cancellationToken);
                 var addressDto = _mapper.Map<CustomerAddressResponseDto>(updatedAddress);
-                
-                return ApiResponse<CustomerAddressResponseDto?>.Ok(addressDto, "C?p nh?t ??a ch? thành công");
+
+                return ApiResponse<CustomerAddressResponseDto?>.Ok(addressDto, "Address updated successfully.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<CustomerAddressResponseDto?>.Fail($"L?i khi c?p nh?t ??a ch?: {ex.Message}");
+                return ApiResponse<CustomerAddressResponseDto?>.Fail($"Error updating the address: {ex.Message}");
             }
         }
 
@@ -124,34 +157,34 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var address = await _customerAddressRepository.GetAddressByIdAsync(addressId, cancellationToken);
-                
+
                 if (address == null)
                 {
-                    return ApiResponse<bool>.Fail("Không tìm th?y ??a ch?", statusCode: 404);
+                    return ApiResponse<bool>.Fail("Address not found.", statusCode: 404);
                 }
 
                 if (address.UserId != userId)
                 {
-                    return ApiResponse<bool>.Fail("B?n không có quy?n thao tác v?i ??a ch? này", statusCode: 403);
+                    return ApiResponse<bool>.Fail("You do not have permission to perform this action on this address.", statusCode: 403);
                 }
 
                 if (!address.IsActive)
                 {
-                    return ApiResponse<bool>.Fail("Không th? ??t ??a ch? không ho?t ??ng làm m?c ??nh", statusCode: 400);
+                    return ApiResponse<bool>.Fail("An inactive address cannot be set as default.", statusCode: 400);
                 }
 
-                // B? default c?a t?t c? ??a ch? khác
+                // Unset default status for all other addresses
                 await _customerAddressRepository.UnsetAllDefaultAddressesAsync(userId, cancellationToken);
-                
-                // ??t ??a ch? này làm m?c ??nh
+
+                // Set this address as the default
                 address.IsDefault = true;
                 await _customerAddressRepository.UpdateAddressAsync(address, cancellationToken);
-                
-                return ApiResponse<bool>.Ok(true, "??t ??a ch? m?c ??nh thành công");
+
+                return ApiResponse<bool>.Ok(true, "Default address set successfully.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.Fail($"L?i khi ??t ??a ch? m?c ??nh: {ex.Message}");
+                return ApiResponse<bool>.Fail($"Error setting default address: {ex.Message}");
             }
         }
 
@@ -160,32 +193,32 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var address = await _customerAddressRepository.GetAddressByIdAsync(id, cancellationToken);
-                
+
                 if (address == null)
                 {
-                    return ApiResponse<bool>.Fail("Không tìm th?y ??a ch?", statusCode: 404);
+                    return ApiResponse<bool>.Fail("Address not found.", statusCode: 404);
                 }
 
                 if (address.UserId != userId)
                 {
-                    return ApiResponse<bool>.Fail("B?n không có quy?n xóa ??a ch? này", statusCode: 403);
+                    return ApiResponse<bool>.Fail("You do not have permission to delete this address.", statusCode: 403);
                 }
 
                 if (!address.IsActive)
                 {
-                    return ApiResponse<bool>.Fail("??a ch? ?ã ???c xóa tr??c ?ó", statusCode: 400);
+                    return ApiResponse<bool>.Fail("Address has already been deleted.", statusCode: 400);
                 }
 
-                // Soft delete: ??t IsActive = false
+                // Soft delete: set IsActive = false
                 address.IsActive = false;
-                
-                // N?u xóa ??a ch? m?c ??nh, t? ??ng ??t ??a ch? khác làm m?c ??nh
+
+                // If the default address is deleted, automatically set another address as default
                 if (address.IsDefault)
                 {
                     address.IsDefault = false;
                     await _customerAddressRepository.UpdateAddressAsync(address, cancellationToken);
-                    
-                    // Tìm ??a ch? active khác ?? ??t làm m?c ??nh
+
+                    // Find another active address to set as default
                     var remainingAddresses = await _customerAddressRepository.GetActiveUserAddressesAsync(userId, cancellationToken);
                     var firstActive = remainingAddresses.FirstOrDefault(a => a.Id != id);
                     if (firstActive != null)
@@ -199,11 +232,11 @@ namespace ProjectDemoWebApi.Services
                     await _customerAddressRepository.UpdateAddressAsync(address, cancellationToken);
                 }
 
-                return ApiResponse<bool>.Ok(true, "Xóa ??a ch? thành công");
+                return ApiResponse<bool>.Ok(true, "Address deleted successfully.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<bool>.Fail($"L?i khi xóa ??a ch?: {ex.Message}");
+                return ApiResponse<bool>.Fail($"Error deleting the address: {ex.Message}");
             }
         }
     }

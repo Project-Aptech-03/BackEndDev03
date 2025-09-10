@@ -40,10 +40,7 @@ namespace ProjectDemoWebApi.DTOs.Order
         public int ProductId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
-        public decimal DiscountPercent { get; set; }
-        public decimal DiscountAmount { get; set; }
         public decimal TotalPrice { get; set; }
-        public string? Notes { get; set; }
 
         // Related product info
         public ProductsResponseDto? Product { get; set; }

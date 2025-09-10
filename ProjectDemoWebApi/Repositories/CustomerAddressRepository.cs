@@ -13,7 +13,7 @@ namespace ProjectDemoWebApi.Repositories
 
         public async Task<IEnumerable<CustomerAddresses>> GetUserAddressesAsync(string userId, CancellationToken cancellationToken = default)
         {
-            // Ch? l?y ??a ch? ?ang active cho user thông th??ng, s?p x?p ??a ch? m?c ??nh lên ??u
+            // Only retrieve active addresses for a regular user, sorting the default address to the top.
             return await _dbSet.AsNoTracking()
                 .Where(ca => ca.UserId == userId && ca.IsActive)
                 .OrderByDescending(ca => ca.IsDefault)

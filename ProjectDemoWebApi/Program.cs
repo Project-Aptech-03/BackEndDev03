@@ -36,12 +36,21 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
+// Shop settings configuration
+builder.Services.Configure<ShopSettings>(builder.Configuration.GetSection("ShopSettings"));
+
+// Google Maps settings configuration
+builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
+
+// SePay settings configuration
+builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePay"));
+
+// HttpClient for distance calculation service
+builder.Services.AddHttpClient<IDistanceCalculationService, DistanceCalculationService>();
+
 // DbContext configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
-
-builder.Services.Configure<SePaySettings>(
-            builder.Configuration.GetSection("SePay"));
 
 builder.Services.AddAuthorization();
 
@@ -60,11 +69,6 @@ builder.Services.AddIdentity<Users, Roles>()
 
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
-
-builder.Services.AddHostedService<UnconfirmedUserCleanupService>();
-
-
-builder.Services.AddHttpContextAccessor();
 
 // Jwt
 builder.Services.AddAuthentication(options =>
