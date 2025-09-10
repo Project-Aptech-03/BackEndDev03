@@ -9,8 +9,6 @@ using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Extensions;
 using ProjectDemoWebApi.Models;
-using ProjectDemoWebApi.Repositories;
-using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using ProjectDemoWebApi.Validation;
@@ -41,6 +39,9 @@ builder.Services.AddScoped<IEmailSender, EmailService>();
 // DbContext configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
+
+builder.Services.Configure<SePaySettings>(
+            builder.Configuration.GetSection("SePay"));
 
 builder.Services.AddAuthorization();
 

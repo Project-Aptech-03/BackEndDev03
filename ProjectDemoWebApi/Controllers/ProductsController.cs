@@ -6,6 +6,7 @@ using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
 {
+    [Authorize]
     [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
@@ -17,11 +18,12 @@ namespace ProjectDemoWebApi.Controllers
             _productsService = productsService;
         }
 
-   
+
 
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts()
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int size = 20)
         {
             var result = await _productsService.GetProductsPagedAsync(page, size);
             return StatusCode(result.StatusCode, result);
@@ -52,7 +54,7 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpDelete]
         [Route("batch")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProducts([FromBody] List<int> ids)
         {
             var result = await _productsService.DeleteProductsAsync(ids);
@@ -68,7 +70,16 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
+        [HttpGet("code/{code}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProductByCode(string code)
+        {
+            var result = await _productsService.GetProductByCodeAsync(code);
+            return StatusCode(result.StatusCode, result);
+        }
+
         [HttpGet("category/{categoryId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetProductsByCategory(int categoryId)
         {
             var result = await _productsService.GetProductsByCategoryAsync(categoryId);
@@ -76,9 +87,21 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet("manufacturer/{manufacturerId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetProductsByManufacturer(int manufacturerId)
         {
             var result = await _productsService.GetProductsByManufacturerAsync(manufacturerId);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("search")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SearchProducts([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest("Search term is required");
+
+            var result = await _productsService.SearchProductsAsync(q);
             return StatusCode(result.StatusCode, result);
         }
 
@@ -90,9 +113,9 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-       
 
-       
+
+
 
         [HttpPut("{id}/stock")]
         [Authorize(Roles = "Admin")]
@@ -102,6 +125,6 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        
+
     }
 }

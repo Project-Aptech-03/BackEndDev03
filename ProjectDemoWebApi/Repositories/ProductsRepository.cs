@@ -38,7 +38,7 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive)) // Ch? l?y ?nh active
+                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
                 .Where(p => p.IsActive) // Only return active products by default
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
@@ -74,7 +74,7 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive)) // Ch? l?y ?nh active
+                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
                 .Where(p => p.CategoryId == categoryId && p.IsActive && p.StockQuantity > 0)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
@@ -86,7 +86,7 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive)) // Ch? l?y ?nh active
+                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
                 .Where(p => p.ManufacturerId == manufacturerId && p.IsActive && p.StockQuantity > 0)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
@@ -132,6 +132,17 @@ namespace ProjectDemoWebApi.Repositories
             return await query.AnyAsync(p => p.ProductCode == productCode, cancellationToken);
         }
 
+        public async Task<IEnumerable<Products>> GetLowStockProductsAsync(int threshold = 10, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Manufacturer)
+                .Where(p => p.IsActive && p.StockQuantity <= threshold)
+                .OrderBy(p => p.StockQuantity)
+                .ThenBy(p => p.ProductName)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task UpdateStockAsync(int productId, int newStock, CancellationToken cancellationToken = default)
         {
             await _dbSet
@@ -142,10 +153,6 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<Products?> GetByIdNoTrackingAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
-                .Include(p => p.Category)
-                .Include(p => p.Manufacturer) 
-                .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive)) // Include photos khi get by ID
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
