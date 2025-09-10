@@ -26,46 +26,34 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUserClaims",
+                name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    AvatarUrl = table.Column<string>(type: "nvarchar(256)", nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(256)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserLogins",
-                columns: table => new
-                {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserTokens",
-                columns: table => new
-                {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -176,36 +164,6 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(256)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(256)", nullable: false),
-                    AvataUrl = table.Column<string>(type: "nvarchar(256)", nullable: true),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Address = table.Column<string>(type: "nvarchar(256)", nullable: true),
-                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -227,11 +185,53 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetUserClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserLogins",
+                columns: table => new
+                {
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UsersId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -242,6 +242,89 @@ namespace ProjectDemoWebApi.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetUsers_UsersId",
+                        column: x => x.UsersId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserTokens",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    full_address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    district = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    city = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    postal_code = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    distance_km = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
+                    is_default = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerAddresses_AspNetUsers_user_id",
+                        column: x => x.user_id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerQueries",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    customer_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    customer_email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    subject = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Open"),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerQueries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerQueries_AspNetUsers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -290,54 +373,73 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CustomerAddresses",
+                name: "Orders",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    full_address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    district = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    city = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    postal_code = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    distance_km = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
-                    is_default = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    order_number = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    delivery_address_id = table.Column<int>(type: "int", nullable: false),
+                    order_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    subtotal = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    coupon_discount_amount = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    delivery_charges = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
+                    total_amount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
+                    order_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    payment_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    payment_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    applied_coupons = table.Column<string>(type: "text", nullable: true),
+                    delivery_notes = table.Column<string>(type: "text", nullable: true),
+                    cancellation_reason = table.Column<string>(type: "text", nullable: true),
+                    cancelled_date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
+                    table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CustomerAddresses_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
+                        name: "FK_Orders_AspNetUsers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Orders_CustomerAddresses_delivery_address_id",
+                        column: x => x.delivery_address_id,
+                        principalTable: "CustomerAddresses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CustomerQueries",
+                name: "AdminReplies",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
-                    customer_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    customer_email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    subject = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    message = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Open"),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    query_id = table.Column<int>(type: "int", nullable: false),
+                    admin_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    reply_message = table.Column<string>(type: "text", nullable: false),
+                    reply_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CustomerQueries", x => x.Id);
+                    table.PrimaryKey("PK_AdminReplies", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CustomerQueries_Users_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "Users",
-                        principalColumn: "Id");
+                        name: "FK_AdminReplies_AspNetUsers_admin_id",
+                        column: x => x.admin_id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AdminReplies_CustomerQueries_query_id",
+                        column: x => x.query_id,
+                        principalTable: "CustomerQueries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -379,15 +481,15 @@ namespace ProjectDemoWebApi.Migrations
                 {
                     table.PrimaryKey("PK_ShoppingCart", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ShoppingCart_Products_product_id",
-                        column: x => x.product_id,
-                        principalTable: "Products",
+                        name: "FK_ShoppingCart_AspNetUsers_user_id",
+                        column: x => x.user_id,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ShoppingCart_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
+                        name: "FK_ShoppingCart_Products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -413,85 +515,17 @@ namespace ProjectDemoWebApi.Migrations
                 {
                     table.PrimaryKey("PK_StockMovements", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_StockMovements_AspNetUsers_created_by",
+                        column: x => x.created_by,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_StockMovements_Products_product_id",
                         column: x => x.product_id,
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_StockMovements_Users_created_by",
-                        column: x => x.created_by,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Orders",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    order_number = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                    customer_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    delivery_address_id = table.Column<int>(type: "int", nullable: false),
-                    order_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    subtotal = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
-                    coupon_discount_amount = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
-                    delivery_charges = table.Column<decimal>(type: "decimal(8,2)", nullable: false, defaultValue: 0m),
-                    total_amount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
-                    order_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
-                    payment_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    payment_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
-                    applied_coupons = table.Column<string>(type: "text", nullable: true),
-                    delivery_notes = table.Column<string>(type: "text", nullable: true),
-                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Orders_CustomerAddresses_delivery_address_id",
-                        column: x => x.delivery_address_id,
-                        principalTable: "CustomerAddresses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Orders_Users_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AdminReplies",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    query_id = table.Column<int>(type: "int", nullable: false),
-                    admin_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    reply_message = table.Column<string>(type: "text", nullable: false),
-                    reply_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AdminReplies", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AdminReplies_CustomerQueries_query_id",
-                        column: x => x.query_id,
-                        principalTable: "CustomerQueries",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_AdminReplies_Users_admin_id",
-                        column: x => x.admin_id,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -570,17 +604,17 @@ namespace ProjectDemoWebApi.Migrations
                 {
                     table.PrimaryKey("PK_ProductReturns", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_ProductReturns_AspNetUsers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_ProductReturns_Orders_order_id",
                         column: x => x.order_id,
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ProductReturns_Users_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -606,9 +640,36 @@ namespace ProjectDemoWebApi.Migrations
                 filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserClaims_UserId",
+                table: "AspNetUserClaims",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserLogins_UserId",
+                table: "AspNetUserLogins",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserRoles_RoleId",
                 table: "AspNetUserRoles",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserRoles_UsersId",
+                table: "AspNetUserRoles",
+                column: "UsersId");
+
+            migrationBuilder.CreateIndex(
+                name: "EmailIndex",
+                table: "AspNetUsers",
+                column: "NormalizedEmail");
+
+            migrationBuilder.CreateIndex(
+                name: "UserNameIndex",
+                table: "AspNetUsers",
+                column: "NormalizedUserName",
+                unique: true,
+                filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "idx_categories_code",
@@ -877,7 +938,7 @@ namespace ProjectDemoWebApi.Migrations
                 name: "Publishers");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "AspNetUsers");
         }
     }
 }
