@@ -9,8 +9,11 @@ using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Extensions;
 using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Repositories;
+using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
+using ProjectDemoWebApi.Validation;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +60,10 @@ builder.Services.AddIdentity<Users, Roles>()
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
+builder.Services.AddHostedService<UnconfirmedUserCleanupService>();
+
+
+builder.Services.AddHttpContextAccessor();
 
 // Jwt
 builder.Services.AddAuthentication(options =>

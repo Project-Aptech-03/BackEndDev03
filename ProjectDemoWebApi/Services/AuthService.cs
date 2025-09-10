@@ -212,6 +212,49 @@ public class AuthService : IAuthService
 
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
         var userRoles = await _userManager.GetRolesAsync(user);
+        if (result.Succeeded)
+        {
+            var subject = "📚 Chào mừng bạn đến với Nhà Sách Project03!";
+
+            var body = $@"
+        <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
+            <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
+                
+                <h1 style='color:#2c3e50; text-align:center;'>✨ Chào mừng bạn, {user.FirstName} {user.LastName}! ✨</h1>
+                
+                <p style='font-size:16px; color:#444;'>
+                    Cảm ơn bạn đã đăng ký tài khoản tại <b>Nhà Sách Project03</b>. 
+                    Chúng tôi rất vui khi được đồng hành cùng bạn trên hành trình khám phá tri thức và niềm vui đọc sách.
+                </p>
+
+                <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; border-radius:6px; margin:20px 0;'>
+                    <p style='margin:5px 0; font-size:15px;'><b>Email đăng nhập:</b> {user.Email}</p>
+                    <p style='margin:5px 0; font-size:15px;'><b>Mật khẩu:</b> {pendingUser.Request.Password}</p>
+                </div>
+
+                <p style='font-size:15px; color:#555;'>
+                    Hãy đăng nhập để bắt đầu hành trình cùng những cuốn sách hay dành cho bạn và bé! 📖👶
+                </p>
+
+                <div style='text-align:center; margin:30px 0;'>
+                    <a href='http://localhost:3000/login' 
+                       style='background:#4CAF50; color:#fff; text-decoration:none; padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
+                        Đăng nhập ngay
+                    </a>
+                </div>
+
+                <hr style='margin:30px 0; border:none; border-top:1px solid #eee;'/>
+                
+                <p style='font-size:13px; color:#888; text-align:center;'>
+                    Đây là email tự động, vui lòng không trả lời lại.<br/>
+                    © {DateTime.Now.Year} Nhà Sách Project03. Tất cả các quyền được bảo lưu.
+                </p>
+            </div>
+        </div>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject, body);
+        }
+
 
         return new RegisterResultDto
         {
@@ -247,7 +290,7 @@ public class AuthService : IAuthService
         }
 
         var roles = await _userManager.GetRolesAsync(user); 
-        var role = roles.FirstOrDefault() ?? "Admin";
+        var role = roles.FirstOrDefault() ?? "User";
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
 
         return new LoginResultDto

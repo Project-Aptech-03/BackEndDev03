@@ -49,6 +49,8 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICustomerAddressService, CustomerAddressService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICouponService, CouponService>();
+            services.AddScoped<IPublishersService, PublishersService>();
+            // Note: ICustomerAddressService implementation needed
 
             // Infrastructure Services
             services.AddScoped<IEmailService, EmailService>();

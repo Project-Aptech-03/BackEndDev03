@@ -5,9 +5,6 @@ namespace ProjectDemoWebApi.DTOs.Products
 {
     public class CreateProductDto
     {
-        [Required(ErrorMessage = "Product code is required.")]
-        [StringLength(7, MinimumLength = 7, ErrorMessage = "Product code must be exactly 7 characters.")]
-        [RegularExpression(@"^[A-Z0-9]{7}$", ErrorMessage = "Product code must contain only uppercase letters and numbers.")]
         public string ProductCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Category ID is required.")]
@@ -21,7 +18,6 @@ namespace ProjectDemoWebApi.DTOs.Products
         [Range(1, int.MaxValue, ErrorMessage = "Publisher ID must be greater than 0.")]
         public int? PublisherId { get; set; }
 
-        [Required(ErrorMessage = "Product name is required.")]
         [StringLength(255, ErrorMessage = "Product name cannot exceed 255 characters.")]
         public string ProductName { get; set; } = string.Empty;
 
@@ -43,8 +39,7 @@ namespace ProjectDemoWebApi.DTOs.Products
         [Range(0.01, 9999.99, ErrorMessage = "Weight must be between 0.01 and 9999.99 kg.")]
         public decimal? Weight { get; set; }
 
-        [Required(ErrorMessage = "Price is required.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
+        [Required(ErrorMessage = "Price cannot be empty.")]
         public decimal Price { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Stock quantity cannot be negative.")]

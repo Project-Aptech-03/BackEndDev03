@@ -11,11 +11,13 @@ namespace ProjectDemoWebApi.Services
     {
         private readonly IManufacturerRepository _manufacturerRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<ManufacturerService> _logger;
 
-        public ManufacturerService(IManufacturerRepository manufacturerRepository, IMapper mapper)
+        public ManufacturerService(IManufacturerRepository manufacturerRepository, IMapper mapper, ILogger<ManufacturerService> logger)
         {
             _manufacturerRepository = manufacturerRepository ?? throw new ArgumentNullException(nameof(manufacturerRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger ?? throw new ArgumentNullException(nameof(_logger));
         }
 
         public async Task<ApiResponse<IEnumerable<ManufacturerResponseDto>>> GetAllManufacturersAsync(CancellationToken cancellationToken = default)
@@ -40,6 +42,51 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
+
+        public async Task<ApiResponse<PagedResponseDto<ManufacturerResponseDto>>> GetAllManufacturersPageAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (pageNumber <= 0) pageNumber = 1;
+                if (pageSize <= 0) pageSize = 10;
+
+                var (manufacturers, totalCount) = await _manufacturerRepository.GetPagedIncludeAsync(
+                    pageNumber,
+                    pageSize,
+                    predicate: null,
+                    cancellationToken
+                );
+
+                var manufacturerDtos = _mapper.Map<List<ManufacturerResponseDto>>(manufacturers);
+
+                var response = new PagedResponseDto<ManufacturerResponseDto>
+                {
+                    Items = manufacturerDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<ManufacturerResponseDto>>.Ok(
+                    response,
+                    "Manufacturers retrieved successfully.",
+                    200
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving manufacturers with pagination");
+                return ApiResponse<PagedResponseDto<ManufacturerResponseDto>>.Fail(
+                    "An error occurred while retrieving manufacturers.",
+                    null,
+                    500
+                );
+            }
+        }
+
 
         public async Task<ApiResponse<IEnumerable<ManufacturerResponseDto>>> GetActiveManufacturersAsync(CancellationToken cancellationToken = default)
         {
@@ -152,7 +199,6 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                // Check if manufacturer code already exists
                 var codeExists = await _manufacturerRepository.IsManufacturerCodeExistsAsync(createManufacturerDto.ManufacturerCode, null, cancellationToken);
                 if (codeExists)
                 {

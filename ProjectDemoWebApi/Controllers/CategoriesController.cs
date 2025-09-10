@@ -20,9 +20,21 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> GetAllCategoriesPaged(
+         [FromQuery] int pageNumber = 1,
+         [FromQuery] int pageSize = 10)
         {
-            var result = await _categoryService.GetActiveCategoriesAsync();
+            var result = await _categoryService.GetAllCategoriesPageAsync(pageNumber, pageSize);
+            return StatusCode(result.StatusCode, result);
+        }
+
+
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveCategoriesPaged(
+       [FromQuery] int pageNumber = 1,
+       [FromQuery] int pageSize = 10)
+        {
+            var result = await _categoryService.GetActiveCategoriesPagedAsync(pageNumber, pageSize);
             return StatusCode(result.StatusCode, result);
         }
 

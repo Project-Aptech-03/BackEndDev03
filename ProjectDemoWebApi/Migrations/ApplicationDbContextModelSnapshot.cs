@@ -127,9 +127,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("admin_id");
 
-                    b.Property<string>("AdminId1")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("QueryId")
                         .HasColumnType("int")
                         .HasColumnName("query_id");
@@ -148,8 +145,6 @@ namespace ProjectDemoWebApi.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AdminId");
-
-                    b.HasIndex("AdminId1");
 
                     b.HasIndex("QueryId")
                         .HasDatabaseName("idx_replies_query");
@@ -344,9 +339,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("user_id");
 
-                    b.Property<string>("UserId1")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DistanceKm")
@@ -354,8 +346,6 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("idx_addresses_user");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("CustomerAddresses");
                 });
@@ -384,9 +374,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerId1")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
@@ -417,8 +404,6 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("idx_queries_customer");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("idx_queries_status");
@@ -581,6 +566,14 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("applied_coupons");
 
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text")
+                        .HasColumnName("cancellation_reason");
+
+                    b.Property<DateTime?>("CancelledDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("cancelled_date");
+
                     b.Property<decimal>("CouponDiscountAmount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(8,2)")
@@ -598,9 +591,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerId1")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("DeliveryAddressId")
                         .HasColumnType("int")
@@ -674,8 +664,6 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("idx_orders_customer");
-
-                    b.HasIndex("CustomerId1");
 
                     b.HasIndex("DeliveryAddressId");
 
@@ -1238,6 +1226,9 @@ namespace ProjectDemoWebApi.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
@@ -1340,15 +1331,11 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.AdminReplies", b =>
                 {
-                    b.HasOne("ProjectDemoWebApi.Models.Users", null)
-                        .WithMany()
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Admin")
+                        .WithMany("AdminReplies")
                         .HasForeignKey("AdminId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("ProjectDemoWebApi.Models.Users", "Admin")
-                        .WithMany("AdminReplies")
-                        .HasForeignKey("AdminId1");
 
                     b.HasOne("ProjectDemoWebApi.Models.CustomerQueries", "Query")
                         .WithMany("AdminReplies")
@@ -1363,29 +1350,21 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerAddresses", b =>
                 {
-                    b.HasOne("ProjectDemoWebApi.Models.Users", null)
-                        .WithMany()
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
+                        .WithMany("CustomerAddresses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
-                        .WithMany("CustomerAddresses")
-                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerQueries", b =>
                 {
-                    b.HasOne("ProjectDemoWebApi.Models.Users", null)
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("ProjectDemoWebApi.Models.Users", "Customer")
                         .WithMany("CustomerQueries")
-                        .HasForeignKey("CustomerId1");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
                 });
@@ -1411,15 +1390,11 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Orders", b =>
                 {
-                    b.HasOne("ProjectDemoWebApi.Models.Users", null)
-                        .WithMany()
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Customer")
+                        .WithMany("Orders")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("ProjectDemoWebApi.Models.Users", "Customer")
-                        .WithMany("Orders")
-                        .HasForeignKey("CustomerId1");
 
                     b.HasOne("ProjectDemoWebApi.Models.CustomerAddresses", "DeliveryAddress")
                         .WithMany("Orders")
@@ -1529,7 +1504,7 @@ namespace ProjectDemoWebApi.Migrations
                     b.HasOne("ProjectDemoWebApi.Models.Products", "Product")
                         .WithMany("StockMovements")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Creator");
