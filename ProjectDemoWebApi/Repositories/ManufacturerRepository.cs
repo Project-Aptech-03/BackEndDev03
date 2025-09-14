@@ -34,5 +34,13 @@ namespace ProjectDemoWebApi.Repositories
                 
             return await query.AnyAsync(m => m.ManufacturerCode == manufacturerCode, cancellationToken);
         }
+
+        public async Task<List<string>> GetCodesByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .Where(m => m.ManufacturerCode.StartsWith(prefix))
+                .Select(m => m.ManufacturerCode)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

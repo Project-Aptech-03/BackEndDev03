@@ -86,6 +86,11 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreateCouponDto, Coupons>();
             CreateMap<UpdateCouponDto, Coupons>();
             CreateMap<Coupons, CouponResponseDto>();
+
+            //=============faq===============
+            //CreateMap<Faq, FaqDto>();
+            //CreateMap<CreateFaqDto, Faq>();
+            //CreateMap<UpdateFaqDto, Faq>();
         }
     }
 }

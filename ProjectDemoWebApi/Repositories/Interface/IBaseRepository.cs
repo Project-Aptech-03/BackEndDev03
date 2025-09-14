@@ -25,5 +25,7 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Expression<Func<T, bool>>? predicate = null,
         CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[] includes);
+
+        
     }
 }

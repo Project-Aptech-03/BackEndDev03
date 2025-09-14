@@ -5,8 +5,8 @@ namespace ProjectDemoWebApi.DTOs.Category
     public class CreateCategoryDto
     {
         [Required(ErrorMessage = "Category code cannot be empty.")]
-        [StringLength(2, MinimumLength = 2, ErrorMessage = "Category code must be exactly 2 characters.")]
-        [RegularExpression(@"^[A-Z]\d$", ErrorMessage = "Category code must follow format: one letter + one digit (e.g., B1, M2).")]
+        [StringLength(1, MinimumLength = 1, ErrorMessage = "Category code must be exactly 1 letter.")]
+        [RegularExpression(@"^[A-Z]{1}$", ErrorMessage = "Category code must be a single uppercase letter.")]
         public string CategoryCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Category name cannot be empty.")]

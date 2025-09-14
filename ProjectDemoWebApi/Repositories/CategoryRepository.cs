@@ -51,10 +51,13 @@ namespace ProjectDemoWebApi.Repositories
                 
             return await query.AnyAsync(c => c.CategoryCode == categoryCode, cancellationToken);
         }
-        
-        //public async Task<Categories> GetCategoriesAsync(CancellationToken cancellationToken = default)
-        //{
 
-        //}
+        public async Task<IEnumerable<Categories>> GetCategoriesByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .Where(c => c.CategoryCode.StartsWith(prefix.ToUpper()))
+                .ToListAsync(cancellationToken);
+        }
+
     }
 }

@@ -14,8 +14,9 @@ namespace ProjectDemoWebApi.Models
         [Column("publisher_name")]
         public string PublisherName { get; set; } = string.Empty;
 
-        [Column("publisher_address", TypeName = "text")]
+        [Column("publisher_address", TypeName = "nvarchar(max)")]
         public string? PublisherAddress { get; set; }
+
 
         [StringLength(255)]
         [Column("contact_info")]
