@@ -29,6 +29,13 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IFAQRepository, FAQRepository>();
             services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
 
+            // Blog repositories
+            services.AddScoped<IBlogRepository, BlogRepository>();
+            services.AddScoped<IBlogCommentRepository, BlogCommentRepository>();
+            services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();
+            services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
+            services.AddScoped<IAuthorFollowRepository, AuthorFollowRepository>();
+
             return services;
         }
 
@@ -43,6 +50,11 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICouponService, CouponService>();
             services.AddScoped<IPublishersService, PublishersService>();
             // Note: ICustomerAddressService implementation needed
+
+            // Blog services
+            services.AddScoped<IBlogService, BlogService>();
+            services.AddScoped<IBlogCommentService, BlogCommentService>();
+            services.AddScoped<IAuthorFollowService, AuthorFollowService>();
 
             // Keep existing services
             services.AddScoped<IAuthService, AuthService>();

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ProjectDemoWebApi.DTOs.Auth;
+using ProjectDemoWebApi.DTOs.Blog;
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.Coupon;
 using ProjectDemoWebApi.DTOs.CustomerAddress;
@@ -86,6 +87,15 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreateCouponDto, Coupons>();
             CreateMap<UpdateCouponDto, Coupons>();
             CreateMap<Coupons, CouponResponseDto>();
+
+            // Blog mappings
+            CreateMap<CreateBlogDto, Blogs>();
+            CreateMap<UpdateBlogDto, Blogs>();
+            CreateMap<Blogs, BlogResponseDto>();
+            CreateMap<Blogs, BlogListResponseDto>();
+            CreateMap<CreateCommentDto, BlogComments>();
+            CreateMap<UpdateCommentDto, BlogComments>();
+            CreateMap<BlogComments, CommentResponseDto>();
         }
     }
 }

@@ -42,6 +42,14 @@ namespace ProjectDemoWebApi.Models
         public ICollection<StockMovements>? StockMovements { get; set; }
         public ICollection<ShoppingCart>? ShoppingCartItems { get; set; }
         public ICollection<UserRole>? UserRoles { get; set; }
+
+        // Blog related navigation properties
+        public ICollection<Blogs>? Blogs { get; set; }
+        public ICollection<BlogComments>? BlogComments { get; set; }
+        public ICollection<BlogLikes>? BlogLikes { get; set; }
+        public ICollection<CommentLikes>? CommentLikes { get; set; }
+        public ICollection<AuthorFollows>? Following { get; set; } // Users this user follows
+        public ICollection<AuthorFollows>? Followers { get; set; } // Users who follow this user
        
     }
 }
