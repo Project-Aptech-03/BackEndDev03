@@ -15,21 +15,23 @@ namespace ProjectDemoWebApi.Models
         public string UserId { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(100)]
+        [Column("address_name")]
+        public string AddressName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+        [Column("full_name")]
+        public string FullName { get; set; } = string.Empty;       
+
+        [Required]
         [StringLength(500)]
         [Column("full_address")]
         public string FullAddress { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        [Column("district")]
-        public string? District { get; set; }
-
-        [StringLength(100)]
-        [Column("city")]
-        public string? City { get; set; }
-
-        [StringLength(10)]
-        [Column("postal_code")]
-        public string? PostalCode { get; set; }
+        [StringLength(15)]
+        [Column("phone_number")]
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [Column("distance_km", TypeName = "decimal(5,2)")]
         public decimal? DistanceKm { get; set; }
@@ -42,14 +44,8 @@ namespace ProjectDemoWebApi.Models
 
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-
-        // Navigation Properties
-        // Note: User relationship handled by foreign key constraint only
-        
-        public virtual ICollection<Orders> Orders { get; set; } = new List<Orders>();
-
+                
         [ForeignKey("UserId")]
         public virtual Users? User { get; set; }
-
     }
 }

@@ -88,7 +88,6 @@ namespace ProjectDemoWebApi.Services
 
             if (result)
             {
-                // Update comment count
                 var blog = await _blogRepository.GetByIdAsync(comment.BlogId);
                 if (blog != null)
                 {
@@ -96,7 +95,6 @@ namespace ProjectDemoWebApi.Services
                     await _blogRepository.UpdateAsync(blog);
                 }
             }
-
             return result;
         }
 

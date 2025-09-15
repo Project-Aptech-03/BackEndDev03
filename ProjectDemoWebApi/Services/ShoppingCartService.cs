@@ -194,7 +194,7 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
-        public async Task<ApiResponse<ShoppingCartResponseDto?>> UpdateCartItemAsync(string userId, int productId, UpdateCartItemDto updateCartItemDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<ShoppingCartResponseDto?>> UpdateCartItemAsync(string userId, int cartId, UpdateCartItemDto updateCartItemDto, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -207,7 +207,10 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                var cartItem = await _shoppingCartRepository.GetUserCartItemAsync(userId, productId, cancellationToken);
+                // L?y cart item theo cartId và userId ?? ??m b?o b?o m?t
+                var cartItem = await _shoppingCartRepository.GetFirstOrDefaultAsync(
+                    sc => sc.Id == cartId && sc.UserId == userId, 
+                    cancellationToken);
                 
                 if (cartItem == null)
                 {
@@ -219,7 +222,7 @@ namespace ProjectDemoWebApi.Services
                 }
 
                 // Validate product stock
-                var product = await _productsRepository.GetByIdAsync(productId, cancellationToken);
+                var product = await _productsRepository.GetByIdAsync(cartItem.ProductId, cancellationToken);
                 if (product == null || !product.IsActive)
                 {
                     return ApiResponse<ShoppingCartResponseDto?>.Fail(

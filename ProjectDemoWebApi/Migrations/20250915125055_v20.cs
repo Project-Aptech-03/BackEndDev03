@@ -5,24 +5,18 @@
 namespace ProjectDemoWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class v3 : Migration
+    public partial class v20 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "AvataUrl",
-                table: "AspNetUsers",
-                newName: "AvatarUrl");
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "AvatarUrl",
-                table: "AspNetUsers",
-                newName: "AvataUrl");
+
         }
     }
 }
