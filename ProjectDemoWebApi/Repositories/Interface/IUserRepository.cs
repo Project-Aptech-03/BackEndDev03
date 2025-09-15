@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Repositories.Interface
@@ -11,6 +12,8 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<Users?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<Users?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
         Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default);
+
+        Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);
 
     }
 }

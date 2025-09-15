@@ -31,6 +31,13 @@ namespace ProjectDemoWebApi.Data
         public DbSet<Faq> Faqs { get; set; } = null!;
         public DbSet<SystemSettings> SystemSettings { get; set; } = null!;
 
+
+        public DbSet<Blogs> Blogs { get; set; } = null!;
+        public DbSet<BlogComments> BlogComments { get; set; } = null!;
+        public DbSet<BlogLikes> BlogLikes { get; set; } = null!;
+        public DbSet<CommentLikes> CommentLikes { get; set; } = null!;
+        public DbSet<AuthorFollows> AuthorFollows { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -163,6 +170,7 @@ namespace ProjectDemoWebApi.Data
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.PublisherId)
                     .OnDelete(DeleteBehavior.SetNull);
+
             });
 
             // Configure ProductPhotos
@@ -205,8 +213,8 @@ namespace ProjectDemoWebApi.Data
                     .HasDefaultValueSql("GETUTCDATE()");
 
                 // Configure Users relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.User)
+                    .WithMany(u => u.CustomerAddresses)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
@@ -260,9 +268,9 @@ namespace ProjectDemoWebApi.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 // Configure Customer relationship
-                entity.HasOne<Users>()
-                    .WithMany()
-                    .HasForeignKey(d => d.CustomerId)
+                entity.HasOne(o => o.Customer)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(o => o.CustomerId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -360,7 +368,7 @@ namespace ProjectDemoWebApi.Data
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.StockMovements)
                     .HasForeignKey(d => d.ProductId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configure Coupons
@@ -411,8 +419,8 @@ namespace ProjectDemoWebApi.Data
                     .HasDefaultValueSql("GETUTCDATE()");
 
                 // Configure Customer relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.Customer)
+                    .WithMany(u => u.CustomerQueries)
                     .HasForeignKey(d => d.CustomerId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
@@ -432,8 +440,8 @@ namespace ProjectDemoWebApi.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 // Configure Admin relationship
-                entity.HasOne<Users>()
-                    .WithMany()
+                entity.HasOne(d => d.Admin)
+                    .WithMany(u => u.AdminReplies)
                     .HasForeignKey(d => d.AdminId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
@@ -466,6 +474,167 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.CreatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
+            });
+
+
+            // Configure Blogs
+            modelBuilder.Entity<Blogs>(entity =>
+            {
+                entity.HasIndex(e => e.Slug)
+                    .IsUnique()
+                    .HasDatabaseName("idx_blogs_slug");
+
+                entity.HasIndex(e => e.AuthorId)
+                    .HasDatabaseName("idx_blogs_author");
+
+                entity.HasIndex(e => e.CategoryId)
+                    .HasDatabaseName("idx_blogs_category");
+
+                entity.HasIndex(e => new { e.IsPublished, e.PublishedDate })
+                    .HasDatabaseName("idx_blogs_published");
+
+                entity.HasIndex(e => e.IsFeatured)
+                    .HasDatabaseName("idx_blogs_featured");
+
+                entity.Property(e => e.ViewCount)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.LikeCount)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CommentCount)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.IsPublished)
+                    .HasDefaultValue(false);
+
+                entity.Property(e => e.IsFeatured)
+                    .HasDefaultValue(false);
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.UpdatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Author)
+                    .WithMany(p => p.Blogs)
+                    .HasForeignKey(d => d.AuthorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.Category)
+                    .WithMany()
+                    .HasForeignKey(d => d.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure BlogComments
+            modelBuilder.Entity<BlogComments>(entity =>
+            {
+                entity.HasIndex(e => e.BlogId)
+                    .HasDatabaseName("idx_blog_comments_blog");
+
+                entity.HasIndex(e => e.UserId)
+                    .HasDatabaseName("idx_blog_comments_user");
+
+                entity.HasIndex(e => e.ParentCommentId)
+                    .HasDatabaseName("idx_blog_comments_parent");
+
+                entity.Property(e => e.IsApproved)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.LikeCount)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.UpdatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Blog)
+                    .WithMany(p => p.Comments)
+                    .HasForeignKey(d => d.BlogId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.BlogComments)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.ParentComment)
+                    .WithMany(p => p.Replies)
+                    .HasForeignKey(d => d.ParentCommentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure BlogLikes
+            modelBuilder.Entity<BlogLikes>(entity =>
+            {
+                entity.HasIndex(e => new { e.BlogId, e.UserId })
+                    .IsUnique()
+                    .HasDatabaseName("idx_blog_likes_unique");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Blog)
+                    .WithMany(p => p.Likes)
+                    .HasForeignKey(d => d.BlogId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.BlogLikes)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure CommentLikes
+            modelBuilder.Entity<CommentLikes>(entity =>
+            {
+                entity.HasIndex(e => new { e.CommentId, e.UserId })
+                    .IsUnique()
+                    .HasDatabaseName("idx_comment_likes_unique");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Comment)
+                    .WithMany(p => p.Likes)
+                    .HasForeignKey(d => d.CommentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.CommentLikes)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure AuthorFollows
+            modelBuilder.Entity<AuthorFollows>(entity =>
+            {
+                entity.HasIndex(e => new { e.FollowerId, e.AuthorId })
+                    .IsUnique()
+                    .HasDatabaseName("idx_author_follows_unique");
+
+                entity.HasIndex(e => e.FollowerId)
+                    .HasDatabaseName("idx_author_follows_follower");
+
+                entity.HasIndex(e => e.AuthorId)
+                    .HasDatabaseName("idx_author_follows_author");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Follower)
+                    .WithMany(p => p.Following)
+                    .HasForeignKey(d => d.FollowerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.Author)
+                    .WithMany(p => p.Followers)
+                    .HasForeignKey(d => d.AuthorId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

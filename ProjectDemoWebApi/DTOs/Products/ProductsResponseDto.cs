@@ -1,6 +1,7 @@
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.Manufacturer;
 using ProjectDemoWebApi.DTOs.Publisher;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.Products
 {
@@ -13,7 +14,12 @@ namespace ProjectDemoWebApi.DTOs.Products
         public string? Author { get; set; }
         public string? ProductType { get; set; }
         public int? Pages { get; set; }
-        public string? Dimensions { get; set; }
+        public int? DimensionLength { get; set; }
+
+        public int? DimensionWidth { get; set; }
+
+        public int? DimensionHeight { get; set; }
+
         public decimal? Weight { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }

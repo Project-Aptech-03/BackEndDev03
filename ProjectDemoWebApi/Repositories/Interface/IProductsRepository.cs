@@ -15,5 +15,10 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<bool> IsProductCodeExistsAsync(string productCode, int? excludeId = null, CancellationToken cancellationToken = default);
         Task<IEnumerable<Products>> GetLowStockProductsAsync(int threshold = 10, CancellationToken cancellationToken = default);
         Task UpdateStockAsync(int productId, int newStock, CancellationToken cancellationToken = default);
+        Task<Products?> GetByIdNoTrackingAsync(int id, CancellationToken cancellationToken = default);
+        //Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default);
+        Task<string?> GetMaxProductCodeByPrefixAsync(string prefix, CancellationToken cancellationToken);
+        Task<int?> GetMaxNumericSuffixByPrefixAsync(string prefix, CancellationToken cancellationToken);
+
     }
 }

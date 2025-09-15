@@ -13,6 +13,7 @@ namespace ProjectDemoWebApi.Extensions
         {
             // Repository registrations
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
             services.AddScoped<IPublisherRepository, PublisherRepository>();
@@ -34,6 +35,12 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IFaqRepository, FaqRepository>();
             services.AddScoped<IFaqService, FaqService>();
 
+            services.AddScoped<IBlogRepository, BlogRepository>();
+            services.AddScoped<IBlogCommentRepository, BlogCommentRepository>();
+            services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();
+            services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
+            services.AddScoped<IAuthorFollowRepository, AuthorFollowRepository>();
+
             return services;
         }
 
@@ -45,8 +52,10 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IProductsService, ProductsService>();
             services.AddScoped<IShoppingCartService, ShoppingCartService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<ICouponService, CouponService>();
+            services.AddScoped<IPublishersService, PublishersService>();
             // Note: ICustomerAddressService implementation needed
-            
+
             // Keep existing services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
@@ -55,6 +64,13 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             services.AddScoped<IRoleSeederService, RoleSeederService>();
 
+            // Blog services
+            services.AddScoped<IBlogService, BlogService>();
+            services.AddScoped<IBlogCommentService, BlogCommentService>();
+            services.AddScoped<IAuthorFollowService, AuthorFollowService>();
+
+            // gg
+            services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             return services;
         }
 

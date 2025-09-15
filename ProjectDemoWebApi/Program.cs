@@ -13,6 +13,7 @@ using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
+using ProjectDemoWebApi.Validation;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,16 +60,10 @@ builder.Services.AddIdentity<Users, Roles>()
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
-// Keep existing legacy services for backward compatibility
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddHostedService<UnconfirmedUserCleanupService>();
 
-// user
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-// upload 
-builder.Services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
+
+builder.Services.AddHttpContextAccessor();
 
 // Jwt 
 builder.Services.AddAuthentication(options =>

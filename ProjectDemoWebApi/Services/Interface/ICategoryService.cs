@@ -5,8 +5,15 @@ namespace ProjectDemoWebApi.Services.Interface
 {
     public interface ICategoryService
     {
-        Task<ApiResponse<IEnumerable<CategoryResponseDto>>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
-        Task<ApiResponse<IEnumerable<CategoryResponseDto>>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default);
+        Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetAllCategoriesPageAsync(
+     int pageNumber = 1,
+     int pageSize = 10,
+     string? keyword = null,
+     CancellationToken cancellationToken = default);
+        Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetActiveCategoriesPagedAsync(
+       int pageNumber = 1,
+       int pageSize = 10,
+       CancellationToken cancellationToken = default);
         Task<ApiResponse<CategoryResponseDto?>> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<ApiResponse<CategoryResponseDto?>> GetCategoryByCodeAsync(string categoryCode, CancellationToken cancellationToken = default);
         Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryDto createCategoryDto, CancellationToken cancellationToken = default);

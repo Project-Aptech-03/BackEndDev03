@@ -25,5 +25,11 @@ namespace ProjectDemoWebApi.DTOs.ShoppingCart
         public decimal DeliveryCharges { get; set; }
         public decimal DiscountAmount { get; set; }
         public decimal TotalAmount => SubTotal + DeliveryCharges - DiscountAmount;
+        
+        // Coupon information
+        public string? AppliedCouponCode { get; set; }
+        public string? CouponDiscountType { get; set; }
+        public decimal? CouponDiscountValue { get; set; }
+        public bool HasValidCoupon => !string.IsNullOrEmpty(AppliedCouponCode) && DiscountAmount > 0;
     }
 }

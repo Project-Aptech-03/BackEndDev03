@@ -19,6 +19,17 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        public async Task<IActionResult> GetAllManufacturersPaged(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? keyword = null)
+        {
+            var result = await _manufacturerService.GetAllManufacturersPageAsync(pageNumber, pageSize, keyword);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpGet("all")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetManufacturers()
         {
             var result = await _manufacturerService.GetActiveManufacturersAsync();

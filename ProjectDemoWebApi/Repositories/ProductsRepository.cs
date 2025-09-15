@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
+using System.Text.RegularExpressions;
 
 namespace ProjectDemoWebApi.Repositories
 {
@@ -9,6 +10,38 @@ namespace ProjectDemoWebApi.Repositories
     {
         public ProductsRepository(ApplicationDbContext context) : base(context)
         {
+        }
+
+        public async Task<string?> GetMaxProductCodeByPrefixAsync(string prefix, CancellationToken cancellationToken)
+        {
+            return await _dbSet
+                .Where(p => p.ProductCode.StartsWith(prefix))
+                .OrderByDescending(p => p.ProductCode)
+                .Select(p => p.ProductCode)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        // An toàn h?n: l?y t?t c? productCode cùng prefix, parse s? ? cu?i, tr? v? max numeric suffix
+        public async Task<int?> GetMaxNumericSuffixByPrefixAsync(string prefix, CancellationToken cancellationToken)
+        {
+            var codes = await _dbSet
+                .Where(p => p.ProductCode.StartsWith(prefix))
+                .Select(p => p.ProductCode)
+                .ToListAsync(cancellationToken);
+
+            if (codes == null || codes.Count == 0) return null;
+
+            int max = 0;
+            foreach (var c in codes)
+            {
+                var m = Regex.Match(c, @"(\d+)$");
+                if (m.Success && int.TryParse(m.Value, out var n))
+                {
+                    if (n > max) max = n;
+                }
+            }
+
+            return max;
         }
 
         public async Task<Products?> GetByProductCodeAsync(string productCode, CancellationToken cancellationToken = default)
@@ -23,17 +56,28 @@ namespace ProjectDemoWebApi.Repositories
 
         public async Task<Products?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AsNoTracking()
+            return await _dbSet
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
-                .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
+                .Include(p => p.ProductPhotos)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
+        //public async Task<Products?> GetLastProductByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+        //{
+        //    return await _dbSet
+        //        .AsNoTracking()
+        //        .Where(p => p.ProductCode.StartsWith(prefix))
+        //        .OrderByDescending(p => p.ProductCode)
+        //        .FirstOrDefaultAsync(cancellationToken);
+        //}
+
+
+
         public async Task<IEnumerable<Products>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
         {
-            return await _dbSet.AsNoTracking()
+            return await _dbSet
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
@@ -42,6 +86,18 @@ namespace ProjectDemoWebApi.Repositories
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
         }
+        // Dùng cho update
+        //public async Task<Products?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default)
+        //{
+        //    return await _dbSet
+        //        .Include(p => p.Category)
+        //        .Include(p => p.Manufacturer)
+        //        .Include(p => p.Publisher)
+        //        .Include(p => p.ProductPhotos)
+        //        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        //}
+
+
 
         public async Task<IEnumerable<Products>> GetActiveProductsAsync(CancellationToken cancellationToken = default)
         {
@@ -50,7 +106,7 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
                 .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
-                .Where(p => p.IsActive && p.StockQuantity > 0) // Include stock check
+                .Where(p => p.IsActive && p.StockQuantity > 0)
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
         }
@@ -94,14 +150,14 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Products>> SearchProductsAsync(string searchTerm, CancellationToken cancellationToken = default)
         {
             var lowerSearchTerm = searchTerm.ToLower(); // Pre-convert to lower case
-            
+
             return await _dbSet.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
                 .Include(p => p.ProductPhotos.Where(ph => ph.IsActive))
                 .Where(p => p.IsActive && p.StockQuantity > 0 &&
-                           (EF.Functions.Like(p.ProductName.ToLower(), $"%{lowerSearchTerm}%") || 
+                           (EF.Functions.Like(p.ProductName.ToLower(), $"%{lowerSearchTerm}%") ||
                             EF.Functions.Like(p.ProductCode.ToLower(), $"%{lowerSearchTerm}%") ||
                             (p.Author != null && EF.Functions.Like(p.Author.ToLower(), $"%{lowerSearchTerm}%")) ||
                             (p.Description != null && EF.Functions.Like(p.Description.ToLower(), $"%{lowerSearchTerm}%"))))
@@ -112,10 +168,10 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<bool> IsProductCodeExistsAsync(string productCode, int? excludeId = null, CancellationToken cancellationToken = default)
         {
             var query = _dbSet.AsQueryable();
-            
+
             if (excludeId.HasValue)
                 query = query.Where(p => p.Id != excludeId.Value);
-                
+
             return await query.AnyAsync(p => p.ProductCode == productCode, cancellationToken);
         }
 
@@ -136,5 +192,18 @@ namespace ProjectDemoWebApi.Repositories
                 .Where(p => p.Id == productId)
                 .ExecuteUpdateAsync(p => p.SetProperty(x => x.StockQuantity, newStock), cancellationToken);
         }
+
+        public async Task<Products?> GetByIdNoTrackingAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        }
+
+        //public async Task<Categories> GetCategoriesAsync(int id, CancellationToken cancellationToken = default)
+        //{
+        //    return await _context.Categories.AsNoTracking()
+        //        .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        //}
+
     }
 }

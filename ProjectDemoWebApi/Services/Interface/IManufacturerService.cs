@@ -6,6 +6,13 @@ namespace ProjectDemoWebApi.Services.Interface
     public interface IManufacturerService
     {
         Task<ApiResponse<IEnumerable<ManufacturerResponseDto>>> GetAllManufacturersAsync(CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<PagedResponseDto<ManufacturerResponseDto>>> GetAllManufacturersPageAsync(
+          int pageNumber = 1,
+          int pageSize = 10,
+          string? keyword = null,
+          CancellationToken cancellationToken = default);
+
         Task<ApiResponse<IEnumerable<ManufacturerResponseDto>>> GetActiveManufacturersAsync(CancellationToken cancellationToken = default);
         Task<ApiResponse<ManufacturerResponseDto?>> GetManufacturerByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<ApiResponse<ManufacturerResponseDto?>> GetManufacturerByCodeAsync(string manufacturerCode, CancellationToken cancellationToken = default);

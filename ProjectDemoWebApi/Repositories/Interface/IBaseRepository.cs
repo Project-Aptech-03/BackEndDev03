@@ -18,5 +18,14 @@ namespace ProjectDemoWebApi.Repositories.Interface
         void Delete(T entity);
         void DeleteRange(IEnumerable<T> entities);
         Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        Task<(IEnumerable<T> Items, int TotalCount)> GetPagedIncludeAsync(
+        int pageNumber,
+        int pageSize,
+        Expression<Func<T, bool>>? predicate = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<T, object>>[] includes);
+
+        
     }
 }

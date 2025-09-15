@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
+using System.Net;
 using System.Text.Json;
+using System.Web;
 
 public class AuthService : IAuthService
     {
@@ -17,8 +20,8 @@ public class AuthService : IAuthService
         private readonly IMapper _mapper;
         private readonly IJwtTokenService _ijwtTokenService;
         private readonly UserManager<Users> _userManager;
-
-    public AuthService(IDistributedCache cache, IEmailSender emailSender, IAuthRepository userRepository, IMapper mapper, IJwtTokenService ijwtTokenService, UserManager<Users> userManager)
+        private readonly IConfiguration _configuration;
+    public AuthService(IDistributedCache cache, IEmailSender emailSender, IAuthRepository userRepository, IMapper mapper, IJwtTokenService ijwtTokenService, UserManager<Users> userManager, IConfiguration configuration)
     {
         _cache = cache;
         _emailSender = emailSender;
@@ -26,6 +29,7 @@ public class AuthService : IAuthService
         _mapper = mapper;
         _ijwtTokenService = ijwtTokenService;
         _userManager = userManager;
+        _configuration = configuration;
     }
 
     public async Task<OtpResultDto> SendRegisterOtpAsync(RegisterRequest request)
@@ -66,7 +70,6 @@ public class AuthService : IAuthService
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         });
 
-        // Gửi Email OTP
         string body = $@"
         <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
             <div style='text-align:center; margin-bottom:24px;'>
@@ -209,6 +212,49 @@ public class AuthService : IAuthService
 
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
         var userRoles = await _userManager.GetRolesAsync(user);
+        if (result.Succeeded)
+        {
+            var subject = "📚 Chào mừng bạn đến với Nhà Sách Project03!";
+
+            var body = $@"
+        <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
+            <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
+                
+                <h1 style='color:#2c3e50; text-align:center;'>✨ Chào mừng bạn, {user.FirstName} {user.LastName}! ✨</h1>
+                
+                <p style='font-size:16px; color:#444;'>
+                    Cảm ơn bạn đã đăng ký tài khoản tại <b>Nhà Sách Project03</b>. 
+                    Chúng tôi rất vui khi được đồng hành cùng bạn trên hành trình khám phá tri thức và niềm vui đọc sách.
+                </p>
+
+                <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; border-radius:6px; margin:20px 0;'>
+                    <p style='margin:5px 0; font-size:15px;'><b>Email đăng nhập:</b> {user.Email}</p>
+                    <p style='margin:5px 0; font-size:15px;'><b>Mật khẩu:</b> {pendingUser.Request.Password}</p>
+                </div>
+
+                <p style='font-size:15px; color:#555;'>
+                    Hãy đăng nhập để bắt đầu hành trình cùng những cuốn sách hay dành cho bạn và bé! 📖👶
+                </p>
+
+                <div style='text-align:center; margin:30px 0;'>
+                    <a href='http://localhost:3000/login' 
+                       style='background:#4CAF50; color:#fff; text-decoration:none; padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
+                        Đăng nhập ngay
+                    </a>
+                </div>
+
+                <hr style='margin:30px 0; border:none; border-top:1px solid #eee;'/>
+                
+                <p style='font-size:13px; color:#888; text-align:center;'>
+                    Đây là email tự động, vui lòng không trả lời lại.<br/>
+                    © {DateTime.Now.Year} Nhà Sách Project03. Tất cả các quyền được bảo lưu.
+                </p>
+            </div>
+        </div>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject, body);
+        }
+
 
         return new RegisterResultDto
         {
@@ -220,8 +266,6 @@ public class AuthService : IAuthService
     }
 
     
-
-
     public async Task<LoginResultDto> LoginAsync(LoginRequest request)
     {
         var user = await _authRepository.GetByEmailAsync(request.Email.Trim().ToLower());
@@ -246,7 +290,7 @@ public class AuthService : IAuthService
         }
 
         var roles = await _userManager.GetRolesAsync(user); 
-        var role = roles.FirstOrDefault() ?? "Admin";
+        var role = roles.FirstOrDefault() ?? "User";
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
 
         return new LoginResultDto
@@ -261,4 +305,65 @@ public class AuthService : IAuthService
         };
 
     }
+
+    public async Task<ApiResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        var responseMessage = "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.";
+
+        if (user == null)
+        {
+            return ApiResponse<string>.Ok(null, responseMessage);
+        }
+        var frontendUrl = _configuration["AppSettings:FrontendUrl"].TrimEnd('/');
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = HttpUtility.UrlEncode(token);
+
+        var resetLink = $"{frontendUrl}/reset-password?email={WebUtility.UrlEncode(user.Email)}&token={encodedToken}";
+
+        var subject = "Yêu cầu đặt lại mật khẩu";
+        var body = $@"
+    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
+        <h2 style='color: #1a73e8;'>Xin chào {user.UserName},</h2>
+        <p>Bạn vừa gửi yêu cầu <strong>đặt lại mật khẩu</strong> cho tài khoản của mình.</p>
+        <p>Vui lòng nhấn vào nút bên dưới để tiếp tục:</p>
+
+        <div style='text-align: center; margin: 32px 0;'>
+            <a href='{resetLink}' 
+               style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
+                Đặt lại mật khẩu
+            </a>
+        </div>
+
+        <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
+        <br/>
+        <p style='color: #555;'>Trân trọng,<br/><strong>Đội ngũ hỗ trợ</strong></p>
+    </div>
+    ";
+
+        await _emailSender.SendEmailAsync(dto.Email, subject, body);
+        return ApiResponse<string>.Ok(responseMessage);
+    }
+
+
+    public async Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return ApiResponse<string>.Fail("Email không tồn tại");
+
+        if (dto.NewPassword != dto.ConfirmPassword)
+            return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp");
+        var token = dto.Token;
+
+        var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+
+        if (!result.Succeeded)
+            return ApiResponse<string>.Fail("Đặt lại mật khẩu thất bại", result.Errors.Select(e => e.Description).ToList());
+
+        return ApiResponse<string>.Ok(null, "Đặt lại mật khẩu thành công");
+    }
+
+
 }
