@@ -572,10 +572,11 @@ namespace ProjectDemoWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("City")
+                    b.Property<string>("AddressName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
-                        .HasColumnName("city");
+                        .HasColumnName("address_name");
 
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
@@ -587,16 +588,17 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasColumnName("distance_km");
 
-                    b.Property<string>("District")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("district");
-
                     b.Property<string>("FullAddress")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("full_address");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("full_name");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -610,10 +612,11 @@ namespace ProjectDemoWebApi.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_default");
 
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("postal_code");
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasColumnName("phone_number");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -775,23 +778,6 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("DiscountAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(8,2)")
-                        .HasDefaultValue(0m)
-                        .HasColumnName("discount_amount");
-
-                    b.Property<decimal>("DiscountPercent")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(5,2)")
-                        .HasDefaultValue(0m)
-                        .HasColumnName("discount_percent");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("notes");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int")
@@ -1778,7 +1764,7 @@ namespace ProjectDemoWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("ProjectDemoWebApi.Models.CustomerAddresses", "DeliveryAddress")
-                        .WithMany("Orders")
+                        .WithMany()
                         .HasForeignKey("DeliveryAddressId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1929,11 +1915,6 @@ namespace ProjectDemoWebApi.Migrations
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerAddresses", b =>
-                {
-                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerQueries", b =>

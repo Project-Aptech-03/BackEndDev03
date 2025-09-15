@@ -17,7 +17,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// L?y danh sách t?t c? coupon (Admin only)
+        /// Get a list of all coupons (Admin only)
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -28,62 +28,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// L?y thông tin coupon theo ID (Admin only)
-        /// </summary>
-        [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetCouponById(int id)
-        {
-            var result = await _couponService.GetCouponByIdAsync(id);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// L?y thông tin coupon theo mã code
-        /// </summary>
-        [HttpGet("code/{couponCode}")]
-        [Authorize]
-        public async Task<IActionResult> GetCouponByCode(string couponCode)
-        {
-            var result = await _couponService.GetCouponByCodeAsync(couponCode);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// L?y danh sách coupon ?ang ho?t ??ng
-        /// </summary>
-        [HttpGet("active")]
-        [Authorize]
-        public async Task<IActionResult> GetActiveCoupons()
-        {
-            var result = await _couponService.GetActiveCouponsAsync();
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// L?y danh sách coupon h?p l? (ch?a h?t h?n, còn s? l??ng)
-        /// </summary>
-        [HttpGet("valid")]
-        [Authorize]
-        public async Task<IActionResult> GetValidCoupons()
-        {
-            var result = await _couponService.GetValidCouponsAsync();
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// L?y danh sách coupon t? ??ng áp d?ng theo s? ti?n ??n hàng
-        /// </summary>
-        [HttpGet("auto-apply/{orderAmount}")]
-        [Authorize]
-        public async Task<IActionResult> GetAutoApplyCoupons(decimal orderAmount)
-        {
-            var result = await _couponService.GetAutoApplyCouponsAsync(orderAmount);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// T?o coupon m?i (Admin only)
+        /// Create a new coupon (Admin only)
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Admin")]
@@ -94,7 +39,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// C?p nh?t thông tin coupon (Admin only)
+        /// Update coupon information (Admin only)
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
@@ -105,7 +50,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// Xóa coupon (Admin only)
+        /// Delete a coupon (Admin only)
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -116,18 +61,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// Xác th?c mã coupon v?i s? ti?n ??n hàng
-        /// </summary>
-        [HttpPost("validate")]
-        [Authorize]
-        public async Task<IActionResult> ValidateCoupon(ValidateCouponDto validateCouponDto)
-        {
-            var result = await _couponService.ValidateCouponAsync(validateCouponDto);
-            return StatusCode(result.StatusCode, result);
-        }
-
-        /// <summary>
-        /// Áp d?ng coupon và tính toán gi?m giá
+        /// Apply a coupon and calculate the discount
         /// </summary>
         [HttpPost("apply")]
         [Authorize]
@@ -138,13 +72,13 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         /// <summary>
-        /// Tính toán s? ti?n gi?m giá c?a coupon
+        /// Use a coupon upon successful order (reduces the quantity)
         /// </summary>
-        [HttpPost("calculate-discount")]
+        [HttpPost("use/{couponCode}")]
         [Authorize]
-        public async Task<IActionResult> CalculateDiscount([FromBody] ApplyCouponDto applyCouponDto)
+        public async Task<IActionResult> UseCoupon(string couponCode)
         {
-            var result = await _couponService.CalculateDiscountAsync(applyCouponDto.CouponCode, applyCouponDto.OrderAmount);
+            var result = await _couponService.UseCouponAsync(couponCode);
             return StatusCode(result.StatusCode, result);
         }
     }
