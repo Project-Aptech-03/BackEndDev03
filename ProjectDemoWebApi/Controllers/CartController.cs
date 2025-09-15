@@ -64,11 +64,11 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpPut("{productId}")]
-        public async Task<IActionResult> UpdateCartItem(int productId, UpdateCartItemDto updateCartItemDto)
+        [HttpPut("{cartId}")]
+        public async Task<IActionResult> UpdateCartItem(int cartId, UpdateCartItemDto updateCartItemDto)
         {
             var userId = GetUserId();
-            var result = await _cartService.UpdateCartItemAsync(userId, productId, updateCartItemDto);
+            var result = await _cartService.UpdateCartItemAsync(userId, cartId, updateCartItemDto);
             return StatusCode(result.StatusCode, result);
         }
 

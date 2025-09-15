@@ -16,6 +16,7 @@ namespace ProjectDemoWebApi.Services
         private readonly IShoppingCartRepository _shoppingCartRepository;
         private readonly IStockMovementRepository _stockMovementRepository;
         private readonly ICouponRepository _couponRepository;
+        private readonly ISePayService _sePayService;
         private readonly IMapper _mapper;
 
         public OrderService(
@@ -26,6 +27,7 @@ namespace ProjectDemoWebApi.Services
             IShoppingCartRepository shoppingCartRepository,
             IStockMovementRepository stockMovementRepository,
             ICouponRepository couponRepository,
+            ISePayService sePayService,
             IMapper mapper)
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
@@ -35,6 +37,7 @@ namespace ProjectDemoWebApi.Services
             _shoppingCartRepository = shoppingCartRepository ?? throw new ArgumentNullException(nameof(shoppingCartRepository));
             _stockMovementRepository = stockMovementRepository ?? throw new ArgumentNullException(nameof(stockMovementRepository));
             _couponRepository = couponRepository ?? throw new ArgumentNullException(nameof(couponRepository));
+            _sePayService = sePayService ?? throw new ArgumentNullException(nameof(sePayService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
@@ -47,19 +50,11 @@ namespace ProjectDemoWebApi.Services
                 var orders = await _orderRepository.GetAllOrdersWithDetailsAsync(cancellationToken);
                 var orderDtos = _mapper.Map<IEnumerable<OrderResponseDto>>(orders);
                 
-                return ApiResponse<IEnumerable<OrderResponseDto>>.Ok(
-                    orderDtos, 
-                    "All orders retrieved successfully.", 
-                    200
-                );
+                return ApiResponse<IEnumerable<OrderResponseDto>>.Ok(orderDtos, "All orders retrieved successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<IEnumerable<OrderResponseDto>>.Fail(
-                    "An error occurred while retrieving all orders.", 
-                    null, 
-                    500
-                );
+                return ApiResponse<IEnumerable<OrderResponseDto>>.Fail("An error occurred while retrieving all orders.", null, 500);
             }
         }
 
@@ -68,24 +63,11 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 if (id <= 0)
-                {
-                    return ApiResponse<OrderResponseDto?>.Fail(
-                        "Invalid order ID.", 
-                        null, 
-                        400
-                    );
-                }
+                    return ApiResponse<OrderResponseDto?>.Fail("Invalid order ID.", null, 400);
 
                 var order = await _orderRepository.GetByIdAsync(id, cancellationToken);
-                
                 if (order == null)
-                {
-                    return ApiResponse<OrderResponseDto?>.Fail(
-                        "Order not found.", 
-                        null, 
-                        404
-                    );
-                }
+                    return ApiResponse<OrderResponseDto?>.Fail("Order not found.", null, 404);
 
                 // Update order status
                 if (!string.IsNullOrWhiteSpace(updateOrderDto.OrderStatus))
@@ -103,19 +85,11 @@ namespace ProjectDemoWebApi.Services
                 var updatedOrder = await _orderRepository.GetByIdWithDetailsAsync(order.Id, cancellationToken);
                 var orderDto = _mapper.Map<OrderResponseDto>(updatedOrder);
                 
-                return ApiResponse<OrderResponseDto?>.Ok(
-                    orderDto, 
-                    "Order status updated successfully.", 
-                    200
-                );
+                return ApiResponse<OrderResponseDto?>.Ok(orderDto, "Order status updated successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<OrderResponseDto?>.Fail(
-                    "An error occurred while updating the order status.", 
-                    null, 
-                    500
-                );
+                return ApiResponse<OrderResponseDto?>.Fail("An error occurred while updating the order status.", null, 500);
             }
         }
 
@@ -123,218 +97,77 @@ namespace ProjectDemoWebApi.Services
 
         #region Customer Functions
 
-        public async Task<ApiResponse<OrderResponseDto>> CreateOrderFromCartAsync(string userId, CreateOrderFromCartDto createOrderFromCartDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<OrderResponseDto>> CreateOrderAsync(string userId, CreateOrderDto createOrderDto, CancellationToken cancellationToken = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(userId))
-                {
-                    return ApiResponse<OrderResponseDto>.Fail(
-                        "User ID cannot be empty.", 
-                        null, 
-                        400
-                    );
-                }
+                // Validate input
+                var validationResult = ValidateCreateOrderInput(userId, createOrderDto);
+                if (!validationResult.Success)
+                    return validationResult;
 
                 // Validate delivery address
-                var address = await _customerAddressRepository.GetByIdAsync(createOrderFromCartDto.DeliveryAddressId, cancellationToken);
-                if (address == null || address.UserId != userId || !address.IsActive)
-                {
-                    return ApiResponse<OrderResponseDto>.Fail(
-                        "Invalid delivery address.", 
-                        null, 
-                        400
-                    );
-                }
+                var addressValidation = await ValidateDeliveryAddressAsync(userId, createOrderDto.DeliveryAddressId, cancellationToken);
+                if (!addressValidation.Success)
+                    return addressValidation;
 
-                // Get cart items
-                var cartItems = await _shoppingCartRepository.GetUserCartAsync(userId, cancellationToken);
-                
-                if (!cartItems.Any())
-                {
-                    return ApiResponse<OrderResponseDto>.Fail(
-                        "Shopping cart is empty.", 
-                        null, 
-                        400
-                    );
-                }
+                // Process order items and calculate subtotal
+                var orderItemsResult = await ProcessOrderItemsAsync(createOrderDto.OrderItems, cancellationToken);
+                if (!orderItemsResult.Success)
+                    return ApiResponse<OrderResponseDto>.Fail(orderItemsResult.Message, null, orderItemsResult.StatusCode);
 
-                // Filter cart items if specific ID
-                var cartItemsToOrder = cartItems.AsEnumerable();
-                if (createOrderFromCartDto.CartItemIds != null && createOrderFromCartDto.CartItemIds.Any())
-                {
-                    cartItemsToOrder = cartItems.Where(ci => createOrderFromCartDto.CartItemIds.Contains(ci.Id));
-                    
-                    if (!cartItemsToOrder.Any())
-                    {
-                        return ApiResponse<OrderResponseDto>.Fail(
-                            "No valid cart items found for the specified IDs.", 
-                            null, 
-                            400
-                        );
-                    }
-                }
+                var (orderItems, orderedProductIds, subtotal) = orderItemsResult.Data;
 
-                // Validate cart items and calculate totals
-                decimal subtotal = 0;
-                var orderItems = new List<OrderItems>();
-
-                foreach (var cartItem in cartItemsToOrder)
-                {
-                    var product = cartItem.Product ?? await _productsRepository.GetByIdNoTrackingAsync(cartItem.ProductId, cancellationToken);
-                    if (product == null || !product.IsActive)
-                    {
-                        return ApiResponse<OrderResponseDto>.Fail(
-                            $"Product with ID {cartItem.ProductId} not found or not available.", 
-                            null, 
-                            400
-                        );
-                    }
-
-                    if (product.StockQuantity < cartItem.Quantity)
-                    {
-                        return ApiResponse<OrderResponseDto>.Fail(
-                            $"Insufficient stock for product {product.ProductName}. Available: {product.StockQuantity}, Requested: {cartItem.Quantity}", 
-                            null, 
-                            400
-                        );
-                    }
-
-                    var orderItem = new OrderItems
-                    {
-                        ProductId = cartItem.ProductId,
-                        Quantity = cartItem.Quantity,
-                        UnitPrice = cartItem.UnitPrice,
-                        DiscountPercent = 0,
-                        DiscountAmount = 0,
-                        TotalPrice = cartItem.UnitPrice * cartItem.Quantity,
-                        Notes = null
-                    };
-
-                    orderItems.Add(orderItem);
-                    subtotal += orderItem.TotalPrice;
-                }
-
-                // Apply coupons if provided
-                decimal couponDiscountAmount = 0;
-                var appliedCoupons = new List<string>();
-
-                if (createOrderFromCartDto.CouponCodes != null && createOrderFromCartDto.CouponCodes.Any())
-                {
-                    foreach (var couponCode in createOrderFromCartDto.CouponCodes)
-                    {
-                        var coupon = await _couponRepository.GetByCouponCodeAsync(couponCode, cancellationToken);
-                        if (coupon != null && await _couponRepository.IsCouponValidAsync(couponCode, subtotal, cancellationToken))
-                        {
-                            decimal discount = 0;
-                            if (string.Equals(coupon.DiscountType, "percentage", StringComparison.OrdinalIgnoreCase))
-                            {
-                                discount = subtotal * (coupon.DiscountValue / 100);
-                                if (coupon.MaxDiscountAmount > 0 && discount > coupon.MaxDiscountAmount)
-                                    discount = coupon.MaxDiscountAmount;
-                            }
-                            else
-                            {
-                                discount = coupon.DiscountValue;
-                            }
-
-                            couponDiscountAmount += discount;
-                            appliedCoupons.Add(couponCode);
-
-                            // Decrement coupon quantity
-                            await _couponRepository.DecrementCouponQuantityAsync(coupon.Id, cancellationToken);
-                        }
-                    }
-                }
-
-                // Calculate delivery charges
-                decimal deliveryCharges = CalculateDeliveryCharges(subtotal, address.DistanceKm);
+                // Apply coupons
+                var (couponDiscountAmount, appliedCoupons) = await ProcessCouponsAsync(createOrderDto.CouponCodes, subtotal, cancellationToken);
 
                 // Create order
-                var order = new Orders
+                var order = await CreateOrderEntityAsync(userId, createOrderDto, subtotal, couponDiscountAmount, appliedCoupons, cancellationToken);
+
+                // Check payment if PaymentType is "BankTransfer"
+                if (string.Equals(order.PaymentType, "BankTransfer", StringComparison.OrdinalIgnoreCase))
                 {
-                    OrderNumber = await _orderRepository.GenerateOrderNumberAsync(cancellationToken),
-                    CustomerId = userId,
-                    DeliveryAddressId = createOrderFromCartDto.DeliveryAddressId,
-                    OrderDate = DateTime.UtcNow,
-                    Subtotal = subtotal,
-                    CouponDiscountAmount = couponDiscountAmount,
-                    DeliveryCharges = deliveryCharges,
-                    TotalAmount = subtotal - couponDiscountAmount + deliveryCharges,
-                    OrderStatus = "Pending",
-                    PaymentType = createOrderFromCartDto.PaymentType,
-                    PaymentStatus = "Pending",
-                    AppliedCoupons = appliedCoupons.Any() ? string.Join(",", appliedCoupons) : null,
-                    DeliveryNotes = createOrderFromCartDto.DeliveryNotes,
-                    IsActive = true,
-                    CreatedDate = DateTime.UtcNow,
-                    UpdatedDate = DateTime.UtcNow
-                };
-
-                await _orderRepository.AddAsync(order, cancellationToken);
-                await _orderRepository.SaveChangesAsync(cancellationToken);
-
-                // Add order items
-                foreach (var orderItem in orderItems)
-                {
-                    orderItem.OrderId = order.Id;
-                }
-
-                await _orderItemRepository.AddRangeAsync(orderItems, cancellationToken);
-                await _orderItemRepository.SaveChangesAsync(cancellationToken);
-
-                // Update product stock and add stock movements
-                foreach (var orderItem in orderItems)
-                {
-                    var product = await _productsRepository.GetByIdNoTrackingAsync(orderItem.ProductId, cancellationToken);
-                    if (product != null)
+                    var paymentResult = await _sePayService.FindTransactionAsync(order.OrderNumber, order.TotalAmount);
+                    
+                    if (paymentResult.Success && paymentResult.Data != null)
                     {
-                        var previousStock = product.StockQuantity;
-                        var newStock = previousStock - orderItem.Quantity;
+                        // Payment found - update payment status
+                        order.PaymentStatus = "Confirmed";
+                    }
+                    else
+                    {
+                        // Payment not found - cancel order
+                        order.PaymentStatus = "Failed";
+                        order.OrderStatus = "Cancelled";
+                        order.CancellationReason = "Payment verification failed - No matching transaction found";
+                        order.CancelledDate = DateTime.UtcNow;
                         
-                        await _productsRepository.UpdateStockAsync(orderItem.ProductId, newStock, cancellationToken);
-                        
-                        await _stockMovementRepository.AddStockMovementAsync(
-                            orderItem.ProductId,
-                            -orderItem.Quantity,
-                            (int)previousStock,
-                            (int)newStock,
-                            "SALE",
-                            order.Id,
-                            orderItem.UnitPrice,
-                            $"Order {order.OrderNumber}",
-                            userId,
-                            cancellationToken);
+                        return ApiResponse<OrderResponseDto>.Fail(
+                            "Payment verification failed. Order has been cancelled.",
+                            new List<string> { $"No transaction found for order {order.OrderNumber} with amount {order.TotalAmount:C}" },
+                            400
+                        );
                     }
                 }
 
-                await _productsRepository.SaveChangesAsync(cancellationToken);
-                await _stockMovementRepository.SaveChangesAsync(cancellationToken);
+                // Save order and items
+                await SaveOrderAndItemsAsync(order, orderItems, cancellationToken);
 
-                // Remove only the ordered items from cart (keep remaining items)
-                foreach (var cartItem in cartItemsToOrder)
-                {
-                    _shoppingCartRepository.Delete(cartItem);
-                }
-                await _shoppingCartRepository.SaveChangesAsync(cancellationToken);
+                // Update stock and create stock movements
+                await UpdateStockAndMovementsAsync(order, orderItems, userId, cancellationToken);
 
-                // Get the complete order for response
+                // Remove items from shopping cart
+                await RemoveItemsFromCartAsync(userId, orderedProductIds, cancellationToken);
+
+                // Return response
                 var createdOrder = await _orderRepository.GetByIdWithDetailsAsync(order.Id, cancellationToken);
                 var orderDto = _mapper.Map<OrderResponseDto>(createdOrder);
                 
-                return ApiResponse<OrderResponseDto>.Ok(
-                    orderDto, 
-                    "Order created successfully from shopping cart.", 
-                    201
-                );
+                return ApiResponse<OrderResponseDto>.Ok(orderDto, "Order created successfully.", 201);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<OrderResponseDto>.Fail(
-                    "An error occurred while creating the order from cart.", 
-                    null, 
-                    500
-                );
+                return ApiResponse<OrderResponseDto>.Fail("An error occurred while creating the order.", null, 500);
             }
         }
 
@@ -342,103 +175,45 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
+                // Validate input
                 if (id <= 0)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "Invalid order ID.", 
-                        false, 
-                        400
-                    );
-                }
+                    return ApiResponse<bool>.Fail("Invalid order ID.", false, 400);
 
                 if (cancelOrderDto == null)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "Cancellation reason is required.", 
-                        false, 
-                        400
-                    );
-                }
+                    return ApiResponse<bool>.Fail("Cancellation reason is required.", false, 400);
 
+                // Get order
                 var order = await _orderRepository.GetByIdWithDetailsAsync(id, cancellationToken);
-                
                 if (order == null)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "Order not found.", 
-                        false, 
-                        404
-                    );
-                }
+                    return ApiResponse<bool>.Fail("Order not found.", false, 404);
 
                 if (order.CustomerId != userId)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "You can only cancel your own orders.", 
-                        false, 
-                        403
-                    );
-                }
+                    return ApiResponse<bool>.Fail("You can only cancel your own orders.", false, 403);
 
-                // Check if order status allows cancellation - only allow cancellation for Pending, Confirmed, Processing
-                var cancellableStatuses = new[] { "Pending", "Confirmed", "Processing" };
-                if (!cancellableStatuses.Any(status => string.Equals(status, order.OrderStatus, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return ApiResponse<bool>.Fail(
-                        $"Order cannot be cancelled. Current status: {order.OrderStatus}. Orders can only be cancelled when status is Pending, Confirmed, or Processing.", 
-                        false, 
-                        400
-                    );
-                }
+                // Check if cancellation is allowed
+                if (!IsOrderCancellable(order.OrderStatus))
+                    return ApiResponse<bool>.Fail($"Order cannot be cancelled. Current status: {order.OrderStatus}.", false, 400);
 
+                // Update order status
                 order.OrderStatus = "Cancelled";
                 order.CancellationReason = cancelOrderDto.CancellationReason;
                 order.CancelledDate = DateTime.UtcNow;
                 order.UpdatedDate = DateTime.UtcNow;
 
-                // Restore stock for cancelled order
-                foreach (var orderItem in order.OrderItems)
-                {
-                    var product = await _productsRepository.GetByIdNoTrackingAsync(orderItem.ProductId, cancellationToken);
-                    if (product != null)
-                    {
-                        var previousStock = product.StockQuantity;
-                        var newStock = previousStock + orderItem.Quantity;
-                        
-                        await _productsRepository.UpdateStockAsync(orderItem.ProductId, newStock, cancellationToken);
-                        
-                        await _stockMovementRepository.AddStockMovementAsync(
-                            orderItem.ProductId,
-                            orderItem.Quantity,
-                            (int)previousStock,
-                            (int)newStock,
-                            "CANCELLATION",
-                            order.Id,
-                            orderItem.UnitPrice,
-                            $"Order {order.OrderNumber} cancelled - Reason: {cancelOrderDto.CancellationReason}",
-                            userId,
-                            cancellationToken);
-                    }
-                }
+                // Restore stock
+                await RestoreStockForCancelledOrderAsync(order, userId, cancellationToken);
 
+                // Save changes
                 _orderRepository.Update(order);
                 await _orderRepository.SaveChangesAsync(cancellationToken);
                 await _productsRepository.SaveChangesAsync(cancellationToken);
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
                 
-                return ApiResponse<bool>.Ok(
-                    true, 
-                    "Order cancelled successfully.", 
-                    200
-                );
+                return ApiResponse<bool>.Ok(true, "Order cancelled successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<bool>.Fail(
-                    "An error occurred while cancelling the order.", 
-                    false, 
-                    500
-                );
+                return ApiResponse<bool>.Fail("An error occurred while cancelling the order.", false, 500);
             }
         }
 
@@ -451,40 +226,18 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 if (id <= 0)
-                {
-                    return ApiResponse<OrderResponseDto?>.Fail(
-                        "Invalid order ID.", 
-                        null, 
-                        400
-                    );
-                }
+                    return ApiResponse<OrderResponseDto?>.Fail("Invalid order ID.", null, 400);
 
                 var order = await _orderRepository.GetByIdWithDetailsAsync(id, cancellationToken);
-                
                 if (order == null)
-                {
-                    return ApiResponse<OrderResponseDto?>.Fail(
-                        "Order not found.", 
-                        null, 
-                        404
-                    );
-                }
+                    return ApiResponse<OrderResponseDto?>.Fail("Order not found.", null, 404);
 
                 var orderDto = _mapper.Map<OrderResponseDto>(order);
-                
-                return ApiResponse<OrderResponseDto?>.Ok(
-                    orderDto, 
-                    "Order retrieved successfully.", 
-                    200
-                );
+                return ApiResponse<OrderResponseDto?>.Ok(orderDto, "Order retrieved successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<OrderResponseDto?>.Fail(
-                    "An error occurred while retrieving the order.", 
-                    null, 
-                    500
-                );
+                return ApiResponse<OrderResponseDto?>.Fail("An error occurred while retrieving the order.", null, 500);
             }
         }
 
@@ -493,53 +246,219 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(userId))
-                {
-                    return ApiResponse<IEnumerable<OrderResponseDto>>.Fail(
-                        "User ID cannot be empty.", 
-                        null, 
-                        400
-                    );
-                }
+                    return ApiResponse<IEnumerable<OrderResponseDto>>.Fail("User ID cannot be empty.", null, 400);
 
                 var orders = await _orderRepository.GetUserOrdersAsync(userId, cancellationToken);
                 var orderDtos = _mapper.Map<IEnumerable<OrderResponseDto>>(orders);
                 
-                return ApiResponse<IEnumerable<OrderResponseDto>>.Ok(
-                    orderDtos, 
-                    "Orders retrieved successfully.", 
-                    200
-                );
+                return ApiResponse<IEnumerable<OrderResponseDto>>.Ok(orderDtos, "Orders retrieved successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return ApiResponse<IEnumerable<OrderResponseDto>>.Fail(
-                    "An error occurred while retrieving orders.", 
-                    null, 
-                    500
-                );
+                return ApiResponse<IEnumerable<OrderResponseDto>>.Fail("An error occurred while retrieving orders.", null, 500);
+            }
+        }
+
+        public async Task<ApiResponse<string>> GetNextOrderCodeAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var orderCode = await _orderRepository.GenerateOrderNumberAsync(cancellationToken);
+                return ApiResponse<string>.Ok(orderCode, "Next order code generated successfully.");
+            }
+            catch (Exception)
+            {
+                return ApiResponse<string>.Fail("An error occurred while generating order code.", null, 500);
             }
         }
 
         #endregion
 
-        #region Private Methods
+        #region Private Helper Methods
 
-        private static decimal CalculateDeliveryCharges(decimal orderTotal, decimal? distanceKm)
+        private static ApiResponse<OrderResponseDto> ValidateCreateOrderInput(string userId, CreateOrderDto createOrderDto)
         {
-            // Free delivery for orders over 100,000 VND
-            if (orderTotal >= 100000)
-                return 0;
+            if (string.IsNullOrWhiteSpace(userId))
+                return ApiResponse<OrderResponseDto>.Fail("User ID cannot be empty.", null, 400);
 
-            // Base delivery charge
-            decimal baseCharge = 25000; // 25,000 VND
+            if (createOrderDto?.OrderItems == null || !createOrderDto.OrderItems.Any())
+                return ApiResponse<OrderResponseDto>.Fail("Order items cannot be empty.", null, 400);
 
-            // Additional charge based on distance
-            if (distanceKm.HasValue && distanceKm > 10)
+            return ApiResponse<OrderResponseDto>.Ok(null!, "Valid");
+        }
+
+        private async Task<ApiResponse<OrderResponseDto>> ValidateDeliveryAddressAsync(string userId, int deliveryAddressId, CancellationToken cancellationToken)
+        {
+            var address = await _customerAddressRepository.GetByIdAsync(deliveryAddressId, cancellationToken);
+            if (address == null || address.UserId != userId || !address.IsActive)
+                return ApiResponse<OrderResponseDto>.Fail("Invalid delivery address.", null, 400);
+
+            return ApiResponse<OrderResponseDto>.Ok(null!, "Valid");
+        }
+
+        private async Task<ApiResponse<(List<OrderItems> orderItems, List<int> productIds, decimal subtotal)>> ProcessOrderItemsAsync(
+            List<CreateOrderItemDto> orderItemDtos, CancellationToken cancellationToken)
+        {
+            var orderItems = new List<OrderItems>();
+            var orderedProductIds = new List<int>();
+            decimal subtotal = 0;
+
+            foreach (var orderItemDto in orderItemDtos)
             {
-                baseCharge += (distanceKm.Value - 10) * 5000; // 5,000 VND per km over 10km
+                var product = await _productsRepository.GetByIdNoTrackingAsync(orderItemDto.ProductId, cancellationToken);
+                if (product == null || !product.IsActive)
+                    return ApiResponse<(List<OrderItems>, List<int>, decimal)>.Fail(
+                        $"Product with ID {orderItemDto.ProductId} not found or not available.", null, 400);
+
+                if (product.StockQuantity < orderItemDto.Quantity)
+                    return ApiResponse<(List<OrderItems>, List<int>, decimal)>.Fail(
+                        $"Insufficient stock for product {product.ProductName}. Available: {product.StockQuantity}, Requested: {orderItemDto.Quantity}", null, 400);
+
+                var orderItem = new OrderItems
+                {
+                    ProductId = orderItemDto.ProductId,
+                    Quantity = orderItemDto.Quantity,
+                    UnitPrice = product.Price,
+                    TotalPrice = product.Price * orderItemDto.Quantity
+                };
+
+                orderItems.Add(orderItem);
+                orderedProductIds.Add(orderItemDto.ProductId);
+                subtotal += orderItem.TotalPrice;
             }
 
-            return Math.Min(baseCharge, 100000); // Cap at 100,000 VND
+            return ApiResponse<(List<OrderItems>, List<int>, decimal)>.Ok((orderItems, orderedProductIds, subtotal), "Valid");
+        }
+
+        private async Task<(decimal couponDiscountAmount, List<string> appliedCoupons)> ProcessCouponsAsync(
+            List<string>? couponCodes, decimal subtotal, CancellationToken cancellationToken)
+        {
+            decimal couponDiscountAmount = 0;
+            var appliedCoupons = new List<string>();
+
+            if (couponCodes?.Any() == true)
+            {
+                foreach (var couponCode in couponCodes)
+                {
+                    var coupon = await _couponRepository.GetByCouponCodeAsync(couponCode, cancellationToken);
+                    if (coupon != null && await _couponRepository.IsCouponValidAsync(couponCode, subtotal, cancellationToken))
+                    {
+                        decimal discount = CalculateCouponDiscount(coupon, subtotal);
+                        couponDiscountAmount += discount;
+                        appliedCoupons.Add(couponCode);
+
+                        await _couponRepository.DecrementCouponQuantityAsync(coupon.Id, cancellationToken);
+                    }
+                }
+            }
+
+            return (couponDiscountAmount, appliedCoupons);
+        }
+
+        private static decimal CalculateCouponDiscount(Coupons coupon, decimal subtotal)
+        {
+            decimal discount = 0;
+            if (string.Equals(coupon.DiscountType, "percentage", StringComparison.OrdinalIgnoreCase))
+            {
+                discount = subtotal * (coupon.DiscountValue / 100);
+                if (coupon.MaxDiscountAmount > 0 && discount > coupon.MaxDiscountAmount)
+                    discount = coupon.MaxDiscountAmount;
+            }
+            else
+            {
+                discount = coupon.DiscountValue;
+            }
+            return discount;
+        }
+
+        private async Task<Orders> CreateOrderEntityAsync(string userId, CreateOrderDto createOrderDto, decimal subtotal, 
+            decimal couponDiscountAmount, List<string> appliedCoupons, CancellationToken cancellationToken)
+        {
+            return new Orders
+            {
+                OrderNumber = await _orderRepository.GenerateOrderNumberAsync(cancellationToken),
+                CustomerId = userId,
+                DeliveryAddressId = createOrderDto.DeliveryAddressId,
+                OrderDate = DateTime.UtcNow,
+                Subtotal = subtotal,
+                CouponDiscountAmount = couponDiscountAmount,
+                DeliveryCharges = createOrderDto.DeliveryCharges,
+                TotalAmount = subtotal - couponDiscountAmount + createOrderDto.DeliveryCharges,
+                OrderStatus = "Pending",
+                PaymentType = createOrderDto.PaymentType,
+                PaymentStatus = "Pending",
+                AppliedCoupons = appliedCoupons.Any() ? string.Join(",", appliedCoupons) : null,
+                DeliveryNotes = createOrderDto.DeliveryNotes,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            };
+        }
+
+        private async Task SaveOrderAndItemsAsync(Orders order, List<OrderItems> orderItems, CancellationToken cancellationToken)
+        {
+            await _orderRepository.AddAsync(order, cancellationToken);
+            await _orderRepository.SaveChangesAsync(cancellationToken);
+
+            foreach (var orderItem in orderItems)
+                orderItem.OrderId = order.Id;
+
+            await _orderItemRepository.AddRangeAsync(orderItems, cancellationToken);
+            await _orderItemRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task UpdateStockAndMovementsAsync(Orders order, List<OrderItems> orderItems, string userId, CancellationToken cancellationToken)
+        {
+            foreach (var orderItem in orderItems)
+            {
+                var product = await _productsRepository.GetByIdNoTrackingAsync(orderItem.ProductId, cancellationToken);
+                if (product != null)
+                {
+                    var previousStock = product.StockQuantity;
+                    var newStock = previousStock - orderItem.Quantity;
+                    
+                    await _productsRepository.UpdateStockAsync(orderItem.ProductId, newStock, cancellationToken);
+                    
+                    await _stockMovementRepository.AddStockMovementAsync(
+                        orderItem.ProductId, -orderItem.Quantity, (int)previousStock, (int)newStock,
+                        "SALE", order.Id, orderItem.UnitPrice, $"Order {order.OrderNumber}", userId, cancellationToken);
+                }
+            }
+
+            await _productsRepository.SaveChangesAsync(cancellationToken);
+            await _stockMovementRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task RemoveItemsFromCartAsync(string userId, List<int> orderedProductIds, CancellationToken cancellationToken)
+        {
+            if (orderedProductIds.Any())
+                await _shoppingCartRepository.RemoveProductsFromCartAsync(userId, orderedProductIds, cancellationToken);
+        }
+
+        private static bool IsOrderCancellable(string orderStatus)
+        {
+            var cancellableStatuses = new[] { "Pending", "Confirmed", "Processing" };
+            return cancellableStatuses.Any(status => string.Equals(status, orderStatus, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private async Task RestoreStockForCancelledOrderAsync(Orders order, string userId, CancellationToken cancellationToken)
+        {
+            foreach (var orderItem in order.OrderItems)
+            {
+                var product = await _productsRepository.GetByIdNoTrackingAsync(orderItem.ProductId, cancellationToken);
+                if (product != null)
+                {
+                    var previousStock = product.StockQuantity;
+                    var newStock = previousStock + orderItem.Quantity;
+                    
+                    await _productsRepository.UpdateStockAsync(orderItem.ProductId, newStock, cancellationToken);
+                    
+                    await _stockMovementRepository.AddStockMovementAsync(
+                        orderItem.ProductId, orderItem.Quantity, (int)previousStock, (int)newStock,
+                        "CANCELLATION", order.Id, orderItem.UnitPrice,
+                        $"Order {order.OrderNumber} cancelled - Reason: {order.CancellationReason}", userId, cancellationToken);
+                }
+            }
         }
 
         #endregion

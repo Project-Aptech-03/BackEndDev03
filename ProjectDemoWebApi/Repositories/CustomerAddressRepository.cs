@@ -13,17 +13,12 @@ namespace ProjectDemoWebApi.Repositories
 
         public async Task<IEnumerable<CustomerAddresses>> GetUserAddressesAsync(string userId, CancellationToken cancellationToken = default)
         {
+            // Only retrieve active addresses for a regular user, sorting the default address to the top.
             return await _dbSet.AsNoTracking()
-                .Where(ca => ca.UserId == userId)
+                .Where(ca => ca.UserId == userId && ca.IsActive)
                 .OrderByDescending(ca => ca.IsDefault)
                 .ThenBy(ca => ca.CreatedDate)
                 .ToListAsync(cancellationToken);
-        }
-
-        public async Task<CustomerAddresses?> GetUserDefaultAddressAsync(string userId, CancellationToken cancellationToken = default)
-        {
-            return await _dbSet.AsNoTracking()
-                .FirstOrDefaultAsync(ca => ca.UserId == userId && ca.IsDefault && ca.IsActive, cancellationToken);
         }
 
         public async Task<IEnumerable<CustomerAddresses>> GetActiveUserAddressesAsync(string userId, CancellationToken cancellationToken = default)
@@ -35,19 +30,42 @@ namespace ProjectDemoWebApi.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task SetDefaultAddressAsync(string userId, int addressId, CancellationToken cancellationToken = default)
+        public async Task<CustomerAddresses?> GetAddressByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            // First, remove default from all user addresses
+            return await _dbSet.AsNoTracking()
+                .FirstOrDefaultAsync(ca => ca.Id == id, cancellationToken);
+        }
+
+        public async Task<CustomerAddresses> CreateAddressAsync(CustomerAddresses address, CancellationToken cancellationToken = default)
+        {
+            await _dbSet.AddAsync(address, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            return address;
+        }
+
+        public async Task<CustomerAddresses> UpdateAddressAsync(CustomerAddresses address, CancellationToken cancellationToken = default)
+        {
+            _dbSet.Update(address);
+            await _context.SaveChangesAsync(cancellationToken);
+            return address;
+        }
+
+        public async Task UnsetAllDefaultAddressesAsync(string userId, CancellationToken cancellationToken = default)
+        {
             var userAddresses = await _dbSet
-                .Where(ca => ca.UserId == userId)
+                .Where(ca => ca.UserId == userId && ca.IsDefault)
                 .ToListAsync(cancellationToken);
 
             foreach (var address in userAddresses)
             {
-                address.IsDefault = address.Id == addressId;
+                address.IsDefault = false;
             }
 
-            _dbSet.UpdateRange(userAddresses);
+            if (userAddresses.Any())
+            {
+                _dbSet.UpdateRange(userAddresses);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
         }
 
         public async Task<IEnumerable<CustomerAddresses>> GetAddressesByDistanceAsync(decimal maxDistance, CancellationToken cancellationToken = default)

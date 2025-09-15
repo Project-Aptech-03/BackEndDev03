@@ -9,8 +9,6 @@ using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Extensions;
 using ProjectDemoWebApi.Models;
-using ProjectDemoWebApi.Repositories;
-using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using ProjectDemoWebApi.Validation;
@@ -38,6 +36,18 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailSender, EmailService>();
 
+// Shop settings configuration
+builder.Services.Configure<ShopSettings>(builder.Configuration.GetSection("ShopSettings"));
+
+// Google Maps settings configuration
+builder.Services.Configure<GoogleMapsSettings>(builder.Configuration.GetSection("GoogleMaps"));
+
+// SePay settings configuration
+builder.Services.Configure<SePaySettings>(builder.Configuration.GetSection("SePay"));
+
+// HttpClient for distance calculation service
+builder.Services.AddHttpClient<IDistanceCalculationService, DistanceCalculationService>();
+
 // DbContext configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BookConnection")));
@@ -60,12 +70,7 @@ builder.Services.AddIdentity<Users, Roles>()
 // Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
-builder.Services.AddHostedService<UnconfirmedUserCleanupService>();
-
-
-builder.Services.AddHttpContextAccessor();
-
-// Jwt 
+// Jwt
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -93,7 +98,7 @@ builder.Services.AddAuthentication(options =>
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
 
-            var result = ApiResponse<string>.Fail("Unauthorized - Token không hợp lệ hoặc chưa đăng nhập", null, 401);
+            var result = ApiResponse<string>.Fail("Unauthorized - Invalid token or not logged in", null, 401);
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         },
         OnForbidden = context =>
@@ -101,7 +106,7 @@ builder.Services.AddAuthentication(options =>
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             context.Response.ContentType = "application/json";
 
-            var result = ApiResponse<string>.Fail("Forbidden - Không có quyền truy cập", null, 403);
+            var result = ApiResponse<string>.Fail("Forbidden - No access rights", null, 403);
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
         }
     };

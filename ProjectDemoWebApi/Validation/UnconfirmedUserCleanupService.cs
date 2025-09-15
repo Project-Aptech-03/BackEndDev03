@@ -19,21 +19,27 @@ namespace ProjectDemoWebApi.Validation
             {
                 using var scope = _serviceProvider.CreateScope();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                var cutoff = DateTime.UtcNow.AddMinutes(-5);
-                var unconfirmedUsers = dbContext.Users
-                    .Where(u => !u.EmailConfirmed && u.CreatedAt < cutoff)
+                
+                // For now, we'll just check every hour instead of using CreatedAt
+                // This is a safer approach without the CreatedAt field
+                
+                var unconfirmedUsers = userManager.Users
+                    .Where(u => !u.EmailConfirmed)
+                    .Take(50) // Limit for performance
                     .ToList();
 
-                foreach (var user in unconfirmedUsers)
+                // Log the count for monitoring
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<UnconfirmedUserCleanupService>>();
+                if (unconfirmedUsers.Count > 0)
                 {
-                    await userManager.DeleteAsync(user);
+                    logger.LogInformation($"Found {unconfirmedUsers.Count} unconfirmed users");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // chạy mỗi phút
+                // We'll be conservative and not auto-delete without CreatedAt timestamp
+                // This prevents accidentally deleting legitimate users
+                
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // Run every hour
             }
         }
     }
-
 }

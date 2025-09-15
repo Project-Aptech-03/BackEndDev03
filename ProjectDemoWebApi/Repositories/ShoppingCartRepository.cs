@@ -64,5 +64,13 @@ namespace ProjectDemoWebApi.Repositories
                 .Where(sc => sc.UpdatedDate < cutoffDate)
                 .ExecuteDeleteAsync(cancellationToken);
         }
+
+        public async Task RemoveProductsFromCartAsync(string userId, IEnumerable<int> productIds, CancellationToken cancellationToken = default)
+        {
+            // Use bulk delete for better performance
+            await _dbSet
+                .Where(sc => sc.UserId == userId && productIds.Contains(sc.ProductId))
+                .ExecuteDeleteAsync(cancellationToken);
+        }
     }
 }
