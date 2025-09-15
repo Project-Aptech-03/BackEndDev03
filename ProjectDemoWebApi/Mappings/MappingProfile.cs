@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ProjectDemoWebApi.DTOs;
 using ProjectDemoWebApi.DTOs.Auth;
+using ProjectDemoWebApi.DTOs.Blog;
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.Coupon;
 using ProjectDemoWebApi.DTOs.CustomerAddress;
@@ -9,7 +10,6 @@ using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.DTOs.Payment;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Publisher;
-using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.DTOs.ShoppingCart;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
@@ -24,10 +24,15 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<RegisterRequest, Users>();
 
             // User mappings
+            CreateMap<CreateUserRequestDto, Users>();
             CreateMap<Users, UsersResponseDto>();
             CreateMap<UpdateUserDto, Users>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            CreateMap<CreateUserRequestDto, Users>();
+
+            //profile
+            CreateMap<Users, ProfileResponseDto>();
+            CreateMap<ProfileUpdateDto, Users>();
+
 
             // Category mappings
             CreateMap<CreateCategoryDto, Categories>();
@@ -50,8 +55,12 @@ namespace ProjectDemoWebApi.Mappings
             // Products mappings
             CreateMap<CreateProductsDto, Products>();
             CreateMap<UpdateProductsDto, Products>();
-            CreateMap<Products, ProductsResponseDto>();
             CreateMap<ProductPhotos, ProductPhotoResponseDto>();
+            CreateMap<Products, ProductsResponseDto>()
+                .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos.Where(ph => ph.IsActive)));
+            CreateMap<CreateProductsDto, Products>()
+                   .ForMember(dest => dest.ProductPhotos, opt => opt.Ignore());
+
 
             // Shopping Cart mappings
             CreateMap<AddToCartDto, ShoppingCart>();
@@ -64,10 +73,10 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CustomerAddresses, CustomerAddressResponseDto>();
 
             // Order mappings
-            CreateMap<CreateOrderDto, Orders>();
-            CreateMap<CreateOrderItemDto, OrderItems>();
+            CreateMap<CreateOrderFromCartDto, Orders>();
             CreateMap<UpdateOrderDto, Orders>();
-            CreateMap<Orders, OrderResponseDto>();
+            CreateMap<Orders, OrderResponseDto>()
+                .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer));
             CreateMap<OrderItems, OrderItemResponseDto>();
 
             // Payment mappings
@@ -75,12 +84,15 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<UpdatePaymentDto, Payments>();
             CreateMap<Payments, PaymentResponseDto>();
 
-
-
             // Coupon mappings
-            CreateMap<ApplyCouponDto, Coupons>();
+            CreateMap<CreateCouponDto, Coupons>();
             CreateMap<UpdateCouponDto, Coupons>();
             CreateMap<Coupons, CouponResponseDto>();
+
+            //=============faq===============
+            //CreateMap<Faq, FaqDto>();
+            //CreateMap<CreateFaqDto, Faq>();
+            //CreateMap<UpdateFaqDto, Faq>();
 
             //=============faq===============
             CreateMap<Faq, FaqDto>();
@@ -88,6 +100,13 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<UpdateFaqDto, Faq>();
 
 
+            CreateMap<CreateBlogDto, Blogs>();
+            CreateMap<UpdateBlogDto, Blogs>();
+            CreateMap<Blogs, BlogResponseDto>();
+            CreateMap<Blogs, BlogListResponseDto>();
+            CreateMap<CreateCommentDto, BlogComments>();
+            CreateMap<UpdateCommentDto, BlogComments>();
+            CreateMap<BlogComments, CommentResponseDto>();
         }
     }
 }

@@ -5,8 +5,8 @@ namespace ProjectDemoWebApi.DTOs.Manufacturer
     public class CreateManufacturerDto
     {
         [Required(ErrorMessage = "Manufacturer code cannot be empty.")]
-        [StringLength(5, MinimumLength = 5, ErrorMessage = "Manufacturer code must be exactly 5 characters.")]
-        [RegularExpression(@"^[A-Z]{3}\d{2}$", ErrorMessage = "Manufacturer code must follow format: 3 letters + 2 digits (e.g., ABC01).")]
+        [StringLength(3, MinimumLength = 3, ErrorMessage = "Manufacturer code must be exactly 3 characters.")]
+        [RegularExpression(@"^[A-Z]{3}$", ErrorMessage = "Manufacturer code must follow format: 3 letters")]
         public string ManufacturerCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Manufacturer name cannot be empty.")]
@@ -14,3 +14,4 @@ namespace ProjectDemoWebApi.DTOs.Manufacturer
         public string ManufacturerName { get; set; } = string.Empty;
     }
 }
+

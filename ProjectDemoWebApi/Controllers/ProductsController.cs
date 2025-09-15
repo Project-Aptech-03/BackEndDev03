@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
@@ -18,16 +19,40 @@ namespace ProjectDemoWebApi.Controllers
             _productsService = productsService;
         }
 
-   
 
-
+        //[HttpGet]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> GetProducts(
+        //[FromQuery] int page = 1,
+        //[FromQuery] int size = 20,
+        //[FromQuery] string? keyword = null) 
+        //    {
+        //    var result = await _productsService.GetProductsPagedAsync(page, size, keyword);
+        //    return StatusCode(result.StatusCode, result);
+        //}
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int size = 20)
+        public async Task<IActionResult> GetProducts(
+        [FromQuery] int page = 1,
+        [FromQuery] int size = 20,
+        [FromQuery] string? keyword = null,
+        [FromQuery] int? categoriesId = null,
+        [FromQuery] int? manufacturerId = null,
+        CancellationToken cancellationToken = default)
         {
-            var result = await _productsService.GetProductsPagedAsync(page, size);
+            var result = await _productsService.GetProductsPagedAsync(
+                page,
+                size,
+                keyword,
+                categoriesId,
+                manufacturerId,
+                cancellationToken
+            );
+
             return StatusCode(result.StatusCode, result);
         }
+
+
 
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
@@ -76,7 +101,16 @@ namespace ProjectDemoWebApi.Controllers
         {
             var result = await _productsService.GetProductByCodeAsync(code);
             return StatusCode(result.StatusCode, result);
+        }  
+        
+
+        [HttpGet("generate-code")]
+        public async Task<IActionResult> GenerateCode([FromQuery] int categoryId, [FromQuery] int manufacturerId, CancellationToken cancellationToken)
+        {
+            var code = await _productsService.GenerateProductCodeAsync(categoryId, manufacturerId, cancellationToken);
+            return Ok(ApiResponse<string>.Ok(code, "Generated product code."));
         }
+
 
         [HttpGet("category/{categoryId}")]
         [AllowAnonymous]

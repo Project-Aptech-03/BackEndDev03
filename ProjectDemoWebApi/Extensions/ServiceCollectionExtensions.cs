@@ -35,6 +35,12 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IFaqRepository, FaqRepository>();
             services.AddScoped<IFaqService, FaqService>();
 
+            services.AddScoped<IBlogRepository, BlogRepository>();
+            services.AddScoped<IBlogCommentRepository, BlogCommentRepository>();
+            services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();
+            services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
+            services.AddScoped<IAuthorFollowRepository, AuthorFollowRepository>();
+
             return services;
         }
 
@@ -58,7 +64,12 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             services.AddScoped<IRoleSeederService, RoleSeederService>();
 
-            // 
+            // Blog services
+            services.AddScoped<IBlogService, BlogService>();
+            services.AddScoped<IBlogCommentService, BlogCommentService>();
+            services.AddScoped<IAuthorFollowService, AuthorFollowService>();
+
+            // gg
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             return services;
         }

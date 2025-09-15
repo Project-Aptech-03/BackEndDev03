@@ -1,9 +1,14 @@
 using AutoMapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.DTOs.Manufacturer;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
+using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace ProjectDemoWebApi.Services
 {
@@ -86,6 +91,68 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
+
+        public async Task<ApiResponse<PagedResponseDto<ManufacturerResponseDto>>> GetAllManufacturersPageAsync(
+          int pageNumber = 1,
+          int pageSize = 10,
+          string? keyword = null,
+          CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (pageNumber <= 0) pageNumber = 1;
+                if (pageSize <= 0) pageSize = 10;
+
+                Expression<Func<Manufacturers, bool>>? predicate = null;
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    predicate = m => m.ManufacturerName.Contains(keyword)
+                                 || m.ManufacturerCode.Contains(keyword);
+                }
+                var (manufacturers, totalCount) = await _manufacturerRepository.GetPagedIncludeAsync(
+                    pageNumber,
+                    pageSize,
+                    predicate,
+                    cancellationToken,
+                    includes: m => m.Products
+                );
+                var manufacturerDtos = manufacturers
+                    .Select(m => new ManufacturerResponseDto
+                    {
+                        Id = m.Id,
+                        ManufacturerCode = m.ManufacturerCode,
+                        ManufacturerName = m.ManufacturerName,
+                        IsActive = m.IsActive,
+                        CreatedDate = m.CreatedDate,
+                        ProductCount = m.Products.Count() 
+                    })
+                    .ToList();
+
+                var response = new PagedResponseDto<ManufacturerResponseDto>
+                {
+                    Items = manufacturerDtos,
+                    TotalCount = totalCount,
+                    PageIndex = pageNumber,
+                    PageSize = pageSize
+                };
+
+                return ApiResponse<PagedResponseDto<ManufacturerResponseDto>>.Ok(
+                    response,
+                    "Manufacturers retrieved successfully.",
+                    200
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving manufacturers with pagination");
+                return ApiResponse<PagedResponseDto<ManufacturerResponseDto>>.Fail(
+                    "An error occurred while retrieving manufacturers.",
+                    null,
+                    500
+                );
+            }
+        }
+
 
 
         public async Task<ApiResponse<IEnumerable<ManufacturerResponseDto>>> GetActiveManufacturersAsync(CancellationToken cancellationToken = default)
@@ -194,40 +261,66 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
-
         public async Task<ApiResponse<ManufacturerResponseDto>> CreateManufacturerAsync(CreateManufacturerDto createManufacturerDto, CancellationToken cancellationToken = default)
         {
             try
             {
-                var codeExists = await _manufacturerRepository.IsManufacturerCodeExistsAsync(createManufacturerDto.ManufacturerCode, null, cancellationToken);
+                var prefix = createManufacturerDto.ManufacturerCode.ToUpper().Trim();
+
+                if (prefix.Length != 3 || !Regex.IsMatch(prefix, @"^[A-Z]{3}$"))
+                {
+                    return ApiResponse<ManufacturerResponseDto>.Fail(
+                        "Manufacturer code prefix must be exactly 3 uppercase letters (e.g., ABC).",
+                        null,
+                        400
+                    );
+                }
+
+                var existingCodes = await _manufacturerRepository.GetCodesByPrefixAsync(prefix, cancellationToken);
+
+                int nextNumber = 1;
+                if (existingCodes.Any())
+                {
+                    var maxNum = existingCodes
+                        .Select(code => int.TryParse(code.Substring(3), out var num) ? num : 0)
+                        .Max();
+
+                    nextNumber = maxNum + 1;
+                }
+
+                var finalCode = $"{prefix}{nextNumber:D2}";
+
+                var codeExists = await _manufacturerRepository.IsManufacturerCodeExistsAsync(finalCode, null, cancellationToken);
                 if (codeExists)
                 {
                     return ApiResponse<ManufacturerResponseDto>.Fail(
-                        "Manufacturer code already exists.", 
-                        null, 
+                        "Manufacturer code already exists, please try again.",
+                        null,
                         409
                     );
                 }
 
+                // Map sang entity
                 var manufacturer = _mapper.Map<Manufacturers>(createManufacturerDto);
+                manufacturer.ManufacturerCode = finalCode; // gán code auto-gen
                 manufacturer.CreatedDate = DateTime.UtcNow;
 
                 await _manufacturerRepository.AddAsync(manufacturer, cancellationToken);
                 await _manufacturerRepository.SaveChangesAsync(cancellationToken);
 
                 var manufacturerDto = _mapper.Map<ManufacturerResponseDto>(manufacturer);
-                
+
                 return ApiResponse<ManufacturerResponseDto>.Ok(
-                    manufacturerDto, 
-                    "Manufacturer created successfully.", 
+                    manufacturerDto,
+                    "Manufacturer created successfully.",
                     201
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<ManufacturerResponseDto>.Fail(
-                    "An error occurred while creating the manufacturer.", 
-                    null, 
+                    "An error occurred while creating the manufacturer.",
+                    null,
                     500
                 );
             }
@@ -285,50 +378,68 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
-        public async Task<ApiResponse<bool>> DeleteManufacturerAsync(int id, CancellationToken cancellationToken = default)
+
+public async Task<ApiResponse<bool>> DeleteManufacturerAsync(int id, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            try
-            {
-                if (id <= 0)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "Invalid manufacturer ID.", 
-                        false, 
-                        400
-                    );
-                }
-
-                var manufacturer = await _manufacturerRepository.GetByIdAsync(id, cancellationToken);
-                
-                if (manufacturer == null)
-                {
-                    return ApiResponse<bool>.Fail(
-                        "Manufacturer not found.", 
-                        false, 
-                        404
-                    );
-                }
-
-                _manufacturerRepository.Delete(manufacturer);
-                await _manufacturerRepository.SaveChangesAsync(cancellationToken);
-                
-                return ApiResponse<bool>.Ok(
-                    true, 
-                    "Manufacturer deleted successfully.", 
-                    200
-                );
-            }
-            catch (Exception ex)
+            if (id <= 0)
             {
                 return ApiResponse<bool>.Fail(
-                    "An error occurred while deleting the manufacturer.", 
-                    false, 
-                    500
+                    "Invalid manufacturer ID.",
+                    false,
+                    400
                 );
             }
-        }
 
-        public async Task<ApiResponse<bool>> IsManufacturerCodeExistsAsync(string manufacturerCode, int? excludeId = null, CancellationToken cancellationToken = default)
+            var manufacturer = await _manufacturerRepository.GetByIdAsync(id, cancellationToken);
+
+            if (manufacturer == null)
+            {
+                return ApiResponse<bool>.Fail(
+                    "Manufacturer not found.",
+                    false,
+                    404
+                );
+            }
+
+            _manufacturerRepository.Delete(manufacturer);
+            await _manufacturerRepository.SaveChangesAsync(cancellationToken);
+
+            return ApiResponse<bool>.Ok(
+                true,
+                "Manufacturer deleted successfully.",
+                200
+            );
+        }
+        catch (DbUpdateException dbEx)
+        {
+            if (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 547) 
+            {
+                return ApiResponse<bool>.Fail(
+                    "Cannot delete manufacturer because it is referenced by other data.",
+                    false,
+                    400
+                );
+            }
+
+            return ApiResponse<bool>.Fail(
+                $"Database error: {dbEx.Message}",
+                false,
+                500
+            );
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<bool>.Fail(
+                $"An error occurred while deleting the manufacturer: {ex.Message}",
+                false,
+                500
+            );
+        }
+    }
+
+    public async Task<ApiResponse<bool>> IsManufacturerCodeExistsAsync(string manufacturerCode, int? excludeId = null, CancellationToken cancellationToken = default)
         {
             try
             {

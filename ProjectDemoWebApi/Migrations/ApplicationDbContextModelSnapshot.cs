@@ -152,6 +152,254 @@ namespace ProjectDemoWebApi.Migrations
                     b.ToTable("AdminReplies");
                 });
 
+            modelBuilder.Entity("ProjectDemoWebApi.Models.AuthorFollows", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("author_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("FollowerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("follower_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId")
+                        .HasDatabaseName("idx_author_follows_author");
+
+                    b.HasIndex("FollowerId")
+                        .HasDatabaseName("idx_author_follows_follower");
+
+                    b.HasIndex("FollowerId", "AuthorId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_author_follows_unique");
+
+                    b.ToTable("AuthorFollows");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.BlogComments", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlogId")
+                        .HasColumnType("int")
+                        .HasColumnName("blog_id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("ntext")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_approved");
+
+                    b.Property<int>("LikeCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("like_count");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int")
+                        .HasColumnName("parent_comment_id");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogId")
+                        .HasDatabaseName("idx_blog_comments_blog");
+
+                    b.HasIndex("ParentCommentId")
+                        .HasDatabaseName("idx_blog_comments_parent");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("idx_blog_comments_user");
+
+                    b.ToTable("BlogComments");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.BlogLikes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlogId")
+                        .HasColumnType("int")
+                        .HasColumnName("blog_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("BlogId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_blog_likes_unique");
+
+                    b.ToTable("BlogLikes");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.Blogs", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("author_id");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("category_id");
+
+                    b.Property<int>("CommentCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("comment_count");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("ntext")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("FeaturedImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("featured_image_url");
+
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_featured");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published");
+
+                    b.Property<int>("LikeCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("like_count");
+
+                    b.Property<DateTime?>("PublishedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("published_date");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("summary");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("ViewCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("view_count");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId")
+                        .HasDatabaseName("idx_blogs_author");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("idx_blogs_category");
+
+                    b.HasIndex("IsFeatured")
+                        .HasDatabaseName("idx_blogs_featured");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("idx_blogs_slug")
+                        .HasFilter("[slug] IS NOT NULL");
+
+                    b.HasIndex("IsPublished", "PublishedDate")
+                        .HasDatabaseName("idx_blogs_published");
+
+                    b.ToTable("Blogs");
+                });
+
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
                     b.Property<int>("Id")
@@ -191,6 +439,40 @@ namespace ProjectDemoWebApi.Migrations
                         .HasDatabaseName("idx_categories_code");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.CommentLikes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int")
+                        .HasColumnName("comment_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CommentId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_comment_likes_unique");
+
+                    b.ToTable("CommentLikes");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Coupons", b =>
@@ -864,10 +1146,17 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<string>("Dimensions")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("dimensions");
+                    b.Property<int?>("DimensionHeight")
+                        .HasColumnType("int")
+                        .HasColumnName("dimension_height");
+
+                    b.Property<int?>("DimensionLength")
+                        .HasColumnType("int")
+                        .HasColumnName("dimension_length");
+
+                    b.Property<int?>("DimensionWidth")
+                        .HasColumnType("int")
+                        .HasColumnName("dimension_width");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -964,7 +1253,7 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnName("is_active");
 
                     b.Property<string>("PublisherAddress")
-                        .HasColumnType("text")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("publisher_address");
 
                     b.Property<string>("PublisherName")
@@ -1340,6 +1629,63 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerAddresses", b =>
                 {
+                    b.HasOne("ProjectDemoWebApi.Models.Blogs", "Blog")
+                        .WithMany("Likes")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
+                        .WithMany("BlogLikes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.Blogs", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Author")
+                        .WithMany("Blogs")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Categories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.CommentLikes", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.BlogComments", "Comment")
+                        .WithMany("Likes")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
+                        .WithMany("CommentLikes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerAddresses", b =>
+                {
                     b.HasOne("ProjectDemoWebApi.Models.Users", "User")
                         .WithMany("CustomerAddresses")
                         .HasForeignKey("UserId")
@@ -1521,6 +1867,20 @@ namespace ProjectDemoWebApi.Migrations
                         .HasForeignKey("UsersId");
                 });
 
+            modelBuilder.Entity("ProjectDemoWebApi.Models.BlogComments", b =>
+                {
+                    b.Navigation("Likes");
+
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.Blogs", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
+                });
+
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
                     b.Navigation("Products");
@@ -1570,9 +1930,21 @@ namespace ProjectDemoWebApi.Migrations
                 {
                     b.Navigation("AdminReplies");
 
+                    b.Navigation("BlogComments");
+
+                    b.Navigation("BlogLikes");
+
+                    b.Navigation("Blogs");
+
+                    b.Navigation("CommentLikes");
+
                     b.Navigation("CustomerAddresses");
 
                     b.Navigation("CustomerQueries");
+
+                    b.Navigation("Followers");
+
+                    b.Navigation("Following");
 
                     b.Navigation("Orders");
 

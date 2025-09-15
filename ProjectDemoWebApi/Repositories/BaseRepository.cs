@@ -180,5 +180,15 @@ namespace ProjectDemoWebApi.Repositories
         protected virtual IQueryable<T> GetQueryable() => _dbSet.AsQueryable();
         
         protected virtual IQueryable<T> GetQueryableAsNoTracking() => _dbSet.AsNoTracking();
+
+        //public void DetachEntity(object entity)
+        //{
+        //    var entry = _context.Entry(entity);
+        //    if (entry != null)
+        //    {
+        //        entry.State = EntityState.Detached;
+        //    }
+        //}
+
     }
 }

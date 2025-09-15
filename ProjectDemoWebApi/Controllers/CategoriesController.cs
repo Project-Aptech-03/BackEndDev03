@@ -21,10 +21,11 @@ namespace ProjectDemoWebApi.Controllers
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllCategoriesPaged(
-         [FromQuery] int pageNumber = 1,
-         [FromQuery] int pageSize = 10)
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? keyword = null)
         {
-            var result = await _categoryService.GetAllCategoriesPageAsync(pageNumber, pageSize);
+            var result = await _categoryService.GetAllCategoriesPageAsync(pageNumber, pageSize, keyword);
             return StatusCode(result.StatusCode, result);
         }
 

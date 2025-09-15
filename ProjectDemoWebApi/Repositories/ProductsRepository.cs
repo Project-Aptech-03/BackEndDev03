@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
+using System.Text.RegularExpressions;
 
 namespace ProjectDemoWebApi.Repositories
 {
@@ -9,6 +10,38 @@ namespace ProjectDemoWebApi.Repositories
     {
         public ProductsRepository(ApplicationDbContext context) : base(context)
         {
+        }
+
+        public async Task<string?> GetMaxProductCodeByPrefixAsync(string prefix, CancellationToken cancellationToken)
+        {
+            return await _dbSet
+                .Where(p => p.ProductCode.StartsWith(prefix))
+                .OrderByDescending(p => p.ProductCode)
+                .Select(p => p.ProductCode)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        // An toàn h?n: l?y t?t c? productCode cùng prefix, parse s? ? cu?i, tr? v? max numeric suffix
+        public async Task<int?> GetMaxNumericSuffixByPrefixAsync(string prefix, CancellationToken cancellationToken)
+        {
+            var codes = await _dbSet
+                .Where(p => p.ProductCode.StartsWith(prefix))
+                .Select(p => p.ProductCode)
+                .ToListAsync(cancellationToken);
+
+            if (codes == null || codes.Count == 0) return null;
+
+            int max = 0;
+            foreach (var c in codes)
+            {
+                var m = Regex.Match(c, @"(\d+)$");
+                if (m.Success && int.TryParse(m.Value, out var n))
+                {
+                    if (n > max) max = n;
+                }
+            }
+
+            return max;
         }
 
         public async Task<Products?> GetByProductCodeAsync(string productCode, CancellationToken cancellationToken = default)
@@ -30,6 +63,16 @@ namespace ProjectDemoWebApi.Repositories
                 .Include(p => p.ProductPhotos)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
+
+        //public async Task<Products?> GetLastProductByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+        //{
+        //    return await _dbSet
+        //        .AsNoTracking()
+        //        .Where(p => p.ProductCode.StartsWith(prefix))
+        //        .OrderByDescending(p => p.ProductCode)
+        //        .FirstOrDefaultAsync(cancellationToken);
+        //}
+
 
 
         public async Task<IEnumerable<Products>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
@@ -53,6 +96,8 @@ namespace ProjectDemoWebApi.Repositories
         //        .Include(p => p.ProductPhotos)
         //        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         //}
+
+
 
 
 
