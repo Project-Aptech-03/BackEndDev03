@@ -24,10 +24,17 @@ public class UpdateProductsDto
     [Range(1, int.MaxValue, ErrorMessage = "Pages must be greater than 0.")]
     public int? Pages { get; set; }
 
-    [StringLength(50, ErrorMessage = "Dimensions cannot exceed 50 characters.")]
-    public string? Dimensions { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Length must be >= 0.")]
+    public int? DimensionLength { get; set; }
 
-    [Range(0.01, 999.99, ErrorMessage = "Weight must be between 0.01 and 999.99 kg.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Width must be >= 0.")]
+    public int? DimensionWidth { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Height must be >= 0.")]
+    public int? DimensionHeight { get; set; }
+
+
+    [Range(0, 999.99, ErrorMessage = "Weight must be between 0.01 and 999.99 kg.")]
     public decimal? Weight { get; set; }
 
     [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]

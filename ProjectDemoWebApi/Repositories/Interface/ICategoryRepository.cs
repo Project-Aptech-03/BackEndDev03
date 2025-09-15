@@ -12,5 +12,6 @@ namespace ProjectDemoWebApi.Repositories.Interface
         Task<bool> IsCategoryCodeExistsAsync(string categoryCode, int? excludeId = null, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<Categories>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<Categories>> GetCategoriesByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
     }
 }

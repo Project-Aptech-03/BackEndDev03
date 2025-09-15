@@ -1,23 +1,33 @@
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Shared;
+using System.Threading.Tasks;
 
 namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IProductsService
     {
-        ///Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetAllProductsAsync(CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
-            int pageNumber,
-            int pageSize,
-            CancellationToken cancellationToken = default);
+        int pageNumber,
+        int pageSize,
+        string? keyword = null,
+        int? categoriesId = null,
+        int? manufacturerId = null,
+        CancellationToken cancellationToken = default);
+        //Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
+        //int pageNumber,
+        //int pageSize,
+        //string? keyword = null,
+        //CancellationToken cancellationToken = default);
 
         Task<ApiResponse<ProductsResponseDto>> CreateProductAsync(CreateProductsDto createProductDto, CancellationToken cancellationToken = default);
         Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(int id, UpdateProductsDto updateProductDto, CancellationToken cancellationToken = default);
         Task<ApiResponse<bool>> DeleteProductAsync(int id, CancellationToken cancellationToken = default);
         Task<ApiResponse<int>> DeleteProductsAsync(List<int> ids, CancellationToken cancellationToken = default);
 
-
-
+         Task<string> GenerateProductCodeAsync(
+         int categoryId,
+         int manufacturerId,
+         CancellationToken cancellationToken);
 
         Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetActiveProductsAsync(CancellationToken cancellationToken = default);
         Task<ApiResponse<ProductsResponseDto?>> GetProductByIdAsync(int id, CancellationToken cancellationToken = default);

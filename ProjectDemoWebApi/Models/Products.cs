@@ -44,9 +44,14 @@ namespace ProjectDemoWebApi.Models
         [Column("pages")]
         public int? Pages { get; set; }
 
-        [StringLength(50)]
-        [Column("dimensions")]
-        public string? Dimensions { get; set; }
+        [Column("dimension_length")]
+        public int? DimensionLength { get; set; }
+
+        [Column("dimension_width")]
+        public int? DimensionWidth { get; set; }
+
+        [Column("dimension_height")]
+        public int? DimensionHeight { get; set; }
 
         [Column("weight", TypeName = "decimal(5,2)")]
         public decimal? Weight { get; set; }

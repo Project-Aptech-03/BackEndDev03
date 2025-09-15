@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using LinqKit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,11 @@ using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
+using System.Globalization;
+using System.Linq.Expressions;
 using System.Security.Claims;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ProjectDemoWebApi.Services
 {
@@ -48,13 +53,73 @@ namespace ProjectDemoWebApi.Services
             _applicationDbContext = applicationDbContext;
         }
 
+        // public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
+        //int pageNumber,
+        //int pageSize,
+        //string? keyword = null,
+        //CancellationToken cancellationToken = default)
+        // {
+        //     try
+        //     {
+        //         if (pageNumber <= 0)
+        //             pageNumber = 1;
+
+        //         if (pageSize <= 0 || pageSize > 100)
+        //             pageSize = 20;
+        //         Expression<Func<Products, bool>>? predicate = p => p.IsActive;
+        //         if (!string.IsNullOrEmpty(keyword))
+        //         {
+        //             predicate = p => p.IsActive && p.ProductName.Contains(keyword)
+        //                             || p.IsActive && p.ProductCode.Contains(keyword);
+        //         }
+
+        //         var (products, totalCount) = await _productsRepository
+        //             .GetPagedIncludeAsync(
+        //                 pageNumber,
+        //                 pageSize,
+        //                 predicate,
+        //                 cancellationToken,
+        //                 p => p.Category,
+        //                 p => p.Manufacturer,
+        //                 p => p.Publisher,
+        //                 p => p.ProductPhotos
+        //             );
+
+        //         var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
+
+        //         var response = new PagedResponseDto<ProductsResponseDto>
+        //         {
+        //             Items = productDtos,
+        //             TotalCount = totalCount,
+        //             PageIndex = pageNumber,
+        //             PageSize = pageSize
+        //         };
+
+        //         return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Ok(
+        //             response,
+        //             "Products retrieved successfully.",
+        //             200
+        //         );
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error while retrieving products with pagination");
+        //         return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
+        //             "An error occurred while retrieving products.",
+        //             new PagedResponseDto<ProductsResponseDto>(),
+        //             500
+        //         );
+        //     }
+        // }
 
 
-        //getAllProduct
         public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
-         int pageNumber,
-         int pageSize,
-         CancellationToken cancellationToken = default)
+    int pageNumber,
+    int pageSize,
+    string? keyword = null,
+    int? categoriesId = null,
+    int? manufacturerId = null,
+    CancellationToken cancellationToken = default)
         {
             try
             {
@@ -64,12 +129,35 @@ namespace ProjectDemoWebApi.Services
                 if (pageSize <= 0 || pageSize > 100)
                     pageSize = 20;
 
+                var predicate = PredicateBuilder.New<Products>(p => p.IsActive);
+
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    predicate = predicate.And(p =>
+                        p.ProductName.Contains(keyword) || p.ProductCode.Contains(keyword));
+                }
+
+                if (categoriesId.HasValue)
+                {
+                    predicate = predicate.And(p => p.CategoryId == categoriesId.Value);
+                }
+
+                if (manufacturerId.HasValue)
+                {
+                    predicate = predicate.And(p => p.ManufacturerId == manufacturerId.Value);
+                }
+
                 var (products, totalCount) = await _productsRepository
-                    .GetPagedIncludeAsync(pageNumber, pageSize, p => p.IsActive, cancellationToken,
+                    .GetPagedIncludeAsync(
+                        pageNumber,
+                        pageSize,
+                        predicate,
+                        cancellationToken,
                         p => p.Category,
                         p => p.Manufacturer,
                         p => p.Publisher,
-                        p => p.ProductPhotos);
+                        p => p.ProductPhotos
+                    );
 
                 var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
 
@@ -87,8 +175,9 @@ namespace ProjectDemoWebApi.Services
                     200
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error while retrieving products with pagination");
                 return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
                     "An error occurred while retrieving products.",
                     new PagedResponseDto<ProductsResponseDto>(),
@@ -103,55 +192,30 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var category = await _categoryRepository.GetByIdAsync(createProductDto.CategoryId, cancellationToken);
-                if (category == null)
-                {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Invalid category ID.",
-                        null,
-                        400
-                    );
-                }
+                if (category == null) return ApiResponse<ProductsResponseDto>.Fail("Invalid category ID.", null, 400);
 
                 var manufacturer = await _manufacturerRepository.GetByIdAsync(createProductDto.ManufacturerId, cancellationToken);
-                if (manufacturer == null)
-                {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Invalid manufacturer ID.",
-                        null,
-                        400
-                    );
-                }
+                if (manufacturer == null) return ApiResponse<ProductsResponseDto>.Fail("Invalid manufacturer ID.", null, 400);
 
-                // 3. Validate Publisher (if provided)
                 if (createProductDto.PublisherId.HasValue)
                 {
                     var publisher = await _publisherRepository.GetByIdAsync(createProductDto.PublisherId.Value, cancellationToken);
-                    if (publisher == null)
-                    {
-                        return ApiResponse<ProductsResponseDto>.Fail(
-                            "Invalid publisher ID.",
-                            null,
-                            400
-                        );
-                    }
+                    if (publisher == null) return ApiResponse<ProductsResponseDto>.Fail("Invalid publisher ID.", null, 400);
                 }
+                if (string.IsNullOrWhiteSpace(createProductDto.ProductCode))
+                    return ApiResponse<ProductsResponseDto>.Fail("Product code is required.", null, 400);
 
                 var codeExists = await _productsRepository.IsProductCodeExistsAsync(createProductDto.ProductCode, null, cancellationToken);
                 if (codeExists)
                 {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Product code already exists.",
-                        null,
-                        409
-                    );
+                    return ApiResponse<ProductsResponseDto>.Fail("Product code already exists.", null, 409);
                 }
-
                 var product = _mapper.Map<Products>(createProductDto);
                 product.CreatedDate = DateTime.UtcNow;
+
                 if (createProductDto.Photos != null && createProductDto.Photos.Any())
                 {
                     var uploadedUrls = await _googleCloudStorageService.UploadFilesAsync(createProductDto.Photos, "products", cancellationToken);
-
                     foreach (var url in uploadedUrls)
                     {
                         product.ProductPhotos.Add(new ProductPhotos
@@ -162,17 +226,21 @@ namespace ProjectDemoWebApi.Services
                         });
                     }
                 }
-                await _productsRepository.AddAsync(product, cancellationToken);
-                await _productsRepository.SaveChangesAsync(cancellationToken);
 
+                await _productsRepository.AddAsync(product, cancellationToken);
+                try
+                {
+                    await _productsRepository.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+                {
+                    _logger.LogWarning(ex, "Unique constraint violated when saving product with code {ProductCode}", createProductDto.ProductCode);
+                    return ApiResponse<ProductsResponseDto>.Fail("Product code already exists.", null, 409);
+                }
                 var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(createdByUserId))
                 {
-                    return ApiResponse<ProductsResponseDto>.Fail(
-                        "Unable to determine current user for stock movement.",
-                        null,
-                        500
-                    );
+                    return ApiResponse<ProductsResponseDto>.Fail("Unable to determine current user for stock movement.", null, 500);
                 }
 
                 await _stockMovementRepository.AddStockMovementAsync(
@@ -191,128 +259,113 @@ namespace ProjectDemoWebApi.Services
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
 
                 var productDto = _mapper.Map<ProductsResponseDto>(product);
-
-                return ApiResponse<ProductsResponseDto>.Ok(
-                    productDto,
-                    "Product created successfully.",
-                    201
-                );
+                return ApiResponse<ProductsResponseDto>.Ok(productDto, "Product created successfully.", 201);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating product");
-
-                return ApiResponse<ProductsResponseDto>.Fail(
-                    $"An error occurred while creating the product. Details: {ex.Message}",
-                    null,
-                    500
-                );
+                _logger.LogError(ex, "Error occurred while creating product with code {ProductCode}", createProductDto?.ProductCode);
+                return ApiResponse<ProductsResponseDto>.Fail($"An error occurred while creating the product. Details: {ex.GetBaseException().Message}", null, 500);
             }
+        }
+        private bool IsUniqueConstraintViolation(DbUpdateException ex)
+        {
+            if (ex == null) return false;
+            var inner = ex.InnerException;
+            if (inner == null) return false;
+            if (inner is Microsoft.Data.SqlClient.SqlException msSqlEx)
+            {
+                return msSqlEx.Number == 2627 || msSqlEx.Number == 2601;
+            }
+            if (inner is System.Data.SqlClient.SqlException legacySqlEx)
+            {
+                return legacySqlEx.Number == 2627 || legacySqlEx.Number == 2601;
+            }
+
+            if (inner is Microsoft.Data.Sqlite.SqliteException sqliteEx)
+            {
+                return sqliteEx.SqliteErrorCode == 19;
+            }
+            var typeName = inner.GetType().FullName;
+            if (!string.IsNullOrEmpty(typeName) && typeName.Contains("Npgsql.PostgresException"))
+            {
+                var prop = inner.GetType().GetProperty("SqlState");
+                if (prop != null)
+                {
+                    var sqlState = prop.GetValue(inner) as string;
+                    return sqlState == "23505";
+                }
+            }
+            return false;
         }
 
 
-        //      public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(
-        //int id,
-        //UpdateProductsDto updateProductDto,
-        //CancellationToken cancellationToken = default)
-        //      {
-        //          try
-        //          {
-        //              if (id <= 0)
-        //                  return ApiResponse<ProductsResponseDto?>.Fail("Invalid product ID.", null, 400);
+        public async Task<string> GenerateProductCodeAsync(
+     int categoryId,
+     int manufacturerId,
+     CancellationToken cancellationToken)
+        {
+            var category = await _categoryRepository.GetByIdAsync(categoryId, cancellationToken);
+            var manufacturer = await _manufacturerRepository.GetByIdAsync(manufacturerId, cancellationToken);
 
-        //              var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
-        //              if (product == null)
-        //                  return ApiResponse<ProductsResponseDto?>.Fail("Product not found.", null, 404);
+            if (category == null || manufacturer == null)
+                throw new InvalidOperationException("Invalid category or manufacturer.");
 
-        //              var previousStock = product.StockQuantity;
+            var categorySource = !string.IsNullOrWhiteSpace(category.CategoryCode) ? category.CategoryCode : (category.CategoryName ?? "");
+            var manufacturerSource = !string.IsNullOrWhiteSpace(manufacturer.ManufacturerCode) ? manufacturer.ManufacturerCode : (manufacturer.ManufacturerName ?? "");
 
-        //              product.ProductCode = updateProductDto.ProductCode ?? product.ProductCode;
-        //              product.ProductName = updateProductDto.ProductName ?? product.ProductName;
-        //              product.Description = updateProductDto.Description ?? product.Description;
-        //              product.Author = updateProductDto.Author ?? product.Author;
-        //              product.ProductType = updateProductDto.ProductType ?? product.ProductType;
-        //              product.Pages = updateProductDto.Pages ?? product.Pages;
-        //              product.Dimensions = updateProductDto.Dimensions ?? product.Dimensions;
-        //              product.Weight = updateProductDto.Weight ?? product.Weight;
-        //              product.Price = updateProductDto.Price ?? product.Price;
-        //              product.IsActive = updateProductDto.IsActive ?? product.IsActive;
+            var cpart = NormalizeAndTakeForCode(categorySource, 2);
+            var mpart = NormalizeAndTakeForCode(manufacturerSource, 3);
+            var prefix = $"{cpart}{mpart}";
 
-        //              // Update Category
-        //              if (updateProductDto.CategoryId.HasValue)
-        //              {
-        //                  var category = await _categoryRepository.GetByIdAsync(updateProductDto.CategoryId.Value, cancellationToken);
-        //                  if (category == null)
-        //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid category ID.", null, 400);
+            var maxSuffix = await _productsRepository.GetMaxNumericSuffixByPrefixAsync(prefix, cancellationToken);
 
-        //                  product.CategoryId = category.Id;
-        //                  product.Category = category;
-        //              }
+            int nextNumber = (maxSuffix.HasValue ? maxSuffix.Value + 1 : 1);
 
-        //              // Update Manufacturer
-        //              if (updateProductDto.ManufacturerId.HasValue)
-        //              {
-        //                  var manufacturer = await _manufacturerRepository.GetByIdAsync(updateProductDto.ManufacturerId.Value, cancellationToken);
-        //                  if (manufacturer == null)
-        //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid manufacturer ID.", null, 400);
+            if (nextNumber > 99)
+            {
+                throw new InvalidOperationException($"Exceeded max suffix (99) for prefix {prefix}.");
+            }
 
-        //                  product.ManufacturerId = manufacturer.Id;
-        //                  product.Manufacturer = manufacturer;
-        //              }
+            var suffix = nextNumber.ToString("D2"); 
+            var productCode = $"{prefix}{suffix}"; 
 
-        //              // Update Publisher
-        //              if (updateProductDto.PublisherId.HasValue)
-        //              {
-        //                  var publisher = await _publisherRepository.GetByIdAsync(updateProductDto.PublisherId.Value, cancellationToken);
-        //                  if (publisher == null)
-        //                      return ApiResponse<ProductsResponseDto?>.Fail("Invalid publisher ID.", null, 400);
-
-        //                  product.PublisherId = publisher.Id;
-        //                  product.Publisher = publisher;
-        //              }
-
-        //              // Update Stock
-        //              if (updateProductDto.StockQuantity.HasValue && updateProductDto.StockQuantity.Value != previousStock)
-        //              {
-        //                  var quantityChange = updateProductDto.StockQuantity.Value - previousStock;
-        //                  product.StockQuantity = updateProductDto.StockQuantity.Value;
-
-        //                  await _stockMovementRepository.AddStockMovementAsync(
-        //                      product.Id,
-        //                      quantityChange,
-        //                      previousStock,
-        //                      product.StockQuantity,
-        //                      "ADJUSTMENT",
-        //                      null,
-        //                      0,
-        //                      "Stock adjustment",
-        //                      "System",
-        //                      cancellationToken);
-        //              }
-
-        //              // L?u entity v? stock movement
-        //              await _productsRepository.SaveChangesAsync(cancellationToken);
-        //              await _stockMovementRepository.SaveChangesAsync(cancellationToken);
-
-        //              // Load l?i entity k?m relations ?? map DTO chu?n
-        //              var updatedProduct = await _productsRepository.GetByIdWithDetailsAsync(product.Id, cancellationToken);
-        //              var productDto = _mapper.Map<ProductsResponseDto>(updatedProduct);
-
-        //              return ApiResponse<ProductsResponseDto?>.Ok(productDto, "Product updated successfully.", 200);
-        //          }
-        //          catch (Exception ex)
-        //          {
-        //              _logger.LogError(ex, "Error occurred while updating product");
-        //              return ApiResponse<ProductsResponseDto?>.Fail("An error occurred while updating the product.", null, 500);
-        //          }
-        //      }
+            return productCode;
+        }
 
 
-        // main
+        private string RemoveDiacritics(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            var normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+            foreach (var ch in normalized)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != UnicodeCategory.NonSpacingMark)
+                    sb.Append(ch);
+            }
+            return sb.ToString().Normalize(NormalizationForm.FormC);
+        }
+
+        private string NormalizeAndTakeForCode(string input, int length)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return new string('X', length);
+
+            var noDiacritics = RemoveDiacritics(input);
+            var alnum = Regex.Replace(noDiacritics, @"[^A-Za-z0-9]", ""); // ch? ch? s?/ch?
+            alnum = alnum.ToUpperInvariant();
+
+            if (alnum.Length >= length) return alnum.Substring(0, length);
+            return alnum.PadRight(length, 'X'); // fallback padding n?u quá ng?n
+        }
+
+
+
         public async Task<ApiResponse<ProductsResponseDto?>> UpdateProductAsync(
-      int id,
-      UpdateProductsDto updateProductDto,
-      CancellationToken cancellationToken = default)
+    int id,
+    UpdateProductsDto updateProductDto,
+    CancellationToken cancellationToken = default)
         {
             try
             {
@@ -330,7 +383,9 @@ namespace ProjectDemoWebApi.Services
                 product.Author = updateProductDto.Author ?? product.Author;
                 product.ProductType = updateProductDto.ProductType ?? product.ProductType;
                 product.Pages = updateProductDto.Pages ?? product.Pages;
-                product.Dimensions = updateProductDto.Dimensions ?? product.Dimensions;
+                product.DimensionHeight = updateProductDto.DimensionHeight ?? product.DimensionHeight;
+                product.DimensionWidth = updateProductDto.DimensionWidth ?? product.DimensionWidth;
+                product.DimensionLength = updateProductDto.DimensionLength ?? product.DimensionLength;
                 product.Weight = updateProductDto.Weight ?? product.Weight;
                 product.Price = updateProductDto.Price ?? product.Price;
                 product.IsActive = updateProductDto.IsActive ?? product.IsActive;
@@ -413,7 +468,6 @@ namespace ProjectDemoWebApi.Services
                 return ApiResponse<ProductsResponseDto?>.Fail("An error occurred while updating the product.", null, 500);
             }
         }
-
 
 
         public async Task<ApiResponse<IEnumerable<ProductsResponseDto>>> GetActiveProductsAsync(CancellationToken cancellationToken = default)
@@ -506,10 +560,10 @@ namespace ProjectDemoWebApi.Services
                 }
 
                 var productDto = _mapper.Map<ProductsResponseDto>(product);
-
+                
                 return ApiResponse<ProductsResponseDto?>.Ok(
-                    productDto,
-                    "Product retrieved successfully.",
+                    productDto, 
+                    "Product retrieved successfully.", 
                     200
                 );
             }
@@ -684,96 +738,6 @@ namespace ProjectDemoWebApi.Services
         }
 
 
-
-
-
-        //public async Task<ApiResponse<bool>> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
-        //{
-        //    try
-        //    {
-        //        if (id <= 0)
-        //        {
-        //            return ApiResponse<bool>.Fail(
-        //                "Invalid product ID.", 
-        //                false, 
-        //                400
-        //            );
-        //        }
-
-        //        var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
-
-        //        if (product == null)
-        //        {
-        //            return ApiResponse<bool>.Fail(
-        //                "Product not found.", 
-        //                false, 
-        //                404
-        //            );
-        //        }
-
-        //        // Collect photo URLs before deletion
-        //        var photoUrls = product.ProductPhotos?.Where(p => !string.IsNullOrWhiteSpace(p.PhotoUrl))
-        //            .Select(p => p.PhotoUrl).ToList() ?? new List<string>();
-
-        //        try
-        //        {
-        //            // Delete from database first
-        //            _productsRepository.Delete(product);
-        //            await _productsRepository.SaveChangesAsync(cancellationToken);
-
-        //            // Only delete photos if database deletion was successful
-        //            foreach (var photoUrl in photoUrls)
-        //            {
-        //                try
-        //                {
-        //                    await _googleCloudStorageService.DeleteFileAsync(photoUrl, cancellationToken);
-        //                }
-        //                catch (Exception ex)
-        //                {
-        //                    _logger.LogWarning(ex, "Failed to delete photo {PhotoUrl} for product {ProductId}", photoUrl, id);
-        //                }
-        //            }
-        //        }
-        //        catch (DbUpdateException ex)
-        //        {
-        //            _logger.LogError(ex, "Database error while deleting product {ProductId}", id);
-
-        //            // Check if it's a foreign key constraint issue
-        //            if (ex.InnerException?.Message?.Contains("REFERENCE") == true || 
-        //                ex.InnerException?.Message?.Contains("FOREIGN KEY") == true)
-        //            {
-        //                return ApiResponse<bool>.Fail(
-        //                    "Cannot delete product because it is referenced by other records (orders, cart items, etc.). Consider deactivating the product instead.",
-        //                    false,
-        //                    409
-        //                );
-        //            }
-
-        //            return ApiResponse<bool>.Fail(
-        //                "Database error occurred while deleting the product.",
-        //                false,
-        //                409
-        //            );
-        //        }
-
-        //        return ApiResponse<bool>.Ok(
-        //            true, 
-        //            "Product deleted successfully.", 
-        //            200
-        //        );
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Unexpected error while deleting product {ProductId}", id);
-        //        return ApiResponse<bool>.Fail(
-        //            "An error occurred while deleting the product.", 
-        //            false, 
-        //            500
-        //        );
-        //    }
-        //}
-
-
         public async Task<ApiResponse<bool>> DeleteProductAsync(int id, CancellationToken cancellationToken = default)
         {
             if (id <= 0)
@@ -781,7 +745,7 @@ namespace ProjectDemoWebApi.Services
 
             try
             {
-                // Load product kèm navigation
+                // Load product k�m navigation
                 var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 if (product == null)
                     return ApiResponse<bool>.Fail("Product not found.", false, 404);
@@ -794,11 +758,8 @@ namespace ProjectDemoWebApi.Services
 
                 try
                 {
-                    // Xóa product (n?u cascade trong DB thì t?t c? con s? xóa theo)
                     _productsRepository.Delete(product);
                     await _productsRepository.SaveChangesAsync(cancellationToken);
-
-                    // Xóa file trên cloud (n?u có)
                     foreach (var url in photoUrls)
                     {
                         try
@@ -816,8 +777,6 @@ namespace ProjectDemoWebApi.Services
                 catch (DbUpdateException dbEx)
                 {
                     _logger.LogWarning(dbEx, "Delete failed for product {ProductId}, fallback to deactivate.", id);
-
-                    // N?u không th? xóa c?ng thì chuy?n sang deactivate
                     if (product.IsActive)
                     {
                         product.IsActive = false;
@@ -873,7 +832,7 @@ namespace ProjectDemoWebApi.Services
 
                     try
                     {
-                        // Th? xóa product
+                        // Th? x�a product
                         _productsRepository.Delete(product);
                         await _productsRepository.SaveChangesAsync(cancellationToken);
                         deletedCount++;
@@ -884,7 +843,7 @@ namespace ProjectDemoWebApi.Services
                     {
                         _logger.LogWarning(dbEx, "Delete failed for product {ProductId}, fallback to deactivate.", productId);
 
-                        // N?u xóa th?t b?i ? deactivate
+                        // N?u x�a th?t b?i ? deactivate
                         if (product.IsActive)
                         {
                             product.IsActive = false;

@@ -206,7 +206,7 @@ namespace ProjectDemoWebApi.Services
                     return IdentityResult.Failed(new IdentityError { Description = "Vai trò không tồn tại" });
 
                 var isCurrentlyAdmin = await _userManager.IsInRoleAsync(account, "Admin");
-                if (isCurrentlyAdmin && userDto.Role != "Admin")
+                if (isCurrentlyAdmin && userDto.Role != "User")
                 {
                     var adminCount = (await _userManager.GetUsersInRoleAsync("Admin")).Count;
                     if (adminCount <= 1)
@@ -222,7 +222,6 @@ namespace ProjectDemoWebApi.Services
                 }
                 await _userManager.AddToRoleAsync(account, userDto.Role);
             }
-
             return IdentityResult.Success;
         }
 

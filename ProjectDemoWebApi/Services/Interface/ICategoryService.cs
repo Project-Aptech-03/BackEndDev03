@@ -4,11 +4,12 @@ using ProjectDemoWebApi.DTOs.Shared;
 namespace ProjectDemoWebApi.Services.Interface
 {
     public interface ICategoryService
-    {   
+    {
         Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetAllCategoriesPageAsync(
-         int pageNumber = 1,
-         int pageSize = 10,
-         CancellationToken cancellationToken = default);
+     int pageNumber = 1,
+     int pageSize = 10,
+     string? keyword = null,
+     CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetActiveCategoriesPagedAsync(
        int pageNumber = 1,
        int pageSize = 10,
