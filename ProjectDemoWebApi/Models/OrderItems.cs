@@ -25,19 +25,9 @@ namespace ProjectDemoWebApi.Models
         [Column("unit_price", TypeName = "decimal(10,2)")]
         public decimal UnitPrice { get; set; }
 
-        [Column("discount_percent", TypeName = "decimal(5,2)")]
-        public decimal DiscountPercent { get; set; } = 0;
-
-        [Column("discount_amount", TypeName = "decimal(8,2)")]
-        public decimal DiscountAmount { get; set; } = 0;
-
         [Required]
         [Column("total_price", TypeName = "decimal(12,2)")]
         public decimal TotalPrice { get; set; }
-
-        [StringLength(255)]
-        [Column("notes")]
-        public string? Notes { get; set; }
 
         // Navigation Properties
         [ForeignKey("OrderId")]

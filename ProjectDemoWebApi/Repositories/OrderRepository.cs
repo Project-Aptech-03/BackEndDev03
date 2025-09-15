@@ -132,27 +132,59 @@ namespace ProjectDemoWebApi.Repositories
 
         public async Task<string> GenerateOrderNumberAsync(CancellationToken cancellationToken = default)
         {
-            string orderNumber;
-            bool exists;
-            var maxAttempts = 100; // Prevent infinite loop
-            var attempts = 0;
+            // Use a database transaction to ensure thread-safety and prevent race conditions
+            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
             
-            do
+            try
             {
-                attempts++;
-                if (attempts > maxAttempts)
-                    throw new InvalidOperationException("Unable to generate unique order number after maximum attempts");
-                    
-                // Generate 8-digit number with better randomness
-                var random = new Random(Guid.NewGuid().GetHashCode());
-                var number = random.Next(10000000, 99999999);
-                orderNumber = number.ToString();
-                
-                exists = await IsOrderNumberExistsAsync(orderNumber, cancellationToken);
-            } 
-            while (exists);
+                // Get the latest order number with ORD prefix within the transaction
+                var latestOrder = await _dbSet
+                    .Where(o => o.OrderNumber.StartsWith("ORD"))
+                    .OrderByDescending(o => o.OrderNumber)
+                    .Select(o => o.OrderNumber)
+                    .FirstOrDefaultAsync(cancellationToken);
 
-            return orderNumber;
+                int nextNumber = 1;
+
+                if (!string.IsNullOrEmpty(latestOrder) && latestOrder.Length >= 8) // ORD + 5 digits
+                {
+                    // Extract the number part from ORD00001 format
+                    var numberPart = latestOrder.Substring(3); // Remove "ORD" prefix
+                    if (int.TryParse(numberPart, out var currentNumber))
+                    {
+                        nextNumber = currentNumber + 1;
+                    }
+                }
+
+                // Format as ORD00001, ORD00002, etc.
+                var newOrderNumber = $"ORD{nextNumber:D5}";
+                
+                // Double-check that this order number doesn't exist (extra safety)
+                var exists = await IsOrderNumberExistsAsync(newOrderNumber, cancellationToken);
+                if (exists)
+                {
+                    // If it exists (very rare race condition), try a few more numbers
+                    for (int i = 1; i <= 10; i++)
+                    {
+                        newOrderNumber = $"ORD{(nextNumber + i):D5}";
+                        exists = await IsOrderNumberExistsAsync(newOrderNumber, cancellationToken);
+                        if (!exists) break;
+                    }
+                    
+                    if (exists)
+                    {
+                        throw new InvalidOperationException("Unable to generate unique order number after multiple attempts");
+                    }
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return newOrderNumber;
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
         }
 
         public async Task<bool> IsOrderNumberExistsAsync(string orderNumber, CancellationToken cancellationToken = default)

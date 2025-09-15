@@ -11,6 +11,10 @@ namespace ProjectDemoWebApi.DTOs.Order
         [StringLength(50, ErrorMessage = "Payment type cannot exceed 50 characters.")]
         public string PaymentType { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Delivery charges cannot be empty.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Delivery charges must be a positive value.")]
+        public decimal DeliveryCharges { get; set; }
+
         [StringLength(1000, ErrorMessage = "Delivery notes cannot exceed 1000 characters.")]
         public string? DeliveryNotes { get; set; }
 
@@ -28,26 +32,5 @@ namespace ProjectDemoWebApi.DTOs.Order
         [Required(ErrorMessage = "Quantity cannot be empty.")]
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1.")]
         public int Quantity { get; set; }
-
-        [StringLength(255, ErrorMessage = "Notes cannot exceed 255 characters.")]
-        public string? Notes { get; set; }
-    }
-
-    public class CreateOrderFromCartDto
-    {
-        [Required(ErrorMessage = "Delivery address ID cannot be empty.")]
-        public int DeliveryAddressId { get; set; }
-
-        [Required(ErrorMessage = "Payment type cannot be empty.")]
-        [StringLength(50, ErrorMessage = "Payment type cannot exceed 50 characters.")]
-        public string PaymentType { get; set; } = string.Empty;
-
-        [StringLength(1000, ErrorMessage = "Delivery notes cannot exceed 1000 characters.")]
-        public string? DeliveryNotes { get; set; }
-
-        public List<string>? CouponCodes { get; set; }
-
-        // Optional: specific cart item IDs to order (if empty, order all cart items)
-        public List<int>? CartItemIds { get; set; }
     }
 }

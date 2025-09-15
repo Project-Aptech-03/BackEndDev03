@@ -26,160 +26,16 @@ namespace ProjectDemoWebApi.Services
                 var couponDtos = _mapper.Map<IEnumerable<CouponResponseDto>>(coupons);
 
                 return ApiResponse<IEnumerable<CouponResponseDto>>.Ok(
-                    couponDtos, 
-                    "Danh sách coupon ?ã ???c l?y thành công.", 
+                    couponDtos,
+                    "Coupon list retrieved successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<CouponResponseDto>>.Fail(
-                    "?ã x?y ra l?i khi l?y danh sách coupon.", 
-                    null, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<CouponResponseDto?>> GetCouponByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var coupon = await _couponRepository.GetByIdAsync(id, cancellationToken);
-                
-                if (coupon == null)
-                {
-                    return ApiResponse<CouponResponseDto?>.Fail(
-                        "Không tìm th?y coupon.", 
-                        null, 
-                        404
-                    );
-                }
-
-                var couponDto = _mapper.Map<CouponResponseDto>(coupon);
-                
-                return ApiResponse<CouponResponseDto?>.Ok(
-                    couponDto, 
-                    "Coupon ?ã ???c l?y thành công.", 
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<CouponResponseDto?>.Fail(
-                    "?ã x?y ra l?i khi l?y thông tin coupon.", 
-                    null, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<CouponResponseDto?>> GetCouponByCodeAsync(string couponCode, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(couponCode))
-                {
-                    return ApiResponse<CouponResponseDto?>.Fail(
-                        "Mã coupon không ???c ?? tr?ng.", 
-                        null, 
-                        400
-                    );
-                }
-
-                var coupon = await _couponRepository.GetByCouponCodeAsync(couponCode, cancellationToken);
-                
-                if (coupon == null)
-                {
-                    return ApiResponse<CouponResponseDto?>.Fail(
-                        "Không tìm th?y coupon v?i mã này.", 
-                        null, 
-                        404
-                    );
-                }
-
-                var couponDto = _mapper.Map<CouponResponseDto>(coupon);
-                
-                return ApiResponse<CouponResponseDto?>.Ok(
-                    couponDto, 
-                    "Coupon ?ã ???c l?y thành công.", 
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<CouponResponseDto?>.Fail(
-                    "?ã x?y ra l?i khi l?y thông tin coupon.", 
-                    null, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<IEnumerable<CouponResponseDto>>> GetActiveCouponsAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var coupons = await _couponRepository.GetActiveCouponsAsync(cancellationToken);
-                var couponDtos = _mapper.Map<IEnumerable<CouponResponseDto>>(coupons);
-
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Ok(
-                    couponDtos, 
-                    "Danh sách coupon ?ang ho?t ??ng ?ã ???c l?y thành công.", 
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Fail(
-                    "?ã x?y ra l?i khi l?y danh sách coupon ?ang ho?t ??ng.", 
-                    null, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<IEnumerable<CouponResponseDto>>> GetValidCouponsAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var coupons = await _couponRepository.GetValidCouponsAsync(DateTime.UtcNow, cancellationToken);
-                var couponDtos = _mapper.Map<IEnumerable<CouponResponseDto>>(coupons);
-
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Ok(
-                    couponDtos, 
-                    "Danh sách coupon h?p l? ?ã ???c l?y thành công.", 
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Fail(
-                    "?ã x?y ra l?i khi l?y danh sách coupon h?p l?.", 
-                    null, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<IEnumerable<CouponResponseDto>>> GetAutoApplyCouponsAsync(decimal orderAmount, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var coupons = await _couponRepository.GetAutoApplyCouponsAsync(orderAmount, cancellationToken);
-                var couponDtos = _mapper.Map<IEnumerable<CouponResponseDto>>(coupons);
-
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Ok(
-                    couponDtos, 
-                    "Danh sách coupon t? ??ng áp d?ng ?ã ???c l?y thành công.", 
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<IEnumerable<CouponResponseDto>>.Fail(
-                    "?ã x?y ra l?i khi l?y danh sách coupon t? ??ng áp d?ng.", 
-                    null, 
+                    "An error occurred while retrieving the coupon list.",
+                    null,
                     500
                 );
             }
@@ -194,8 +50,8 @@ namespace ProjectDemoWebApi.Services
                 if (existingCoupon)
                 {
                     return ApiResponse<CouponResponseDto>.Fail(
-                        "Mã coupon ?ã t?n t?i.", 
-                        null, 
+                        "Coupon code already exists.",
+                        null,
                         400
                     );
                 }
@@ -204,8 +60,8 @@ namespace ProjectDemoWebApi.Services
                 if (createCouponDto.EndDate <= createCouponDto.StartDate)
                 {
                     return ApiResponse<CouponResponseDto>.Fail(
-                        "Ngày k?t thúc ph?i sau ngày b?t ??u.", 
-                        null, 
+                        "End date must be after start date.",
+                        null,
                         400
                     );
                 }
@@ -214,8 +70,8 @@ namespace ProjectDemoWebApi.Services
                 if (createCouponDto.DiscountType == "percentage" && createCouponDto.DiscountValue > 100)
                 {
                     return ApiResponse<CouponResponseDto>.Fail(
-                        "Giá tr? gi?m giá theo ph?n tr?m không ???c v??t quá 100%.", 
-                        null, 
+                        "Percentage discount value cannot exceed 100%.",
+                        null,
                         400
                     );
                 }
@@ -229,16 +85,16 @@ namespace ProjectDemoWebApi.Services
                 var couponDto = _mapper.Map<CouponResponseDto>(coupon);
 
                 return ApiResponse<CouponResponseDto>.Ok(
-                    couponDto, 
-                    "Coupon ?ã ???c t?o thành công.", 
+                    couponDto,
+                    "Coupon created successfully.",
                     201
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<CouponResponseDto>.Fail(
-                    "?ã x?y ra l?i khi t?o coupon.", 
-                    null, 
+                    "An error occurred while creating the coupon.",
+                    null,
                     500
                 );
             }
@@ -249,12 +105,12 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var coupon = await _couponRepository.GetByIdAsync(id, cancellationToken);
-                
+
                 if (coupon == null)
                 {
                     return ApiResponse<CouponResponseDto?>.Fail(
-                        "Không tìm th?y coupon.", 
-                        null, 
+                        "Coupon not found.",
+                        null,
                         404
                     );
                 }
@@ -263,8 +119,8 @@ namespace ProjectDemoWebApi.Services
                 if (updateCouponDto.EndDate <= updateCouponDto.StartDate)
                 {
                     return ApiResponse<CouponResponseDto?>.Fail(
-                        "Ngày k?t thúc ph?i sau ngày b?t ??u.", 
-                        null, 
+                        "End date must be after start date.",
+                        null,
                         400
                     );
                 }
@@ -273,30 +129,30 @@ namespace ProjectDemoWebApi.Services
                 if (updateCouponDto.DiscountType == "percentage" && updateCouponDto.DiscountValue > 100)
                 {
                     return ApiResponse<CouponResponseDto?>.Fail(
-                        "Giá tr? gi?m giá theo ph?n tr?m không ???c v??t quá 100%.", 
-                        null, 
+                        "Percentage discount value cannot exceed 100%.",
+                        null,
                         400
                     );
                 }
 
                 _mapper.Map(updateCouponDto, coupon);
-                
+
                 _couponRepository.Update(coupon);
                 await _couponRepository.SaveChangesAsync(cancellationToken);
 
                 var couponDto = _mapper.Map<CouponResponseDto>(coupon);
 
                 return ApiResponse<CouponResponseDto?>.Ok(
-                    couponDto, 
-                    "Coupon ?ã ???c c?p nh?t thành công.", 
+                    couponDto,
+                    "Coupon updated successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<CouponResponseDto?>.Fail(
-                    "?ã x?y ra l?i khi c?p nh?t coupon.", 
-                    null, 
+                    "An error occurred while updating the coupon.",
+                    null,
                     500
                 );
             }
@@ -307,12 +163,12 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var coupon = await _couponRepository.GetByIdAsync(id, cancellationToken);
-                
+
                 if (coupon == null)
                 {
                     return ApiResponse<bool>.Fail(
-                        "Không tìm th?y coupon.", 
-                        false, 
+                        "Coupon not found.",
+                        false,
                         404
                     );
                 }
@@ -321,57 +177,16 @@ namespace ProjectDemoWebApi.Services
                 await _couponRepository.SaveChangesAsync(cancellationToken);
 
                 return ApiResponse<bool>.Ok(
-                    true, 
-                    "Coupon ?ã ???c xóa thành công.", 
+                    true,
+                    "Coupon deleted successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<bool>.Fail(
-                    "?ã x?y ra l?i khi xóa coupon.", 
-                    false, 
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<CouponDiscountResultDto>> ValidateCouponAsync(ValidateCouponDto validateCouponDto, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var coupon = await _couponRepository.GetByCouponCodeAsync(validateCouponDto.CouponCode, cancellationToken);
-                
-                if (coupon == null)
-                {
-                    return ApiResponse<CouponDiscountResultDto>.Ok(
-                        new CouponDiscountResultDto
-                        {
-                            IsValid = false,
-                            Message = "Mã coupon không t?n t?i.",
-                            DiscountAmount = 0,
-                            FinalAmount = validateCouponDto.OrderAmount
-                        },
-                        "Mã coupon không h?p l?.",
-                        200
-                    );
-                }
-
-                var validationResult = ValidateCouponInternal(coupon, validateCouponDto.OrderAmount);
-                var couponDto = _mapper.Map<CouponResponseDto>(coupon);
-                validationResult.CouponInfo = couponDto;
-
-                return ApiResponse<CouponDiscountResultDto>.Ok(
-                    validationResult,
-                    validationResult.IsValid ? "Coupon h?p l?." : validationResult.Message,
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<CouponDiscountResultDto>.Fail(
-                    "?ã x?y ra l?i khi xác th?c coupon.", 
-                    null, 
+                    "An error occurred while deleting the coupon.",
+                    false,
                     500
                 );
             }
@@ -382,23 +197,23 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var coupon = await _couponRepository.GetByCouponCodeAsync(applyCouponDto.CouponCode, cancellationToken);
-                
+
                 if (coupon == null)
                 {
                     return ApiResponse<CouponDiscountResultDto>.Fail(
-                        "Mã coupon không t?n t?i.", 
-                        null, 
+                        "Coupon code does not exist.",
+                        null,
                         404
                     );
                 }
 
                 var validationResult = ValidateCouponInternal(coupon, applyCouponDto.OrderAmount);
-                
+
                 if (!validationResult.IsValid)
                 {
                     return ApiResponse<CouponDiscountResultDto>.Fail(
-                        validationResult.Message, 
-                        null, 
+                        validationResult.Message,
+                        null,
                         400
                     );
                 }
@@ -408,57 +223,73 @@ namespace ProjectDemoWebApi.Services
 
                 return ApiResponse<CouponDiscountResultDto>.Ok(
                     validationResult,
-                    "Coupon ?ã ???c áp d?ng thành công.",
+                    "Valid coupon applied successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<CouponDiscountResultDto>.Fail(
-                    "?ã x?y ra l?i khi áp d?ng coupon.", 
-                    null, 
+                    "An error occurred while applying the coupon.",
+                    null,
                     500
                 );
             }
         }
 
-        public async Task<ApiResponse<decimal>> CalculateDiscountAsync(string couponCode, decimal orderAmount, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<bool>> UseCouponAsync(string couponCode, CancellationToken cancellationToken = default)
         {
             try
             {
-                var coupon = await _couponRepository.GetByCouponCodeAsync(couponCode, cancellationToken);
-                
-                if (coupon == null)
+                if (string.IsNullOrWhiteSpace(couponCode))
                 {
-                    return ApiResponse<decimal>.Fail(
-                        "Mã coupon không t?n t?i.", 
-                        0, 
-                        404
-                    );
-                }
-
-                var validationResult = ValidateCouponInternal(coupon, orderAmount);
-                
-                if (!validationResult.IsValid)
-                {
-                    return ApiResponse<decimal>.Fail(
-                        validationResult.Message, 
-                        0, 
+                    return ApiResponse<bool>.Fail(
+                        "Coupon code cannot be empty.",
+                        false,
                         400
                     );
                 }
 
-                return ApiResponse<decimal>.Ok(
-                    validationResult.DiscountAmount,
-                    "S? ti?n gi?m giá ?ã ???c tính toán.",
+                var coupon = await _couponRepository.GetByCouponCodeAsync(couponCode, cancellationToken);
+
+                if (coupon == null)
+                {
+                    return ApiResponse<bool>.Fail(
+                        "Coupon code does not exist.",
+                        false,
+                        404
+                    );
+                }
+
+                // Check if the coupon has quantity left
+                if (coupon.Quantity == 0)
+                {
+                    return ApiResponse<bool>.Fail(
+                        "Coupon is out of stock.",
+                        false,
+                        400
+                    );
+                }
+
+                // Decrease the coupon quantity
+                if (coupon.Quantity > 0) // Do not decrease if it is unlimited (-1)
+                {
+                    coupon.Quantity -= 1;
+                    _couponRepository.Update(coupon);
+                    await _couponRepository.SaveChangesAsync(cancellationToken);
+                }
+
+                return ApiResponse<bool>.Ok(
+                    true,
+                    "Coupon used successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
-                return ApiResponse<decimal>.Fail(
-                    "?ã x?y ra l?i khi tính toán gi?m giá.", 
-                    0, 
+                return ApiResponse<bool>.Fail(
+                    "An error occurred while using the coupon.",
+                    false,
                     500
                 );
             }
@@ -474,7 +305,7 @@ namespace ProjectDemoWebApi.Services
                 return new CouponDiscountResultDto
                 {
                     IsValid = false,
-                    Message = "Coupon không còn ho?t ??ng.",
+                    Message = "Coupon is no longer active.",
                     DiscountAmount = 0,
                     FinalAmount = orderAmount
                 };
@@ -486,7 +317,7 @@ namespace ProjectDemoWebApi.Services
                 return new CouponDiscountResultDto
                 {
                     IsValid = false,
-                    Message = "Coupon ch?a có hi?u l?c.",
+                    Message = "Coupon is not yet valid.",
                     DiscountAmount = 0,
                     FinalAmount = orderAmount
                 };
@@ -497,7 +328,7 @@ namespace ProjectDemoWebApi.Services
                 return new CouponDiscountResultDto
                 {
                     IsValid = false,
-                    Message = "Coupon ?ã h?t h?n.",
+                    Message = "Coupon has expired.",
                     DiscountAmount = 0,
                     FinalAmount = orderAmount
                 };
@@ -509,7 +340,7 @@ namespace ProjectDemoWebApi.Services
                 return new CouponDiscountResultDto
                 {
                     IsValid = false,
-                    Message = "Coupon ?ã h?t s? l??ng.",
+                    Message = "Coupon is out of stock.",
                     DiscountAmount = 0,
                     FinalAmount = orderAmount
                 };
@@ -521,7 +352,7 @@ namespace ProjectDemoWebApi.Services
                 return new CouponDiscountResultDto
                 {
                     IsValid = false,
-                    Message = $"??n hàng ph?i có giá tr? t?i thi?u {coupon.MinOrderAmount:C} ?? s? d?ng coupon này.",
+                    Message = $"Order must have a minimum value of {coupon.MinOrderAmount:C} to use this coupon.",
                     DiscountAmount = 0,
                     FinalAmount = orderAmount
                 };
@@ -553,7 +384,7 @@ namespace ProjectDemoWebApi.Services
             return new CouponDiscountResultDto
             {
                 IsValid = true,
-                Message = "Coupon h?p l? và ?ã ???c áp d?ng.",
+                Message = "Valid coupon applied successfully.",
                 DiscountAmount = discountAmount,
                 FinalAmount = orderAmount - discountAmount
             };

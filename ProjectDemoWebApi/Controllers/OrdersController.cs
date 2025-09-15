@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.Services.Interface;
@@ -20,7 +20,7 @@ namespace ProjectDemoWebApi.Controllers
 
         private string GetUserId()
         {
-            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                 ?? throw new UnauthorizedAccessException("User not authenticated");
         }
 
@@ -53,14 +53,21 @@ namespace ProjectDemoWebApi.Controllers
         #region Customer Functions
 
         /// <summary>
-        /// Create order from shopping cart - Customer
+        /// Create an order
         /// </summary>
-        [HttpPost("from-cart")]
-        public async Task<IActionResult> CreateOrderFromCart(CreateOrderFromCartDto createOrderFromCartDto)
+        [HttpPost("checkout")]
+        public async Task<IActionResult> CheckoutOrder(CreateOrderDto createOrderDto)
         {
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var userId = GetUserId();
-            var result = await _orderService.CreateOrderFromCartAsync(userId, createOrderFromCartDto);
-            return StatusCode(result.StatusCode, result);
+            // Create the order
+            var orderResult = await _orderService.CreateOrderAsync(userId, createOrderDto);
+
+            return StatusCode(orderResult.StatusCode, orderResult);
+                
         }
 
         /// <summary>
@@ -73,23 +80,28 @@ namespace ProjectDemoWebApi.Controllers
                 return BadRequest(ModelState);
 
             var userId = GetUserId();
+
             var result = await _orderService.CancelOrderAsync(id, userId, cancelOrderDto);
             return StatusCode(result.StatusCode, result);
         }
 
         #endregion
 
-        #region Common Functions
+        #region Order Code Generation
 
         /// <summary>
-        /// Get order by ID with full details
+        /// Get the next available order code for checkout preparation
         /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrderById(int id)
+        [HttpGet("next-order-code")]
+        public async Task<IActionResult> GetNextOrderCode()
         {
-            var result = await _orderService.GetOrderByIdAsync(id);
+            var result = await _orderService.GetNextOrderCodeAsync();
             return StatusCode(result.StatusCode, result);
         }
+
+        #endregion
+
+        #region Common Functions
 
         /// <summary>
         /// Get customer's own orders
@@ -99,6 +111,16 @@ namespace ProjectDemoWebApi.Controllers
         {
             var userId = GetUserId();
             var result = await _orderService.GetUserOrdersAsync(userId);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        /// <summary>
+        /// Get order by ID with full details
+        /// </summary>
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetOrderById(int id)
+        {
+            var result = await _orderService.GetOrderByIdAsync(id);
             return StatusCode(result.StatusCode, result);
         }
 
