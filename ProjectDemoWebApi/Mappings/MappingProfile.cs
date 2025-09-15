@@ -2,6 +2,7 @@
 using ProjectDemoWebApi.DTOs;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Category;
+using ProjectDemoWebApi.DTOs.Coupon;
 using ProjectDemoWebApi.DTOs.CustomerAddress;
 using ProjectDemoWebApi.DTOs.Manufacturer;
 using ProjectDemoWebApi.DTOs.Order;
@@ -73,6 +74,13 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreatePaymentDto, Payments>();
             CreateMap<UpdatePaymentDto, Payments>();
             CreateMap<Payments, PaymentResponseDto>();
+
+
+
+            // Coupon mappings
+            CreateMap<ApplyCouponDto, Coupons>();
+            CreateMap<UpdateCouponDto, Coupons>();
+            CreateMap<Coupons, CouponResponseDto>();
 
             //=============faq===============
             CreateMap<Faq, FaqDto>();

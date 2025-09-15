@@ -27,15 +27,23 @@ namespace ProjectDemoWebApi.Controllers
         public async Task<IActionResult> GetDashboard()
         {
             // Get basic dashboard data
-            var totalSales = await _orderService.GetTotalSalesAsync();
+            var allOrders = await _orderService.GetAllOrdersAsync();
             var lowStockProducts = await _productsService.GetLowStockProductsAsync(5);
-            var pendingOrders = await _orderService.GetPendingOrdersAsync();
+
+            var totalSales = allOrders.Data?.Where(o => 
+                string.Equals(o.OrderStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(o.OrderStatus, "Completed", StringComparison.OrdinalIgnoreCase))
+                .Sum(o => o.TotalAmount) ?? 0;
+
+            var pendingOrdersCount = allOrders.Data?.Count(o => 
+                string.Equals(o.OrderStatus, "Pending", StringComparison.OrdinalIgnoreCase)) ?? 0;
 
             var dashboard = new
             {
-                TotalSales = totalSales.Data,
+                TotalSales = totalSales,
                 LowStockProductsCount = lowStockProducts.Data?.Count() ?? 0,
-                PendingOrdersCount = pendingOrders.Data?.Count() ?? 0,
+                PendingOrdersCount = pendingOrdersCount,
+                TotalOrdersCount = allOrders.Data?.Count() ?? 0,
                 Date = DateTime.UtcNow
             };
 
@@ -54,6 +62,16 @@ namespace ProjectDemoWebApi.Controllers
         {
             if (year == 0) year = DateTime.UtcNow.Year;
 
+            var allOrders = await _orderService.GetAllOrdersAsync();
+            if (!allOrders.Success || allOrders.Data == null)
+            {
+                return Ok(new { Success = false, Message = "Unable to retrieve orders data" });
+            }
+
+            var completedOrders = allOrders.Data.Where(o => 
+                string.Equals(o.OrderStatus, "Delivered", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(o.OrderStatus, "Completed", StringComparison.OrdinalIgnoreCase));
+
             var monthlySales = new List<object>();
             
             for (int month = 1; month <= 12; month++)
@@ -61,13 +79,15 @@ namespace ProjectDemoWebApi.Controllers
                 var startDate = new DateTime(year, month, 1);
                 var endDate = startDate.AddMonths(1).AddDays(-1);
                 
-                var sales = await _orderService.GetTotalSalesAsync(startDate, endDate);
+                var sales = completedOrders
+                    .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                    .Sum(o => o.TotalAmount);
                 
                 monthlySales.Add(new
                 {
                     Month = month,
                     MonthName = startDate.ToString("MMMM"),
-                    Sales = sales.Data
+                    Sales = sales
                 });
             }
 
@@ -84,8 +104,22 @@ namespace ProjectDemoWebApi.Controllers
         [HttpGet("orders/pending")]
         public async Task<IActionResult> GetPendingOrders()
         {
-            var result = await _orderService.GetPendingOrdersAsync();
-            return StatusCode(result.StatusCode, result);
+            var allOrders = await _orderService.GetAllOrdersAsync();
+            if (!allOrders.Success || allOrders.Data == null)
+            {
+                return StatusCode(allOrders.StatusCode, allOrders);
+            }
+
+            var pendingOrders = allOrders.Data.Where(o => 
+                string.Equals(o.OrderStatus, "Pending", StringComparison.OrdinalIgnoreCase));
+
+            return Ok(new 
+            { 
+                Success = true, 
+                Message = "Pending orders retrieved successfully.",
+                Data = pendingOrders,
+                StatusCode = 200 
+            });
         }
     }
 }

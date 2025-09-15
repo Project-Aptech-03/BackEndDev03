@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Products;
+using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Controllers
@@ -17,6 +18,9 @@ namespace ProjectDemoWebApi.Controllers
             _productsService = productsService;
         }
 
+   
+
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int size = 20)
@@ -24,6 +28,39 @@ namespace ProjectDemoWebApi.Controllers
             var result = await _productsService.GetProductsPagedAsync(page, size);
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
+        {
+            var result = await _productsService.CreateProductAsync(createProductDto);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
+        {
+            var result = await _productsService.UpdateProductAsync(id, updateProductDto);
+            return StatusCode(result.StatusCode, result);
+        }
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var result = await _productsService.DeleteProductAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete]
+        [Route("batch")]
+        [Authorize(Roles ="Admin")]
+        public async Task<IActionResult> DeleteProducts([FromBody] List<int> ids)
+        {
+            var result = await _productsService.DeleteProductsAsync(ids);
+            return StatusCode(result.StatusCode, result);
+        }
+
 
         [HttpGet("{id}")]
         [AllowAnonymous]
@@ -76,21 +113,9 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
-        {
-            var result = await _productsService.CreateProductAsync(createProductDto);
-            return StatusCode(result.StatusCode, result);
-        }
+       
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
-        {
-            var result = await _productsService.UpdateProductAsync(id, updateProductDto);
-            return StatusCode(result.StatusCode, result);
-        }
+       
 
         [HttpPut("{id}/stock")]
         [Authorize(Roles = "Admin")]
@@ -100,12 +125,6 @@ namespace ProjectDemoWebApi.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteProduct(int id)
-        {
-            var result = await _productsService.DeleteProductAsync(id);
-            return StatusCode(result.StatusCode, result);
-        }
+        
     }
 }

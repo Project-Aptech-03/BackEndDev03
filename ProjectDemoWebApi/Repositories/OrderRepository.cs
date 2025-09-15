@@ -11,9 +11,30 @@ namespace ProjectDemoWebApi.Repositories
         {
         }
 
+        public async Task<IEnumerable<Orders>> GetAllOrdersWithDetailsAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
+                .Include(o => o.DeliveryAddress)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p!.Category)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p!.Manufacturer)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p!.ProductPhotos.Where(ph => ph.IsActive))
+                .Include(o => o.Payments)
+                .AsSplitQuery()
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Orders?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -25,6 +46,7 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<Orders?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -43,6 +65,7 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Orders>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -55,11 +78,12 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Orders>> GetOrdersByStatusAsync(string status, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .AsSplitQuery()
-                .Where(o => o.OrderStatus == status)
+                .Where(o => EF.Functions.Collate(o.OrderStatus, "SQL_Latin1_General_CP1_CI_AS") == EF.Functions.Collate(status, "SQL_Latin1_General_CP1_CI_AS"))
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync(cancellationToken);
         }
@@ -67,6 +91,7 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<IEnumerable<Orders>> GetOrdersByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
         {
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -81,11 +106,12 @@ namespace ProjectDemoWebApi.Repositories
             var pendingStatuses = new[] { "Pending", "Confirmed" };
             
             return await _dbSet.AsNoTracking()
+                .Include(o => o.Customer)
                 .Include(o => o.DeliveryAddress)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .AsSplitQuery()
-                .Where(o => pendingStatuses.Contains(o.OrderStatus))
+                .Where(o => pendingStatuses.Any(status => EF.Functions.Collate(o.OrderStatus, "SQL_Latin1_General_CP1_CI_AS") == EF.Functions.Collate(status, "SQL_Latin1_General_CP1_CI_AS")))
                 .OrderBy(o => o.OrderDate)
                 .ToListAsync(cancellationToken);
         }
@@ -93,7 +119,7 @@ namespace ProjectDemoWebApi.Repositories
         public async Task<decimal> GetTotalSalesAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
             var query = _dbSet.AsQueryable()
-                .Where(o => o.OrderStatus == "Delivered");
+                .Where(o => EF.Functions.Collate(o.OrderStatus, "SQL_Latin1_General_CP1_CI_AS") == EF.Functions.Collate("Delivered", "SQL_Latin1_General_CP1_CI_AS"));
 
             if (startDate.HasValue)
                 query = query.Where(o => o.OrderDate >= startDate.Value);

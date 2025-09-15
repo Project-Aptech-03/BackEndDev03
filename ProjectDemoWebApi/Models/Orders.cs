@@ -59,6 +59,12 @@ namespace ProjectDemoWebApi.Models
         [Column("delivery_notes", TypeName = "text")]
         public string? DeliveryNotes { get; set; }
 
+        [Column("cancellation_reason", TypeName = "text")]
+        public string? CancellationReason { get; set; }
+
+        [Column("cancelled_date")]
+        public DateTime? CancelledDate { get; set; }
+
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 

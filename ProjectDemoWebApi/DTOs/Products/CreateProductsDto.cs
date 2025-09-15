@@ -4,8 +4,6 @@ namespace ProjectDemoWebApi.DTOs.Products
 {
     public class CreateProductsDto
     {
-        [Required(ErrorMessage = "Product code cannot be empty.")]
-        [StringLength(7, MinimumLength = 7, ErrorMessage = "Product code must be exactly 7 characters.")]
         public string ProductCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Category ID cannot be empty.")]
@@ -16,7 +14,6 @@ namespace ProjectDemoWebApi.DTOs.Products
 
         public int? PublisherId { get; set; }
 
-        [Required(ErrorMessage = "Product name cannot be empty.")]
         [StringLength(255, ErrorMessage = "Product name cannot exceed 255 characters.")]
         public string ProductName { get; set; } = string.Empty;
 
@@ -39,7 +36,6 @@ namespace ProjectDemoWebApi.DTOs.Products
         public decimal? Weight { get; set; }
 
         [Required(ErrorMessage = "Price cannot be empty.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
         public decimal Price { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Stock quantity cannot be negative.")]

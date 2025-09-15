@@ -14,11 +14,15 @@ namespace ProjectDemoWebApi.Services.Interface
          CancellationToken cancellationToken = default);
         Task<ApiResponse<UsersResponseDto?>> GetUserByIdAsync(string userId, CancellationToken cancellationToken = default);
         Task<Users?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
-        
+
         Task<Users?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
-        //Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default);
         Task<IdentityResult> UpdateUserAsync(string id, UpdateUserDto userDto, CancellationToken cancellationToken);
-        //Task<IdentityResult> DeleteUserAsync(Users user, CancellationToken cancellationToken = default);
+        Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);
+
+        // profile 
+        Task<ApiResponse<ProfileResponseDto>> GetProfile(string id, CancellationToken cancellationToken = default);
+        Task<IdentityResult> UpdateProfileAsync(string id, ProfileUpdateDto userDto, CancellationToken cancellationToken);
+        Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 
     }
 }

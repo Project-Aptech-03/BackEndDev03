@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProjectDemoWebApi.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.User
 {
@@ -28,6 +29,7 @@ namespace ProjectDemoWebApi.DTOs.User
         [StringLength(200, ErrorMessage = "Địa chỉ không được vượt quá 200 ký tự.")]
         public string? Address { get; set; } = string.Empty;
 
+        [MinimumAge(16, ErrorMessage = "Người dùng phải trên 16 tuổi.")]
         [DataType(DataType.Date, ErrorMessage = "Ngày sinh không hợp lệ.")]
         public DateTime? DateOfBirth { get; set; }
 
