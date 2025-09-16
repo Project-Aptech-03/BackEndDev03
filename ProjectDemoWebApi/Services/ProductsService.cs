@@ -175,7 +175,7 @@ namespace ProjectDemoWebApi.Services
                     200
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while retrieving products with pagination");
                 return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
