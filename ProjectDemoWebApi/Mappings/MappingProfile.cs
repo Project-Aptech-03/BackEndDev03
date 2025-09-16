@@ -9,6 +9,7 @@ using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Publisher;
 using ProjectDemoWebApi.DTOs.ShoppingCart;
+using ProjectDemoWebApi.DTOs.SubCategory;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 
@@ -37,8 +38,32 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<UpdateCategoryDto, Categories>();
             CreateMap<Categories, CategoryResponseDto>()
                 .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count));
+            CreateMap<CreateCategoryDto, Categories>()
+                .ForMember(dest => dest.SubCategories, opt => opt.Ignore());
 
-            // Manufacturer mappings
+            // SubCategory mappings
+            // Create
+            CreateMap<SubCategories, SubCategoryResponseDto>();
+            CreateMap<Categories, CategoryResponseDto>()
+            .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count))
+            .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories)); 
+
+            CreateMap<CreateCategoryDto, Categories>()
+             .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src =>
+                 src.SubCategoryNames.Select(name => new SubCategories
+                 {
+                     SubCategoryName = name,
+                     IsActive = true,
+                     CreatedDate = DateTime.UtcNow
+                 }).ToList()
+             ));
+            CreateMap<UpdateCategoryDto, Categories>()
+             .ForMember(dest => dest.SubCategories, opt => opt.Ignore()); 
+
+            CreateMap<Categories, CategoryResponseDto>()
+             .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count))
+             .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories)); 
+            
             CreateMap<CreateManufacturerDto, Manufacturers>();
             CreateMap<UpdateManufacturerDto, Manufacturers>();
             CreateMap<Manufacturers, ManufacturerResponseDto>()
@@ -53,7 +78,9 @@ namespace ProjectDemoWebApi.Mappings
             // Products mappings
             CreateMap<CreateProductsDto, Products>();
             CreateMap<UpdateProductsDto, Products>();
-            CreateMap<Products, ProductsResponseDto>();
+            CreateMap<Products, ProductsResponseDto>()
+            .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos));
+
             CreateMap<ProductPhotos, ProductPhotoResponseDto>();
 
             // Shopping Cart mappings

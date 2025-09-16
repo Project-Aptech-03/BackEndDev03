@@ -1,4 +1,4 @@
-ï»¿using AutoMapper;
+using AutoMapper;
 using LinqKit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -237,7 +237,9 @@ namespace ProjectDemoWebApi.Services
                     _logger.LogWarning(ex, "Unique constraint violated when saving product with code {ProductCode}", createProductDto.ProductCode);
                     return ApiResponse<ProductsResponseDto>.Fail("Product code already exists.", null, 409);
                 }
-                var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                _logger.LogInformation("CreatedByUserId resolved: {UserId}", createdByUserId);
+
                 if (string.IsNullOrEmpty(createdByUserId))
                 {
                     return ApiResponse<ProductsResponseDto>.Fail("Unable to determine current user for stock movement.", null, 500);
@@ -357,7 +359,7 @@ namespace ProjectDemoWebApi.Services
             alnum = alnum.ToUpperInvariant();
 
             if (alnum.Length >= length) return alnum.Substring(0, length);
-            return alnum.PadRight(length, 'X'); // fallback padding n?u quÃ¡ ng?n
+            return alnum.PadRight(length, 'X'); // fallback padding n?u quá ng?n
         }
 
 
@@ -476,18 +478,18 @@ namespace ProjectDemoWebApi.Services
             {
                 var products = await _productsRepository.GetActiveProductsAsync(cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Active products retrieved successfully.",
+                    productDtos, 
+                    "Active products retrieved successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving active products.",
-                    null,
+                    "An error occurred while retrieving active products.", 
+                    null, 
                     500
                 );
             }
@@ -500,61 +502,19 @@ namespace ProjectDemoWebApi.Services
                 if (id <= 0)
                 {
                     return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Invalid product ID.",
-                        null,
+                        "Invalid product ID.", 
+                        null, 
                         400
                     );
                 }
 
                 var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
-
+                
                 if (product == null)
                 {
                     return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Product not found.",
-                        null,
-                        404
-                    );
-                }
-
-                var productDto = _mapper.Map<ProductsResponseDto>(product);
-
-                return ApiResponse<ProductsResponseDto?>.Ok(
-                    productDto,
-                    "Product retrieved successfully.",
-                    200
-                );
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<ProductsResponseDto?>.Fail(
-                    "An error occurred while retrieving the product.",
-                    null,
-                    500
-                );
-            }
-        }
-
-        public async Task<ApiResponse<ProductsResponseDto?>> GetProductByCodeAsync(string productCode, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(productCode))
-                {
-                    return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Product code cannot be empty.",
-                        null,
-                        400
-                    );
-                }
-
-                var product = await _productsRepository.GetByProductCodeAsync(productCode, cancellationToken);
-
-                if (product == null)
-                {
-                    return ApiResponse<ProductsResponseDto?>.Fail(
-                        "Product not found.",
-                        null,
+                        "Product not found.", 
+                        null, 
                         404
                     );
                 }
@@ -570,8 +530,50 @@ namespace ProjectDemoWebApi.Services
             catch (Exception ex)
             {
                 return ApiResponse<ProductsResponseDto?>.Fail(
-                    "An error occurred while retrieving the product.",
-                    null,
+                    "An error occurred while retrieving the product.", 
+                    null, 
+                    500
+                );
+            }
+        }
+
+        public async Task<ApiResponse<ProductsResponseDto?>> GetProductByCodeAsync(string productCode, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(productCode))
+                {
+                    return ApiResponse<ProductsResponseDto?>.Fail(
+                        "Product code cannot be empty.", 
+                        null, 
+                        400
+                    );
+                }
+
+                var product = await _productsRepository.GetByProductCodeAsync(productCode, cancellationToken);
+                
+                if (product == null)
+                {
+                    return ApiResponse<ProductsResponseDto?>.Fail(
+                        "Product not found.", 
+                        null, 
+                        404
+                    );
+                }
+
+                var productDto = _mapper.Map<ProductsResponseDto>(product);
+                
+                return ApiResponse<ProductsResponseDto?>.Ok(
+                    productDto, 
+                    "Product retrieved successfully.", 
+                    200
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<ProductsResponseDto?>.Fail(
+                    "An error occurred while retrieving the product.", 
+                    null, 
                     500
                 );
             }
@@ -584,26 +586,26 @@ namespace ProjectDemoWebApi.Services
                 if (categoryId <= 0)
                 {
                     return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                        "Invalid category ID.",
-                        null,
+                        "Invalid category ID.", 
+                        null, 
                         400
                     );
                 }
 
                 var products = await _productsRepository.GetByCategoryAsync(categoryId, cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Products retrieved successfully.",
+                    productDtos, 
+                    "Products retrieved successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving products by category.",
-                    null,
+                    "An error occurred while retrieving products by category.", 
+                    null, 
                     500
                 );
             }
@@ -616,26 +618,26 @@ namespace ProjectDemoWebApi.Services
                 if (manufacturerId <= 0)
                 {
                     return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                        "Invalid manufacturer ID.",
-                        null,
+                        "Invalid manufacturer ID.", 
+                        null, 
                         400
                     );
                 }
 
                 var products = await _productsRepository.GetByManufacturerAsync(manufacturerId, cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Products retrieved successfully.",
+                    productDtos, 
+                    "Products retrieved successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving products by manufacturer.",
-                    null,
+                    "An error occurred while retrieving products by manufacturer.", 
+                    null, 
                     500
                 );
             }
@@ -648,26 +650,26 @@ namespace ProjectDemoWebApi.Services
                 if (publisherId <= 0)
                 {
                     return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                        "Invalid publisher ID.",
-                        null,
+                        "Invalid publisher ID.", 
+                        null, 
                         400
                     );
                 }
 
                 var products = await _productsRepository.GetByPublisherAsync(publisherId, cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Products retrieved successfully.",
+                    productDtos, 
+                    "Products retrieved successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving products by publisher.",
-                    null,
+                    "An error occurred while retrieving products by publisher.", 
+                    null, 
                     500
                 );
             }
@@ -680,26 +682,26 @@ namespace ProjectDemoWebApi.Services
                 if (string.IsNullOrWhiteSpace(searchTerm))
                 {
                     return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                        "Search term cannot be empty.",
-                        null,
+                        "Search term cannot be empty.", 
+                        null, 
                         400
                     );
                 }
 
                 var products = await _productsRepository.SearchProductsAsync(searchTerm, cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Products search completed successfully.",
+                    productDtos, 
+                    "Products search completed successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while searching products.",
-                    null,
+                    "An error occurred while searching products.", 
+                    null, 
                     500
                 );
             }
@@ -712,26 +714,26 @@ namespace ProjectDemoWebApi.Services
                 if (threshold < 0)
                 {
                     return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                        "Threshold cannot be negative.",
-                        null,
+                        "Threshold cannot be negative.", 
+                        null, 
                         400
                     );
                 }
 
                 var products = await _productsRepository.GetLowStockProductsAsync(threshold, cancellationToken);
                 var productDtos = _mapper.Map<IEnumerable<ProductsResponseDto>>(products);
-
+                
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Ok(
-                    productDtos,
-                    "Low stock products retrieved successfully.",
+                    productDtos, 
+                    "Low stock products retrieved successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<ProductsResponseDto>>.Fail(
-                    "An error occurred while retrieving low stock products.",
-                    null,
+                    "An error occurred while retrieving low stock products.", 
+                    null, 
                     500
                 );
             }
@@ -745,7 +747,7 @@ namespace ProjectDemoWebApi.Services
 
             try
             {
-                // Load product kï¿½m navigation
+                // Load product kèm navigation
                 var product = await _productsRepository.GetByIdWithDetailsAsync(id, cancellationToken);
                 if (product == null)
                     return ApiResponse<bool>.Fail("Product not found.", false, 404);
@@ -832,7 +834,7 @@ namespace ProjectDemoWebApi.Services
 
                     try
                     {
-                        // Th? xï¿½a product
+                        // Th? xóa product
                         _productsRepository.Delete(product);
                         await _productsRepository.SaveChangesAsync(cancellationToken);
                         deletedCount++;
@@ -843,7 +845,7 @@ namespace ProjectDemoWebApi.Services
                     {
                         _logger.LogWarning(dbEx, "Delete failed for product {ProductId}, fallback to deactivate.", productId);
 
-                        // N?u xï¿½a th?t b?i ? deactivate
+                        // N?u xóa th?t b?i ? deactivate
                         if (product.IsActive)
                         {
                             product.IsActive = false;
@@ -895,8 +897,8 @@ namespace ProjectDemoWebApi.Services
                 if (productId <= 0)
                 {
                     return ApiResponse<bool>.Fail(
-                        "Invalid product ID.",
-                        false,
+                        "Invalid product ID.", 
+                        false, 
                         400
                     );
                 }
@@ -904,53 +906,53 @@ namespace ProjectDemoWebApi.Services
                 if (newStock < 0)
                 {
                     return ApiResponse<bool>.Fail(
-                        "Stock quantity cannot be negative.",
-                        false,
+                        "Stock quantity cannot be negative.", 
+                        false, 
                         400
                     );
                 }
 
                 var product = await _productsRepository.GetByIdAsync(productId, cancellationToken);
-
+                
                 if (product == null)
                 {
                     return ApiResponse<bool>.Fail(
-                        "Product not found.",
-                        false,
+                        "Product not found.", 
+                        false, 
                         404
                     );
                 }
 
                 var previousStock = product.StockQuantity;
                 await _productsRepository.UpdateStockAsync(productId, newStock, cancellationToken);
-
+                
                 // Add stock movement record
                 await _stockMovementRepository.AddStockMovementAsync(
-                    productId,
-                    newStock - previousStock,
-                    previousStock,
-                    newStock,
-                    "ADJUSTMENT",
-                    null,
-                    0,
-                    "Stock update",
-                    "System",
+                    productId, 
+                    newStock - previousStock, 
+                    previousStock, 
+                    newStock, 
+                    "ADJUSTMENT", 
+                    null, 
+                    0, 
+                    "Stock update", 
+                    "System", 
                     cancellationToken);
 
                 await _productsRepository.SaveChangesAsync(cancellationToken);
                 await _stockMovementRepository.SaveChangesAsync(cancellationToken);
-
+                
                 return ApiResponse<bool>.Ok(
-                    true,
-                    "Stock updated successfully.",
+                    true, 
+                    "Stock updated successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<bool>.Fail(
-                    "An error occurred while updating stock.",
-                    false,
+                    "An error occurred while updating stock.", 
+                    false, 
                     500
                 );
             }
@@ -963,30 +965,30 @@ namespace ProjectDemoWebApi.Services
                 if (string.IsNullOrWhiteSpace(productCode))
                 {
                     return ApiResponse<bool>.Fail(
-                        "Product code cannot be empty.",
-                        false,
+                        "Product code cannot be empty.", 
+                        false, 
                         400
                     );
                 }
 
                 var exists = await _productsRepository.IsProductCodeExistsAsync(productCode, excludeId, cancellationToken);
-
+                
                 return ApiResponse<bool>.Ok(
-                    exists,
-                    "Product code existence checked successfully.",
+                    exists, 
+                    "Product code existence checked successfully.", 
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<bool>.Fail(
-                    "An error occurred while checking product code existence.",
-                    false,
+                    "An error occurred while checking product code existence.", 
+                    false, 
                     500
                 );
             }
         }
-
+     
 
     }
 }

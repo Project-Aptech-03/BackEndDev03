@@ -1139,7 +1139,7 @@ namespace ProjectDemoWebApi.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
                     b.Property<int?>("DimensionHeight")
@@ -1415,6 +1415,52 @@ namespace ProjectDemoWebApi.Migrations
                         .HasDatabaseName("idx_stock_reference");
 
                     b.ToTable("StockMovements");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.SubCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("SubCategoryCode")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasColumnName("subcategory_code");
+
+                    b.Property<string>("SubCategoryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("subcategory_name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SubCategoryCode")
+                        .IsUnique()
+                        .HasDatabaseName("idx_subcategories_code");
+
+                    b.ToTable("SubCategories");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.SystemSettings", b =>
@@ -1889,6 +1935,16 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("ProjectDemoWebApi.Models.SubCategories", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.Categories", "Category")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("ProjectDemoWebApi.Models.UserRole", b =>
                 {
                     b.HasOne("ProjectDemoWebApi.Models.Roles", null)
@@ -1925,6 +1981,8 @@ namespace ProjectDemoWebApi.Migrations
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("SubCategories");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerQueries", b =>

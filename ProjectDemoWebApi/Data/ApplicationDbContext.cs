@@ -14,6 +14,7 @@ namespace ProjectDemoWebApi.Data
 
         // New database schema models
         public DbSet<Categories> Categories { get; set; } = null!;
+        public DbSet<SubCategories> SubCategories { get; set; } = null!;
         public DbSet<Manufacturers> Manufacturers { get; set; } = null!;
         public DbSet<Publishers> Publishers { get; set; } = null!;
         public DbSet<Products> Products { get; set; } = null!;
@@ -104,6 +105,26 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.CreatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure 1-n relationship with SubCategories
+                entity.HasMany(c => c.SubCategories)
+                      .WithOne(sc => sc.Category)
+                      .HasForeignKey(sc => sc.CategoryId)
+                      .OnDelete(DeleteBehavior.Cascade); // hoặc Restrict 
+            });
+
+            // Configure SubCategories
+            modelBuilder.Entity<SubCategories>(entity =>
+            {
+                entity.HasIndex(e => e.SubCategoryCode)
+                      .IsUnique()
+                      .HasDatabaseName("idx_subcategories_code");
+
+                entity.Property(e => e.IsActive)
+                      .HasDefaultValue(true);
+
+                entity.Property(e => e.CreatedDate)
+                      .HasDefaultValueSql("GETUTCDATE()");
             });
 
             // Configure Manufacturers
@@ -363,6 +384,8 @@ namespace ProjectDemoWebApi.Data
                     .WithMany(p => p.StockMovements)
                     .HasForeignKey(d => d.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+            
             });
 
             // Configure Coupons

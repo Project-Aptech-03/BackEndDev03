@@ -12,5 +12,7 @@ namespace ProjectDemoWebApi.DTOs.Category
         [Required(ErrorMessage = "Category name cannot be empty.")]
         [StringLength(100, ErrorMessage = "Category name cannot exceed 100 characters.")]
         public string CategoryName { get; set; } = string.Empty;
+
+        public List<string>? SubCategoryNames { get; set; } = null;
     }
 }

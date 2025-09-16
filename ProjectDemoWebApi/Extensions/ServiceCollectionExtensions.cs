@@ -30,7 +30,7 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IAdminReplyRepository, AdminReplyRepository>();
             services.AddScoped<IFAQRepository, FAQRepository>();
             services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
-
+            services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
             services.AddScoped<IBlogRepository, BlogRepository>();
             services.AddScoped<IBlogCommentRepository, BlogCommentRepository>();
             services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();

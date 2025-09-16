@@ -394,6 +394,29 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SubCategories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    subcategory_code = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    subcategory_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CategoryId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubCategories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubCategories_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -404,7 +427,7 @@ namespace ProjectDemoWebApi.Migrations
                     manufacturer_id = table.Column<int>(type: "int", nullable: false),
                     publisher_id = table.Column<int>(type: "int", nullable: true),
                     product_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "text", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     author = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     product_type = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     pages = table.Column<int>(type: "int", nullable: true),
@@ -1096,6 +1119,17 @@ namespace ProjectDemoWebApi.Migrations
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
+                name: "idx_subcategories_code",
+                table: "SubCategories",
+                column: "subcategory_code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubCategories_CategoryId",
+                table: "SubCategories",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
                 name: "idx_settings_key",
                 table: "SystemSettings",
                 column: "setting_key",
@@ -1155,6 +1189,9 @@ namespace ProjectDemoWebApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "StockMovements");
+
+            migrationBuilder.DropTable(
+                name: "SubCategories");
 
             migrationBuilder.DropTable(
                 name: "SystemSettings");

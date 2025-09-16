@@ -43,7 +43,7 @@ namespace ProjectDemoWebApi.Models
         [Required]
         [StringLength(450)]
         [Column("created_by")]
-        public string CreatedBy { get; set; } = string.Empty;
+        public string? CreatedBy { get; set; } = string.Empty;
 
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

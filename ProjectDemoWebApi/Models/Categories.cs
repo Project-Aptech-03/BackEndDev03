@@ -25,7 +25,10 @@ namespace ProjectDemoWebApi.Models
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        // Navigation Properties
         public virtual ICollection<Products> Products { get; set; } = new List<Products>();
+
+        public virtual ICollection<SubCategories>? SubCategories { get; set; } = null;
     }
+
+  
 }

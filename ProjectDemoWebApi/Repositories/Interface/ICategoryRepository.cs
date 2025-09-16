@@ -13,5 +13,6 @@ namespace ProjectDemoWebApi.Repositories.Interface
 
         Task<IEnumerable<Categories>> GetActiveCategoriesAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<Categories>> GetCategoriesByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
+        Task<Categories?> GetByIdWithSubCategoriesAsync(int id, CancellationToken cancellationToken = default);
     }
 }
