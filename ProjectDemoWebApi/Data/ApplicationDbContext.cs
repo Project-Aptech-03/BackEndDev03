@@ -29,7 +29,7 @@ namespace ProjectDemoWebApi.Data
         public DbSet<Coupons> Coupons { get; set; } = null!;
         public DbSet<CustomerQueries> CustomerQueries { get; set; } = null!;
         public DbSet<AdminReplies> AdminReplies { get; set; } = null!;
-        public DbSet<Faq> Faqs { get; set; } = null!;
+        public DbSet<FAQ> FAQ { get; set; } = null!;
         public DbSet<SystemSettings> SystemSettings { get; set; } = null!;
 
 
@@ -465,20 +465,20 @@ namespace ProjectDemoWebApi.Data
             });
 
             // Configure FAQ
-            //modelBuilder.Entity<Faq>(entity =>
-            //{
-            //    entity.HasIndex(e => e.SortOrder)
-            //        .HasDatabaseName("idx_faq_sort");
+            modelBuilder.Entity<FAQ>(entity =>
+            {
+                entity.HasIndex(e => e.SortOrder)
+                    .HasDatabaseName("idx_faq_sort");
 
-            //    entity.Property(e => e.SortOrder)
-            //        .HasDefaultValue(0);
+                entity.Property(e => e.SortOrder)
+                    .HasDefaultValue(0);
 
-            //    entity.Property(e => e.IsActive)
-            //        .HasDefaultValue(true);
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
 
-            //    entity.Property(e => e.CreatedDate)
-            //        .HasDefaultValueSql("GETUTCDATE()");
-            //});
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+            });
 
             // Configure SystemSettings
             modelBuilder.Entity<SystemSettings>(entity =>

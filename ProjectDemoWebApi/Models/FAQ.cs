@@ -1,28 +1,29 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjectDemoWebApi.Models
 {
-    public class Faq
+    [Table("FAQ")]
+    public class FAQ
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(500)]
-        public string Question { get; set; }
+        [Column("question", TypeName = "text")]
+        public string Question { get; set; } = string.Empty;
 
         [Required]
-        public string Answer { get; set; }
+        [Column("answer", TypeName = "text")]
+        public string Answer { get; set; } = string.Empty;
 
-        public int DisplayOrder { get; set; }
+        [Column("sort_order")]
+        public int SortOrder { get; set; } = 0;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
-
+        [Column("is_active")]
         public bool IsActive { get; set; } = true;
+
+        [Column("created_date")]
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }

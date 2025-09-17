@@ -1,65 +1,60 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 
-namespace ProjectDemoWebApi.Repositories.Implementations
+namespace ProjectDemoWebApi.Repositories
 {
-    public class FaqRepository : IFaqRepository
+    public class FAQRepository : BaseRepository<FAQ>, IFAQRepository
     {
-        private readonly ApplicationDbContext _context;
-
-        public FaqRepository(ApplicationDbContext context)
+        public FAQRepository(ApplicationDbContext context) : base(context)
         {
-            _context = context;
         }
 
-        public async Task<IEnumerable<Faq>> GetAllFaqsAsync()
+        public async Task<IEnumerable<FAQ>> GetActiveFAQsAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Faqs
-                .OrderBy(f => f.DisplayOrder)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Faq>> GetActiveFaqsAsync()
-        {
-            return await _context.Faqs
+            return await _dbSet.AsNoTracking()
                 .Where(f => f.IsActive)
-                .OrderBy(f => f.DisplayOrder)
-                .ToListAsync();
+                .OrderBy(f => f.SortOrder)
+                .ThenBy(f => f.Question)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<Faq> GetFaqByIdAsync(int id)
+        public async Task<IEnumerable<FAQ>> GetFAQsByOrderAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Faqs.FindAsync(id);
+            return await _dbSet.AsNoTracking()
+                .OrderBy(f => f.SortOrder)
+                .ThenBy(f => f.Question)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<Faq> CreateFaqAsync(Faq faq)
+        public async Task<IEnumerable<FAQ>> SearchFAQsAsync(string searchTerm, CancellationToken cancellationToken = default)
         {
-            _context.Faqs.Add(faq);
-            await _context.SaveChangesAsync();
-            return faq;
+            return await _dbSet.AsNoTracking()
+                .Where(f => f.IsActive && 
+                           (f.Question.Contains(searchTerm) || f.Answer.Contains(searchTerm)))
+                .OrderBy(f => f.SortOrder)
+                .ThenBy(f => f.Question)
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<Faq> UpdateFaqAsync(Faq faq)
+        public async Task ReorderFAQsAsync(List<(int Id, int SortOrder)> faqOrders, CancellationToken cancellationToken = default)
         {
-            _context.Faqs.Update(faq);
-            await _context.SaveChangesAsync();
-            return faq;
-        }
+            var faqIds = faqOrders.Select(x => x.Id).ToList();
+            var faqs = await _dbSet
+                .Where(f => faqIds.Contains(f.Id))
+                .ToListAsync(cancellationToken);
 
-        public async Task<bool> DeleteFaqAsync(int id)
-        {
-            var faq = await _context.Faqs.FindAsync(id);
-            if (faq == null)
-                return false;
+            foreach (var faq in faqs)
+            {
+                var orderItem = faqOrders.FirstOrDefault(x => x.Id == faq.Id);
+                if (orderItem != default)
+                {
+                    faq.SortOrder = orderItem.SortOrder;
+                }
+            }
 
-            _context.Faqs.Remove(faq);
-            await _context.SaveChangesAsync();
-            return true;
+            _dbSet.UpdateRange(faqs);
         }
     }
 }
