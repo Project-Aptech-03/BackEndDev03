@@ -1,9 +1,10 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.Publisher;
 using ProjectDemoWebApi.DTOs.Shared;
+using ProjectDemoWebApi.DTOs.SubCategory;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
@@ -17,19 +18,20 @@ namespace ProjectDemoWebApi.Services
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<CategoryService> _logger;
-        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ILogger<CategoryService> logger)
+        private readonly ISubCategoryRepository _subCategoryRepository;
+        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ILogger<CategoryService> logger, ISubCategoryRepository subCategoryRepository)
         {
             _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(_logger));
-           
+            _subCategoryRepository = subCategoryRepository;
         }
 
         public async Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetAllCategoriesPageAsync(
-     int pageNumber = 1,
-     int pageSize = 10,
-     string? keyword = null,
-     CancellationToken cancellationToken = default)
+      int pageNumber = 1,
+      int pageSize = 10,
+      string? keyword = null,
+      CancellationToken cancellationToken = default)
         {
             try
             {
@@ -48,20 +50,28 @@ namespace ProjectDemoWebApi.Services
                     pageSize,
                     predicate,
                     cancellationToken,
-                    includes: c => c.Products
+                    c => c.Products,
+                    c => c.SubCategories 
                 );
 
                 var categoryDtos = categories
-                    .Select(c => new CategoryResponseDto
+                .Select(c => new CategoryResponseDto
+                {
+                    Id = c.Id,
+                    CategoryCode = c.CategoryCode,
+                    CategoryName = c.CategoryName,
+                    IsActive = c.IsActive,
+                    CreatedDate = c.CreatedDate,
+                    ProductCount = c.Products.Count(),
+                    SubCategories = c.SubCategories?.Select(sc => new SubCategoryResponseDto
                     {
-                        Id = c.Id,
-                        CategoryCode = c.CategoryCode,
-                        CategoryName = c.CategoryName,
-                        IsActive = c.IsActive,
-                        CreatedDate = c.CreatedDate,
-                        ProductCount = c.Products.Count()
-                    })
-                    .ToList();
+                        Id = sc.Id,
+                        SubCategoryName = sc.SubCategoryName,
+                        IsActive = sc.IsActive,
+                        CreatedDate = sc.CreatedDate
+                    }).ToList()
+                })
+                .ToList();
 
                 var response = new PagedResponseDto<CategoryResponseDto>
                 {
@@ -87,10 +97,6 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
-
-
-
-
 
         public async Task<ApiResponse<PagedResponseDto<CategoryResponseDto>>> GetActiveCategoriesPagedAsync(
     int pageNumber = 1,
@@ -221,7 +227,6 @@ namespace ProjectDemoWebApi.Services
             try
             {
                 var prefix = createCategoryDto.CategoryCode.ToUpper();
-
                 if (prefix.Length != 1 || !char.IsLetter(prefix[0]))
                 {
                     return ApiResponse<CategoryResponseDto>.Fail(
@@ -232,19 +237,21 @@ namespace ProjectDemoWebApi.Services
                 }
 
                 var existingCategories = await _categoryRepository.GetCategoriesByPrefixAsync(prefix, cancellationToken);
-
                 int maxNumber = 0;
+
                 foreach (var cat in existingCategories)
                 {
-                    var numberPart = cat.CategoryCode.Substring(1); 
-                    if (int.TryParse(numberPart, out var n))
+                    if (cat.CategoryCode.Length > 1)
                     {
-                        if (n > maxNumber) maxNumber = n;
+                        var numberPart = cat.CategoryCode.Substring(1);
+                        if (int.TryParse(numberPart, out var n))
+                        {
+                            if (n > maxNumber) maxNumber = n;
+                        }
                     }
                 }
 
                 int nextNumber = maxNumber + 1;
-
                 var newCode = $"{prefix}{nextNumber}";
 
                 var codeExists = await _categoryRepository.IsCategoryCodeExistsAsync(newCode, null, cancellationToken);
@@ -257,15 +264,43 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                createCategoryDto.CategoryCode = newCode;
-
-                var category = _mapper.Map<Categories>(createCategoryDto);
-                category.CreatedDate = DateTime.UtcNow;
+                var category = new Categories
+                {
+                    CategoryCode = newCode,
+                    CategoryName = createCategoryDto.CategoryName,
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow,
+                    SubCategories = new List<SubCategories>()
+                };
 
                 await _categoryRepository.AddAsync(category, cancellationToken);
-                await _categoryRepository.SaveChangesAsync(cancellationToken);
+                await _categoryRepository.SaveChangesAsync(cancellationToken); 
 
-                var categoryDto = _mapper.Map<CategoryResponseDto>(category);
+                if (createCategoryDto.SubCategories != null && createCategoryDto.SubCategories.Any())
+                {
+                    int counter = 1;
+                    foreach (var subDto in createCategoryDto.SubCategories)
+                    {
+                        if (string.IsNullOrWhiteSpace(subDto.SubCategoryName)) continue;
+
+                        var subCategory = new SubCategories
+                        {
+                            SubCategoryCode = $"{newCode}S{counter:D2}",
+                            SubCategoryName = subDto.SubCategoryName.Trim(),
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow,
+                            CategoryId = category.Id
+                        };
+
+                        await _subCategoryRepository.AddAsync(subCategory, cancellationToken);
+                        counter++;
+                    }
+
+                    await _subCategoryRepository.SaveChangesAsync(cancellationToken);
+                }
+
+                var createdCategory = await _categoryRepository.GetByIdWithSubCategoriesAsync(category.Id, cancellationToken);
+                var categoryDto = _mapper.Map<CategoryResponseDto>(createdCategory);
 
                 return ApiResponse<CategoryResponseDto>.Ok(
                     categoryDto,
@@ -275,8 +310,11 @@ namespace ProjectDemoWebApi.Services
             }
             catch (Exception ex)
             {
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                var fullMessage = $"Main: {ex.Message} | Inner: {innerMessage}";
+
                 return ApiResponse<CategoryResponseDto>.Fail(
-                    "An error occurred while creating the category.",
+                    $"An error occurred while creating the category: {fullMessage}",
                     null,
                     500
                 );
@@ -285,59 +323,92 @@ namespace ProjectDemoWebApi.Services
 
 
 
-        public async Task<ApiResponse<CategoryResponseDto?>> UpdateCategoryAsync(int id, UpdateCategoryDto updateCategoryDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<CategoryResponseDto?>> UpdateCategoryAsync(
+      int id,
+      UpdateCategoryDto updateCategoryDto,
+      CancellationToken cancellationToken = default)
         {
             try
             {
                 if (id <= 0)
-                {
-                    return ApiResponse<CategoryResponseDto?>.Fail(
-                        "Invalid category ID.", 
-                        null, 
-                        400
-                    );
-                }
+                    return ApiResponse<CategoryResponseDto?>.Fail("Invalid category ID.", null, 400);
 
-                var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
-                
+                var category = await _categoryRepository.GetByIdWithSubCategoriesAsync(id, cancellationToken);
                 if (category == null)
-                {
-                    return ApiResponse<CategoryResponseDto?>.Fail(
-                        "Category not found.", 
-                        null, 
-                        404
-                    );
-                }
+                    return ApiResponse<CategoryResponseDto?>.Fail("Category not found.", null, 404);
 
-                // Update only provided fields
                 if (!string.IsNullOrWhiteSpace(updateCategoryDto.CategoryName))
                     category.CategoryName = updateCategoryDto.CategoryName;
-                
+
                 if (updateCategoryDto.IsActive.HasValue)
                     category.IsActive = updateCategoryDto.IsActive.Value;
+
+                if (updateCategoryDto.SubCategories != null)
+                {
+                    var incomingSubs = updateCategoryDto.SubCategories;
+                    var incomingIds = incomingSubs.Where(s => s.Id > 0).Select(s => s.Id).ToList();
+
+                    var existingSubs = category.SubCategories?.ToList() ?? new List<SubCategories>();
+
+                    foreach (var existing in existingSubs)
+                    {
+                        if (!incomingIds.Contains(existing.Id))
+                        {
+                            category.SubCategories.Remove(existing); 
+                        }
+                    }
+
+                    foreach (var sub in incomingSubs)
+                    {
+                        if (sub.Id > 0)
+                        {
+                            var existing = existingSubs.FirstOrDefault(s => s.Id == sub.Id);
+                            if (existing != null)
+                            {
+                                existing.SubCategoryName = sub.SubCategoryName;
+                            }
+                        }
+                        else
+                        {
+                            var newSub = new SubCategories
+                            {
+                                SubCategoryName = sub.SubCategoryName.Trim(),
+                                SubCategoryCode = $"{category.CategoryCode}{Guid.NewGuid().ToString()[..1].ToUpper()}",
+                                IsActive = true,
+                                CreatedDate = DateTime.UtcNow,
+                                CategoryId = category.Id
+                            };
+                            category.SubCategories.Add(newSub);
+                        }
+                    }
+                }
 
                 _categoryRepository.Update(category);
                 await _categoryRepository.SaveChangesAsync(cancellationToken);
 
-                var categoryDto = _mapper.Map<CategoryResponseDto>(category);
-                
+                var updatedCategory = await _categoryRepository.GetByIdWithSubCategoriesAsync(id, cancellationToken);
+
+                var categoryDto = _mapper.Map<CategoryResponseDto>(updatedCategory);
+
                 return ApiResponse<CategoryResponseDto?>.Ok(
-                    categoryDto, 
-                    "Category updated successfully.", 
+                    categoryDto,
+                    "Category updated successfully.",
                     200
                 );
             }
             catch (Exception ex)
             {
                 return ApiResponse<CategoryResponseDto?>.Fail(
-                    "An error occurred while updating the category.", 
-                    null, 
+                    $"An error occurred while updating the category: {ex.Message}",
+                    null,
                     500
                 );
             }
         }
 
-        public async Task<ApiResponse<bool>> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<bool>> DeleteCategoryAsync(
+     int id,
+     CancellationToken cancellationToken = default)
         {
             try
             {
@@ -372,7 +443,7 @@ namespace ProjectDemoWebApi.Services
             }
             catch (DbUpdateException dbEx)
             {
-                if (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 547) 
+                if (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 547)
                 {
                     return ApiResponse<bool>.Fail(
                         "Cannot delete category because it is referenced by other data.",
@@ -396,6 +467,7 @@ namespace ProjectDemoWebApi.Services
                 );
             }
         }
+
 
         public async Task<ApiResponse<bool>> IsCategoryCodeExistsAsync(string categoryCode, int? excludeId = null, CancellationToken cancellationToken = default)
         {

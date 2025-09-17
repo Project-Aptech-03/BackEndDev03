@@ -1,3 +1,4 @@
+using ProjectDemoWebApi.DTOs.SubCategory;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.Category
@@ -8,5 +9,7 @@ namespace ProjectDemoWebApi.DTOs.Category
         public string? CategoryName { get; set; }
 
         public bool? IsActive { get; set; }
+
+        public List<UpdateSubCategoriesDto>? SubCategories { get; set; }
     }
 }

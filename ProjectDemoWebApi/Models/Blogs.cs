@@ -60,7 +60,7 @@ namespace ProjectDemoWebApi.Models
         public string AuthorId { get; set; } = string.Empty;
 
         [Column("category_id")]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
         // Navigation Properties
         [ForeignKey("AuthorId")]

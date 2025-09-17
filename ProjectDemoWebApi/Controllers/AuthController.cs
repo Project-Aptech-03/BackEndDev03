@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Shared;
@@ -7,6 +9,8 @@ using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Services;
 using ProjectDemoWebApi.Services.Interface;
 using StackExchange.Redis;
+using System.Security.Claims;
+using static Google.Apis.Storage.v1.Data.Bucket;
 
 namespace ProjectDemoWebApi.Controllers
 {
@@ -71,12 +75,56 @@ namespace ProjectDemoWebApi.Controllers
             var user = new Users { Id = result.UserId, Email = request.Email };
 
             var tokenResult = await _jwtTokenService.GenerateTokenAsync(user);
+            tokenResult.RefreshToken = await _jwtTokenService.GenerateRefreshTokenAsync(user);
 
-            result.Token = tokenResult;
+            result.Token = tokenResult;          
+            result.RefreshToken = tokenResult.RefreshToken;
 
 
             return Ok(ApiResponse<LoginResultDto>.Ok(result, "Đăng nhập thành công!"));
         }
+        
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Token))
+                return BadRequest(ApiResponse<string>.Fail("Refresh token không hợp lệ."));
+
+            try
+            {
+                var tokenResult = await _jwtTokenService.RefreshTokenAsync(request.Token);
+
+                return Ok(ApiResponse<RefreshTokenResponse>.Ok(new RefreshTokenResponse
+                {
+                    AccessToken = tokenResult.Token,  
+                    RefreshToken = tokenResult.RefreshToken
+                }, "Lấy token mới thành công"));
+
+
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(ApiResponse<string>.Fail($"Refresh token thất bại: {ex.Message}"));
+            }
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(ApiResponse<string>.Fail("User not found"));
+
+            var userDto = await _authService.GetCurrentUserAsync(userId);
+            if (userDto == null)
+                return NotFound(ApiResponse<string>.Fail("User not found"));
+
+            return Ok(ApiResponse<LoginResultDto>.Ok(userDto, "Lấy thông tin user thành công"));
+        }
+
+
 
         [HttpPost("resend-otp")]
         public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request)

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection.Metadata;
 
 namespace ProjectDemoWebApi.Models
 {
@@ -25,7 +26,12 @@ namespace ProjectDemoWebApi.Models
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        // Navigation Properties
         public virtual ICollection<Products> Products { get; set; } = new List<Products>();
+
+        public virtual ICollection<SubCategories>? SubCategories { get; set; } = null;
+
+        public ICollection<Blogs> Blogs { get; set; } = new List<Blogs>();
     }
+
+  
 }

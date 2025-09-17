@@ -30,7 +30,7 @@ namespace ProjectDemoWebApi.Models
         [Column("product_name")]
         public string ProductName { get; set; } = string.Empty;
 
-        [Column("description", TypeName = "text")]
+        [Column("description", TypeName = "nvarchar(max)")]
         public string? Description { get; set; }
 
         [StringLength(200)]

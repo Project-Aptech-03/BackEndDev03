@@ -15,5 +15,6 @@ namespace ProjectDemoWebApi.Services.Interface
 
         Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordDto dto);
         Task<ApiResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task<LoginResultDto?> GetCurrentUserAsync(string userId);
     }
 }

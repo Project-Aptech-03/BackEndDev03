@@ -33,9 +33,13 @@ namespace ProjectDemoWebApi.Extensions
             
             services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
 
+
             //===faq    =================
             services.AddScoped<IFaqRepository, FaqRepository>();
             services.AddScoped<IFaqService, FaqService>();
+
+=======
+            services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 
             services.AddScoped<IBlogRepository, BlogRepository>();
             services.AddScoped<IBlogCommentRepository, BlogCommentRepository>();
@@ -62,7 +66,11 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICustomerAddressService, CustomerAddressService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICouponService, CouponService>();
+            services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<IPublishersService, PublishersService>();
+            services.AddScoped<IBlogCommentService, BlogCommentService>();
+            services.AddScoped<IAuthorFollowService, AuthorFollowService>();
+
 
             // Payment Services - Register HttpClient for SePayService
             services.AddHttpClient<ISePayService, SePayService>((serviceProvider, client) =>
@@ -92,20 +100,15 @@ namespace ProjectDemoWebApi.Extensions
                 client.DefaultRequestHeaders.Add("User-Agent", "SePayService/1.0");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-
-                // Add headers to avoid Cloudflare protection
                 client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "cross-site");
             });
 
-            // Payment Services - Register HttpClient for SePayService
             services.AddHttpClient<ISePayService, SePayService>((serviceProvider, client) =>
             {
                 var sePaySettings = serviceProvider.GetRequiredService<IOptions<SePaySettings>>().Value;
-
-                // Check for null safety
                 if (string.IsNullOrEmpty(sePaySettings.ApiUrl))
                 {
                     throw new InvalidOperationException("SePay ApiUrl is not configured");
@@ -116,32 +119,25 @@ namespace ProjectDemoWebApi.Extensions
                     throw new InvalidOperationException("SePay ApiKey is not configured");
                 }
 
-                // Configure base address
                 client.BaseAddress = new Uri(sePaySettings.ApiUrl);
 
-                // Configure timeout
                 client.Timeout = TimeSpan.FromSeconds(30);
 
-                // Configure headers
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {sePaySettings.ApiKey}");
                 client.DefaultRequestHeaders.Add("User-Agent", "SePayService/1.0");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 
-                // Add headers to avoid Cloudflare protection
                 client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "cross-site");
             });
 
-            // Infrastructure Services
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             services.AddScoped<IRoleSeederService, RoleSeederService>();
-
-            // 
             services.AddScoped<IGoogleCloudStorageService, GoogleCloudStorageService>();
             return services;
         }

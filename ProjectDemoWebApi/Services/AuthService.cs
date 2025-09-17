@@ -116,6 +116,35 @@ public class AuthService : IAuthService
         };
     }
 
+    //auth-me
+    public async Task<LoginResultDto?> GetCurrentUserAsync(string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+            return null;
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return null;
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return new LoginResultDto
+        {
+            Success = true,
+            UserId = user.Id,
+            Email = user.Email,
+            FullName = user.UserName ?? "",
+            Role = roles.FirstOrDefault() ?? "",
+            Token = new TokenResultDto
+            {
+                Token = "",      // frontend đã có token
+                RefreshToken = "",
+                ExpiresAt = DateTime.MinValue,
+                ExpiresIn = 0
+            },
+            RefreshToken = ""
+        };
+    }
+
     // resend OTP
     public async Task<OtpResultDto> ResendRegisterOtpAsync(string email)
     {

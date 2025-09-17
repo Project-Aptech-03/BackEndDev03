@@ -41,6 +41,12 @@ namespace ProjectDemoWebApi.Repositories
 
             return (items, totalCount);
         }
+        public async Task<Categories?> GetByIdWithSubCategoriesAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(c => c.SubCategories)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        }
 
         public async Task<bool> IsCategoryCodeExistsAsync(string categoryCode, int? excludeId = null, CancellationToken cancellationToken = default)
         {

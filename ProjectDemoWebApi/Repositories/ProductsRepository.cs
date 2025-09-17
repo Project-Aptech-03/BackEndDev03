@@ -21,7 +21,6 @@ namespace ProjectDemoWebApi.Repositories
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        // An toàn h?n: l?y t?t c? productCode cùng prefix, parse s? ? cu?i, tr? v? max numeric suffix
         public async Task<int?> GetMaxNumericSuffixByPrefixAsync(string prefix, CancellationToken cancellationToken)
         {
             var codes = await _dbSet
@@ -58,23 +57,12 @@ namespace ProjectDemoWebApi.Repositories
         {
             return await _dbSet
                 .Include(p => p.Category)
+                .ThenInclude(c => c.SubCategories)
                 .Include(p => p.Manufacturer)
                 .Include(p => p.Publisher)
                 .Include(p => p.ProductPhotos)
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
-
-        //public async Task<Products?> GetLastProductByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
-        //{
-        //    return await _dbSet
-        //        .AsNoTracking()
-        //        .Where(p => p.ProductCode.StartsWith(prefix))
-        //        .OrderByDescending(p => p.ProductCode)
-        //        .FirstOrDefaultAsync(cancellationToken);
-        //}
-
-
-
         public async Task<IEnumerable<Products>> GetAllWithDetailsAsync(CancellationToken cancellationToken = default)
         {
             return await _dbSet
@@ -86,17 +74,7 @@ namespace ProjectDemoWebApi.Repositories
                 .OrderBy(p => p.ProductName)
                 .ToListAsync(cancellationToken);
         }
-        // Dùng cho update
-        //public async Task<Products?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default)
-        //{
-        //    return await _dbSet
-        //        .Include(p => p.Category)
-        //        .Include(p => p.Manufacturer)
-        //        .Include(p => p.Publisher)
-        //        .Include(p => p.ProductPhotos)
-        //        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-        //}
-
+   
 
 
 

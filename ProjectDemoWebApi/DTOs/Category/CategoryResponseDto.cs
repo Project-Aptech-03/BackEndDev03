@@ -1,3 +1,5 @@
+using ProjectDemoWebApi.DTOs.SubCategory;
+
 namespace ProjectDemoWebApi.DTOs.Category
 {
     public class CategoryResponseDto
@@ -8,5 +10,7 @@ namespace ProjectDemoWebApi.DTOs.Category
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         public int ProductCount { get; set; }
+
+        public List<SubCategoryResponseDto>? SubCategories { get; set; } = null;
     }
 }

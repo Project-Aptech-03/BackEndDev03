@@ -14,6 +14,7 @@ namespace ProjectDemoWebApi.Data
 
         // New database schema models
         public DbSet<Categories> Categories { get; set; } = null!;
+        public DbSet<SubCategories> SubCategories { get; set; } = null!;
         public DbSet<Manufacturers> Manufacturers { get; set; } = null!;
         public DbSet<Publishers> Publishers { get; set; } = null!;
         public DbSet<Products> Products { get; set; } = null!;
@@ -104,6 +105,28 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.CreatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure 1-n relationship with SubCategories
+                entity.HasMany(c => c.SubCategories)
+                      .WithOne(sc => sc.Category)
+                      .HasForeignKey(sc => sc.CategoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+
+            });
+
+            // Configure SubCategories
+            modelBuilder.Entity<SubCategories>(entity =>
+            {
+                entity.HasIndex(e => e.SubCategoryCode)
+                      .IsUnique()
+                      .HasDatabaseName("idx_subcategories_code");
+
+                entity.Property(e => e.IsActive)
+                      .HasDefaultValue(true);
+
+                entity.Property(e => e.CreatedDate)
+                      .HasDefaultValueSql("GETUTCDATE()");
             });
 
             // Configure Manufacturers
@@ -345,6 +368,7 @@ namespace ProjectDemoWebApi.Data
             });
 
             // Configure StockMovements
+            // Configure StockMovements
             modelBuilder.Entity<StockMovements>(entity =>
             {
                 entity.HasIndex(e => new { e.ProductId, e.CreatedDate })
@@ -516,11 +540,12 @@ namespace ProjectDemoWebApi.Data
                     .HasForeignKey(d => d.AuthorId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(d => d.Category)
-                    .WithMany()
-                    .HasForeignKey(d => d.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
+                entity.HasOne(b => b.Category)
+                     .WithMany(c => c.Blogs)
+                     .HasForeignKey(b => b.CategoryId)
+                     .IsRequired(false)                 
+                     .OnDelete(DeleteBehavior.SetNull); 
+                        });
 
             // Configure BlogComments
             modelBuilder.Entity<BlogComments>(entity =>
