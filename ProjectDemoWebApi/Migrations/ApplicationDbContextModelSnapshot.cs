@@ -696,7 +696,7 @@ namespace ProjectDemoWebApi.Migrations
                     b.ToTable("CustomerQueries");
                 });
 
-            modelBuilder.Entity("ProjectDemoWebApi.Models.Faq", b =>
+            modelBuilder.Entity("ProjectDemoWebApi.Models.FAQ", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -706,28 +706,38 @@ namespace ProjectDemoWebApi.Migrations
 
                     b.Property<string>("Answer")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("answer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Question")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("text")
+                        .HasColumnName("question");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("sort_order");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Faqs");
+                    b.HasIndex("SortOrder")
+                        .HasDatabaseName("idx_faq_sort");
+
+                    b.ToTable("FAQ");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Manufacturers", b =>
