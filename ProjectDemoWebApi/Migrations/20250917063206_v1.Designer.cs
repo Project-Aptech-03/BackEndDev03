@@ -12,7 +12,7 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250916132052_v1")]
+    [Migration("20250917063206_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -305,7 +305,7 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("author_id");
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int")
                         .HasColumnName("category_id");
 
@@ -1594,6 +1594,12 @@ namespace ProjectDemoWebApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -1745,10 +1751,9 @@ namespace ProjectDemoWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("ProjectDemoWebApi.Models.Categories", "Category")
-                        .WithMany()
+                        .WithMany("Blogs")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Author");
 
@@ -1983,6 +1988,8 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
+                    b.Navigation("Blogs");
+
                     b.Navigation("Products");
 
                     b.Navigation("SubCategories");

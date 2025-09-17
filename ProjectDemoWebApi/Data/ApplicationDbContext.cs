@@ -110,7 +110,9 @@ namespace ProjectDemoWebApi.Data
                 entity.HasMany(c => c.SubCategories)
                       .WithOne(sc => sc.Category)
                       .HasForeignKey(sc => sc.CategoryId)
-                      .OnDelete(DeleteBehavior.Cascade); // hoặc Restrict 
+                      .OnDelete(DeleteBehavior.Cascade);
+
+
             });
 
             // Configure SubCategories
@@ -538,11 +540,12 @@ namespace ProjectDemoWebApi.Data
                     .HasForeignKey(d => d.AuthorId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(d => d.Category)
-                    .WithMany()
-                    .HasForeignKey(d => d.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
+                entity.HasOne(b => b.Category)
+                     .WithMany(c => c.Blogs)
+                     .HasForeignKey(b => b.CategoryId)
+                     .IsRequired(false)                 
+                     .OnDelete(DeleteBehavior.SetNull); 
+                        });
 
             // Configure BlogComments
             modelBuilder.Entity<BlogComments>(entity =>

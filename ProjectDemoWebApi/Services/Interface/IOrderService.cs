@@ -19,5 +19,7 @@ namespace ProjectDemoWebApi.Services.Interface
         
         // Order code generation
         Task<ApiResponse<string>> GetNextOrderCodeAsync(CancellationToken cancellationToken = default);
+        Task<ApiResponse<IEnumerable<BestSellerProductDto>>> GetTop3ProductsAsync(CancellationToken cancellationToken = default);
+
     }
 }

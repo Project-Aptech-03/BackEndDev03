@@ -302,7 +302,7 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("author_id");
 
-                    b.Property<int>("CategoryId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int")
                         .HasColumnName("category_id");
 
@@ -1748,10 +1748,9 @@ namespace ProjectDemoWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("ProjectDemoWebApi.Models.Categories", "Category")
-                        .WithMany()
+                        .WithMany("Blogs")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Author");
 
@@ -1986,6 +1985,8 @@ namespace ProjectDemoWebApi.Migrations
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Categories", b =>
                 {
+                    b.Navigation("Blogs");
+
                     b.Navigation("Products");
 
                     b.Navigation("SubCategories");

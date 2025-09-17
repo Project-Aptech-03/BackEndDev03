@@ -217,6 +217,48 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
+      public async Task<ApiResponse<IEnumerable<BestSellerProductDto>>> GetTop3ProductsAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var orderItems = await _orderItemRepository.GetAllAsync(cancellationToken);
+
+                var topProducts = orderItems
+                    .GroupBy(oi => oi.ProductId)
+                    .Select(g => new
+                    {
+                        ProductId = g.Key,
+                        TotalQuantity = g.Sum(x => x.Quantity)
+                    })
+                    .OrderByDescending(x => x.TotalQuantity)
+                    .Take(3)
+                    .ToList();
+
+                var result = new List<BestSellerProductDto>();
+
+                foreach (var item in topProducts)
+                {
+                    var product = await _productsRepository.GetByIdAsync(item.ProductId, cancellationToken);
+                    if (product != null)
+                    {
+                        result.Add(new BestSellerProductDto
+                        {
+                            ProductId = product.Id,
+                            ProductName = product.ProductName,
+                            TotalQuantity = item.TotalQuantity
+                        });
+                    }
+                }
+
+                return ApiResponse<IEnumerable<BestSellerProductDto>>.Ok(result, "Top 3 products retrieved successfully.");
+            }
+            catch (Exception)
+            {
+                return ApiResponse<IEnumerable<BestSellerProductDto>>.Fail("An error occurred while retrieving top products.", null, 500);
+            }
+        }
+
+
         #endregion
 
         #region Common Functions

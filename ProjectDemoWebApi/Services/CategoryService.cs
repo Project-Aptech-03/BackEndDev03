@@ -406,12 +406,6 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
-
-
-
-
-
-
         public async Task<ApiResponse<bool>> DeleteCategoryAsync(
      int id,
      CancellationToken cancellationToken = default)
@@ -438,7 +432,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // EF Core s? xóa cascade SubCategories
                 _categoryRepository.Delete(category);
                 await _categoryRepository.SaveChangesAsync(cancellationToken);
 
