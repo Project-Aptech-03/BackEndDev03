@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using ProjectDemoWebApi.DTOs;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.DTOs.Blog;
 using ProjectDemoWebApi.DTOs.Category;
@@ -118,12 +117,6 @@ namespace ProjectDemoWebApi.Mappings
             //CreateMap<Faq, FaqDto>();
             //CreateMap<CreateFaqDto, Faq>();
             //CreateMap<UpdateFaqDto, Faq>();
-
-            //=============faq===============
-            CreateMap<Faq, FaqDto>();
-            CreateMap<CreateFaqDto, Faq>();
-            CreateMap<UpdateFaqDto, Faq>();
-
 
             CreateMap<CreateBlogDto, Blogs>();
             CreateMap<UpdateBlogDto, Blogs>();
