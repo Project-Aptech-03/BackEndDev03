@@ -21,16 +21,16 @@ public class UpdateProductsDto
     [StringLength(100, ErrorMessage = "Product type cannot exceed 100 characters.")]
     public string? ProductType { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Pages must be greater than 0.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Pages must be greater than 0.")]
     public int? Pages { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Length must be >= 0.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Length must be >= 0.")]
     public int? DimensionLength { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Width must be >= 0.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Width must be >= 0.")]
     public int? DimensionWidth { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Height must be >= 0.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Height must be >= 0.")]
     public int? DimensionHeight { get; set; }
 
 

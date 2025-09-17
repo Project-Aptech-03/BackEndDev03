@@ -7,7 +7,7 @@ namespace ProjectDemoWebApi.Services.Interface
 {
     public interface IUserService
     {
-        Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default);
+        Task<IdentityResult> CreateUserAsync(CreateUserRequestDto dto, CancellationToken cancellationToken = default);
         Task<ApiResponse<PagedResponseDto<UsersResponseDto>>> GetAllUsersAsync(
          int pageIndex = 1,
          int pageSize = 10,

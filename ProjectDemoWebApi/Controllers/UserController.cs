@@ -5,6 +5,7 @@
     using Microsoft.AspNetCore.Mvc;
     using ProjectDemoWebApi.DTOs.Shared;
     using ProjectDemoWebApi.DTOs.User;
+using ProjectDemoWebApi.Helper;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Services.Interface;
     using System.Security.Claims;
@@ -39,25 +40,27 @@ namespace ProjectDemoWebApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = _mapper.Map<Users>(createUserRequestDto);
-
-            var result = await _userService.CreateUserAsync(user, createUserRequestDto.Password, cancellationToken);
+            var result = await _userService.CreateUserAsync(createUserRequestDto, cancellationToken);
 
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(e => e.Description).ToList();
                 return BadRequest(ApiResponse<string>.Fail(
-                    message: "Tạo người dùng không thành công",
+                    message: "Failed to create user",
                     statusCode: 400,
                     errors: errors
                 ));
             }
 
-            var userDto = _mapper.Map<UsersResponseDto>(user);
+            // lấy user để trả về
+            var createdUser = await _userService.GetUserByEmailAsync(createUserRequestDto.Email);
+            var userDto = _mapper.Map<UsersResponseDto>(createdUser);
 
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id },
-                ApiResponse<UsersResponseDto>.Ok(userDto, "Tạo người dùng thành công", 201));
+            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id },
+                ApiResponse<UsersResponseDto>.Ok(userDto, "User created successfully", 201));
         }
+
+
 
 
         [HttpGet]

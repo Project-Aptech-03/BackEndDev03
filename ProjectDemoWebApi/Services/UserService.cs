@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using ProjectDemoWebApi.DTOs.Shared;
 using ProjectDemoWebApi.DTOs.User;
+using ProjectDemoWebApi.Helper;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services.Interface;
@@ -28,47 +29,51 @@ namespace ProjectDemoWebApi.Services
             _httpContextAccessor = httpContextAccessor;
             _emailService = emailService;
         }
-
-        public async Task<IdentityResult> CreateUserAsync(Users user, string password, CancellationToken cancellationToken = default)
+        public async Task<IdentityResult> CreateUserAsync(CreateUserRequestDto dto, CancellationToken cancellationToken = default)
         {
-            var result = await _userRepository.CreateUserAsync(user, password, cancellationToken);
+            var user = _mapper.Map<Users>(dto);
+            var generatedPassword = PasswordGenerator.GeneratePassword();
+
+            var result = await _userRepository.CreateUserAsync(user, generatedPassword, cancellationToken);
 
             if (result.Succeeded)
             {
-                var subject = "📚 Chào mừng bạn đến với Nhà Sách Project03!";
+                var subject = "📚 Welcome to Project03 Bookstore!";
 
                 var body = $@"
         <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
-            <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
-                
-                <h1 style='color:#2c3e50; text-align:center;'>✨ Chào mừng bạn, {user.FirstName} {user.LastName}! ✨</h1>
-                
+            <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; 
+                        box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
+
+                <h1 style='color:#2c3e50; text-align:center;'>✨ Welcome, {user.FirstName} {user.LastName}! ✨</h1>
+
                 <p style='font-size:16px; color:#444;'>
-                    Cảm ơn bạn đã đăng ký tài khoản tại <b>Nhà Sách Project03</b>. 
-                    Chúng tôi rất vui khi được đồng hành cùng bạn trên hành trình khám phá tri thức và niềm vui đọc sách.
+                    Your account has been successfully created at <b>Project03 Bookstore</b>. 
                 </p>
 
-                <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; border-radius:6px; margin:20px 0;'>
-                    <p style='margin:5px 0; font-size:15px;'><b>Email đăng nhập:</b> {user.Email}</p>
-                    <p style='margin:5px 0; font-size:15px;'><b>Mật khẩu:</b> {password}</p>
+                <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; 
+                            border-radius:6px; margin:20px 0;'>
+                    <p style='margin:5px 0; font-size:15px;'><b>Login Email:</b> {user.Email}</p>
+                    <p style='margin:5px 0; font-size:15px;'><b>Temporary Password:</b> {generatedPassword}</p>
                 </div>
 
                 <p style='font-size:15px; color:#555;'>
-                    Hãy đăng nhập để bắt đầu hành trình cùng những cuốn sách hay dành cho bạn và bé! 📖👶
+                    Please log in and change your password immediately after your first login! 🔑
                 </p>
 
                 <div style='text-align:center; margin:30px 0;'>
                     <a href='http://localhost:3000/login' 
-                       style='background:#4CAF50; color:#fff; text-decoration:none; padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
-                        Đăng nhập ngay
+                       style='background:#4CAF50; color:#fff; text-decoration:none; 
+                              padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
+                        Login Now
                     </a>
                 </div>
 
                 <hr style='margin:30px 0; border:none; border-top:1px solid #eee;'/>
-                
+
                 <p style='font-size:13px; color:#888; text-align:center;'>
-                    Đây là email tự động, vui lòng không trả lời lại.<br/>
-                    © {DateTime.Now.Year} Nhà Sách Project03. Tất cả các quyền được bảo lưu.
+                    This is an automated email, please do not reply.<br/>
+                    © {DateTime.Now.Year} Project03 Bookstore. All rights reserved.
                 </p>
             </div>
         </div>";
@@ -78,6 +83,8 @@ namespace ProjectDemoWebApi.Services
 
             return result;
         }
+
+
 
 
         public async Task<ApiResponse<PagedResponseDto<UsersResponseDto>>> GetAllUsersAsync(

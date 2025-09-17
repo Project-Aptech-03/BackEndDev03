@@ -34,7 +34,7 @@ namespace ProjectDemoWebApi.Services
             var dto = _mapper.Map<BlogResponseDto>(blog);
             dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
             dto.AuthorAvatar = blog.Author.AvatarUrl;
-            dto.CategoryName = blog.Category.CategoryName;
+            dto.CategoryName = blog.Category?.CategoryName;
             dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                 await _blogLikeRepository.ExistsAsync(id, currentUserId);
 
@@ -110,7 +110,7 @@ namespace ProjectDemoWebApi.Services
                 var dto = _mapper.Map<BlogListResponseDto>(blog);
                 dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
                 dto.AuthorAvatar = blog.Author.AvatarUrl;
-                dto.CategoryName = blog.Category.CategoryName;
+                dto.CategoryName = blog.Category?.CategoryName;
                 dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                     await _blogLikeRepository.ExistsAsync(blog.Id, currentUserId);
                 dtos.Add(dto);
@@ -129,7 +129,7 @@ namespace ProjectDemoWebApi.Services
                 var dto = _mapper.Map<BlogListResponseDto>(blog);
                 dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
                 dto.AuthorAvatar = blog.Author.AvatarUrl;
-                dto.CategoryName = blog.Category.CategoryName;
+                dto.CategoryName = blog.Category?.CategoryName;
                 dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                     await _blogLikeRepository.ExistsAsync(blog.Id, currentUserId);
                 dtos.Add(dto);
@@ -148,7 +148,7 @@ namespace ProjectDemoWebApi.Services
                 var dto = _mapper.Map<BlogListResponseDto>(blog);
                 dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
                 dto.AuthorAvatar = blog.Author.AvatarUrl;
-                dto.CategoryName = blog.Category.CategoryName;
+                dto.CategoryName = blog.Category?.CategoryName;
                 dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                     await _blogLikeRepository.ExistsAsync(blog.Id, currentUserId);
                 dtos.Add(dto);
@@ -273,7 +273,7 @@ namespace ProjectDemoWebApi.Services
                 var dto = _mapper.Map<BlogListResponseDto>(blog);
                 dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
                 dto.AuthorAvatar = blog.Author.AvatarUrl;
-                dto.CategoryName = blog.Category.CategoryName;
+                dto.CategoryName = blog.Category?.CategoryName;
                 dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                     await _blogLikeRepository.ExistsAsync(blog.Id, currentUserId);
                 dtos.Add(dto);

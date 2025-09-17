@@ -56,13 +56,13 @@ namespace ProjectDemoWebApi.Services
 
 
         public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
-    int pageNumber,
-    int pageSize,
-    string? keyword = null,
-    int? categoriesId = null,
-    int? manufacturerId = null,
-    CancellationToken cancellationToken = default)
-        {
+            int pageNumber,
+            int pageSize,
+            string? keyword = null,
+            int? categoriesId = null,
+            int? manufacturerId = null,
+            CancellationToken cancellationToken = default)
+                {
             try
             {
                 if (pageNumber <= 0)

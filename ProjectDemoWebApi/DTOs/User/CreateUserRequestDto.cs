@@ -5,38 +5,29 @@ namespace ProjectDemoWebApi.DTOs.User
 {
     public class CreateUserRequestDto
     {
-        [Required(ErrorMessage = "Email không được để trống.")]
-        [RegularExpression(@"^[\w\.\-]+@(fpt\.edu\.vn|gmail\.com)$", ErrorMessage = "Chỉ cho phép email @fpt.edu.vn hoặc @gmail.com.")]
+        [Required(ErrorMessage = "Email is required.")]
+        [RegularExpression(@"^[\w\.\-]+@(fpt\.edu\.vn|gmail\.com)$", ErrorMessage = "Only @fpt.edu.vn or @gmail.com emails are allowed.")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
-        [DataType(DataType.Password)]
-        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
-        [RegularExpression(@"^(?=.*[A-Z])(?=.*[!@#$%^&*()_+?~]).+$",
-        ErrorMessage = "Mật khẩu phải có ít nhất một chữ hoa (A-Z) và một ký tự đặc biệt.")]
-
-        public string Password { get; set; } = string.Empty;
-
-
-        [Required(ErrorMessage = "Họ không được để trống.")]
-        [StringLength(50, ErrorMessage = "Họ không được vượt quá 50 ký tự.")]
+        [Required(ErrorMessage = "First name is required.")]
+        [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
         public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Tên không được để trống.")]
-        [StringLength(50, ErrorMessage = "Tên không được vượt quá 50 ký tự.")]
+        [Required(ErrorMessage = "Last name is required.")]
+        [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters.")]
         public string LastName { get; set; } = string.Empty;
 
-        [StringLength(200, ErrorMessage = "Địa chỉ không được vượt quá 200 ký tự.")]
+        [StringLength(200, ErrorMessage = "Address cannot exceed 200 characters.")]
         public string? Address { get; set; } = string.Empty;
 
-        [MinimumAge(16, ErrorMessage = "Người dùng phải trên 16 tuổi.")]
-        [DataType(DataType.Date, ErrorMessage = "Ngày sinh không hợp lệ.")]
+        [MinimumAge(16, ErrorMessage = "User must be at least 16 years old.")]
+        [DataType(DataType.Date, ErrorMessage = "Invalid date of birth format.")]
         public DateTime? DateOfBirth { get; set; }
 
-        [Phone(ErrorMessage = "Số điện thoại không đúng định dạng.")]
+        [Phone(ErrorMessage = "Invalid phone number format.")]
         public string? PhoneNumber { get; set; } = string.Empty;
 
-        [Required(ErrorMessage ="Bạn phải phân quyền cho người dùng")]
-        public string Role {  get; set; } = string.Empty;
+        [Required(ErrorMessage = "User role is required.")]
+        public string Role { get; set; } = string.Empty;
     }
 }

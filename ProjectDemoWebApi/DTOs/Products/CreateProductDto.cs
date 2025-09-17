@@ -29,7 +29,6 @@ namespace ProjectDemoWebApi.DTOs.Products
         [Range(1, int.MaxValue, ErrorMessage = "Pages must be greater than 0.")]
         public int? Pages { get; set; }
 
-        // Tách Dimensions thành 3 field
         [Range(1, int.MaxValue, ErrorMessage = "Length must be greater than 0.")]
         public int? DimensionLength { get; set; }
 
