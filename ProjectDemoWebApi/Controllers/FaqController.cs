@@ -20,6 +20,7 @@ namespace ProjectDemoWebApi.Controllers
 
         // GET: api/faq
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<FaqDto>>> GetFaqs()
         {
             var faqs = await _faqService.GetActiveFaqsAsync();
@@ -28,7 +29,7 @@ namespace ProjectDemoWebApi.Controllers
 
         // GET: api/faq/all
         [HttpGet("all")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<FaqDto>>> GetAllFaqs()
         {
             var faqs = await _faqService.GetAllFaqsAsync();
@@ -61,6 +62,7 @@ namespace ProjectDemoWebApi.Controllers
         // PUT: api/faq/5
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> PutFaq(int id, UpdateFaqDto updateFaqDto)
         {
             var result = await _faqService.UpdateFaqAsync(id, updateFaqDto);
@@ -76,6 +78,7 @@ namespace ProjectDemoWebApi.Controllers
         // DELETE: api/faq/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> DeleteFaq(int id)
         {
             var result = await _faqService.DeleteFaqAsync(id);

@@ -1613,7 +1613,52 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("Query");
                 });
 
-            modelBuilder.Entity("ProjectDemoWebApi.Models.CustomerAddresses", b =>
+            modelBuilder.Entity("ProjectDemoWebApi.Models.AuthorFollows", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Author")
+                        .WithMany("Followers")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Follower")
+                        .WithMany("Following")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.BlogComments", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.Blogs", "Blog")
+                        .WithMany("Comments")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.BlogComments", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
+                        .WithMany("BlogComments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("ParentComment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.BlogLikes", b =>
                 {
                     b.HasOne("ProjectDemoWebApi.Models.Blogs", "Blog")
                         .WithMany("Likes")

@@ -32,16 +32,10 @@ namespace ProjectDemoWebApi.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(256)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(256)", nullable: false),
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                    AvataUrl = table.Column<string>(type: "nvarchar(256)", nullable: true),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Address = table.Column<string>(type: "nvarchar(256)", nullable: true),
-========
                     AvatarUrl = table.Column<string>(type: "nvarchar(256)", nullable: true),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(256)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -103,20 +97,21 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "FAQ",
+                name: "Faqs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    question = table.Column<string>(type: "text", nullable: false),
-                    answer = table.Column<string>(type: "text", nullable: false),
-                    sort_order = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    Question = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Answer = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FAQ", x => x.Id);
+                    table.PrimaryKey("PK_Faqs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -282,8 +277,6 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-========
                 name: "AuthorFollows",
                 columns: table => new
                 {
@@ -311,24 +304,12 @@ namespace ProjectDemoWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 name: "CustomerAddresses",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                    full_address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    district = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    city = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    postal_code = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    distance_km = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
-                    is_default = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: true)
-========
                     address_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     full_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     full_address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
@@ -337,20 +318,11 @@ namespace ProjectDemoWebApi.Migrations
                     is_default = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
                     table.ForeignKey(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                        name: "FK_CustomerAddresses_AspNetUsers_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-========
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                         name: "FK_CustomerAddresses_AspNetUsers_user_id",
                         column: x => x.user_id,
                         principalTable: "AspNetUsers",
@@ -370,32 +342,17 @@ namespace ProjectDemoWebApi.Migrations
                     subject = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     message = table.Column<string>(type: "text", nullable: false),
                     status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Open"),
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CustomerId1 = table.Column<string>(type: "nvarchar(450)", nullable: true)
-========
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CustomerQueries", x => x.Id);
                     table.ForeignKey(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                        name: "FK_CustomerQueries_AspNetUsers_CustomerId1",
-                        column: x => x.CustomerId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-========
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                         name: "FK_CustomerQueries_AspNetUsers_customer_id",
                         column: x => x.customer_id,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-========
                 });
 
             migrationBuilder.CreateTable(
@@ -435,7 +392,6 @@ namespace ProjectDemoWebApi.Migrations
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 });
 
             migrationBuilder.CreateTable(
@@ -504,33 +460,16 @@ namespace ProjectDemoWebApi.Migrations
                     payment_status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
                     applied_coupons = table.Column<string>(type: "text", nullable: true),
                     delivery_notes = table.Column<string>(type: "text", nullable: true),
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                    is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CustomerId1 = table.Column<string>(type: "nvarchar(450)", nullable: true)
-========
                     cancellation_reason = table.Column<string>(type: "text", nullable: true),
                     cancelled_date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     updated_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                        name: "FK_Orders_AspNetUsers_CustomerId1",
-                        column: x => x.CustomerId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Orders_AspNetUsers_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "AspNetUsers",
-========
                         name: "FK_Orders_AspNetUsers_customer_id",
                         column: x => x.customer_id,
                         principalTable: "AspNetUsers",
@@ -568,46 +507,16 @@ namespace ProjectDemoWebApi.Migrations
                         name: "FK_AdminReplies_CustomerQueries_query_id",
                         column: x => x.query_id,
                         principalTable: "CustomerQueries",
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Orders_CustomerAddresses_delivery_address_id",
-                        column: x => x.delivery_address_id,
-                        principalTable: "CustomerAddresses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                name: "AdminReplies",
-========
                 name: "BlogComments",
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                    query_id = table.Column<int>(type: "int", nullable: false),
-                    admin_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    reply_message = table.Column<string>(type: "text", nullable: false),
-                    reply_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    AdminId1 = table.Column<string>(type: "nvarchar(450)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AdminReplies", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AdminReplies_AspNetUsers_AdminId1",
-                        column: x => x.AdminId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_AdminReplies_AspNetUsers_admin_id",
-                        column: x => x.admin_id,
-========
                     content = table.Column<string>(type: "ntext", nullable: false),
                     is_approved = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     like_count = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
@@ -623,16 +532,10 @@ namespace ProjectDemoWebApi.Migrations
                     table.ForeignKey(
                         name: "FK_BlogComments_AspNetUsers_user_id",
                         column: x => x.user_id,
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                        name: "FK_AdminReplies_CustomerQueries_query_id",
-                        column: x => x.query_id,
-                        principalTable: "CustomerQueries",
-========
                         name: "FK_BlogComments_BlogComments_parent_comment_id",
                         column: x => x.parent_comment_id,
                         principalTable: "BlogComments",
@@ -669,7 +572,6 @@ namespace ProjectDemoWebApi.Migrations
                         name: "FK_BlogLikes_Blogs_blog_id",
                         column: x => x.blog_id,
                         principalTable: "Blogs",
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -757,11 +659,7 @@ namespace ProjectDemoWebApi.Migrations
                         column: x => x.product_id,
                         principalTable: "Products",
                         principalColumn: "Id",
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-                        onDelete: ReferentialAction.Restrict);
-========
                         onDelete: ReferentialAction.Cascade);
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 });
 
             migrationBuilder.CreateTable(
@@ -848,8 +746,6 @@ namespace ProjectDemoWebApi.Migrations
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-========
                 });
 
             migrationBuilder.CreateTable(
@@ -877,7 +773,6 @@ namespace ProjectDemoWebApi.Migrations
                         principalTable: "BlogComments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 });
 
             migrationBuilder.CreateIndex(
@@ -889,11 +784,6 @@ namespace ProjectDemoWebApi.Migrations
                 name: "IX_AdminReplies_admin_id",
                 table: "AdminReplies",
                 column: "admin_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AdminReplies_AdminId1",
-                table: "AdminReplies",
-                column: "AdminId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -940,8 +830,6 @@ namespace ProjectDemoWebApi.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-========
                 name: "idx_author_follows_author",
                 table: "AuthorFollows",
                 column: "author_id");
@@ -1011,7 +899,6 @@ namespace ProjectDemoWebApi.Migrations
                 filter: "[slug] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 name: "idx_categories_code",
                 table: "Categories",
                 column: "category_code",
@@ -1055,11 +942,6 @@ namespace ProjectDemoWebApi.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomerAddresses_UserId1",
-                table: "CustomerAddresses",
-                column: "UserId1");
-
-            migrationBuilder.CreateIndex(
                 name: "idx_queries_customer",
                 table: "CustomerQueries",
                 column: "customer_id");
@@ -1068,16 +950,6 @@ namespace ProjectDemoWebApi.Migrations
                 name: "idx_queries_status",
                 table: "CustomerQueries",
                 column: "status");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CustomerQueries_CustomerId1",
-                table: "CustomerQueries",
-                column: "CustomerId1");
-
-            migrationBuilder.CreateIndex(
-                name: "idx_faq_sort",
-                table: "FAQ",
-                column: "sort_order");
 
             migrationBuilder.CreateIndex(
                 name: "idx_manufacturers_code",
@@ -1120,11 +992,6 @@ namespace ProjectDemoWebApi.Migrations
                 name: "idx_orders_status",
                 table: "Orders",
                 column: "order_status");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Orders_CustomerId1",
-                table: "Orders",
-                column: "CustomerId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_delivery_address_id",
@@ -1265,7 +1132,7 @@ namespace ProjectDemoWebApi.Migrations
                 name: "Coupons");
 
             migrationBuilder.DropTable(
-                name: "FAQ");
+                name: "Faqs");
 
             migrationBuilder.DropTable(
                 name: "OrderItems");
@@ -1316,12 +1183,9 @@ namespace ProjectDemoWebApi.Migrations
                 name: "Publishers");
 
             migrationBuilder.DropTable(
-<<<<<<<< HEAD:ProjectDemoWebApi/Migrations/20250830100126_v1.cs
-========
                 name: "Categories");
 
             migrationBuilder.DropTable(
->>>>>>>> 5798cb0b627c96bf5baa7734567861dcf1b7cec3:ProjectDemoWebApi/Migrations/20250915135209_v1.cs
                 name: "AspNetUsers");
         }
     }
