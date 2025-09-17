@@ -12,7 +12,7 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250916115028_v1")]
+    [Migration("20250916132052_v1")]
     partial class v1
     {
         /// <inheritdoc />

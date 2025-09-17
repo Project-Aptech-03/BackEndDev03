@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectDemoWebApi.DTOs.Auth;
 using ProjectDemoWebApi.Models;
@@ -18,6 +19,7 @@ public class JwtTokenService : IJwtTokenService
         _userManager = userManager;
     }
 
+    // Tạo access token
     public async Task<TokenResultDto> GenerateTokenAsync(Users user)
     {
         var userRoles = await _userManager.GetRolesAsync(user);
@@ -38,7 +40,7 @@ public class JwtTokenService : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expires = DateTime.UtcNow.AddDays(1);
+        var expires = DateTime.UtcNow.AddMinutes(15);
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
@@ -54,5 +56,31 @@ public class JwtTokenService : IJwtTokenService
             ExpiresAt = expires,
             ExpiresIn = (int)(expires - DateTime.UtcNow).TotalSeconds
         };
+    }
+
+    // Tạo refresh token và lưu vào user
+    public async Task<string> GenerateRefreshTokenAsync(Users user)
+    {
+        var refreshToken = Guid.NewGuid().ToString();
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 ngày
+        await _userManager.UpdateAsync(user);
+        return refreshToken;
+    }
+    public async Task<TokenResultDto> RefreshTokenAsync(string refreshToken)
+    {
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+        if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            throw new Exception("Refresh token không hợp lệ hoặc hết hạn.");
+
+        // Tạo access token mới
+        var tokenResult = await GenerateTokenAsync(user);
+
+        // Tạo refresh token mới
+        var newRefreshToken = await GenerateRefreshTokenAsync(user);
+        tokenResult.RefreshToken = newRefreshToken;
+
+        return tokenResult;
     }
 }

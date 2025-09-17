@@ -366,6 +366,7 @@ namespace ProjectDemoWebApi.Data
             });
 
             // Configure StockMovements
+            // Configure StockMovements
             modelBuilder.Entity<StockMovements>(entity =>
             {
                 entity.HasIndex(e => new { e.ProductId, e.CreatedDate })
@@ -384,8 +385,6 @@ namespace ProjectDemoWebApi.Data
                     .WithMany(p => p.StockMovements)
                     .HasForeignKey(d => d.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-            
             });
 
             // Configure Coupons

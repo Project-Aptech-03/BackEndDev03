@@ -28,7 +28,6 @@ namespace ProjectDemoWebApi.Models
         [ForeignKey("Category")]
         public int? CategoryId { get; set; }
 
-        // Navigation property, nullable để Category có thể null
         public virtual Categories? Category { get; set; }
     }
 }

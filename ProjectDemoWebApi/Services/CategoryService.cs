@@ -1,4 +1,4 @@
-using AutoMapper;
+ï»¿using AutoMapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ProjectDemoWebApi.DTOs.Category;
@@ -268,41 +268,40 @@ namespace ProjectDemoWebApi.Services
                 {
                     CategoryCode = newCode,
                     CategoryName = createCategoryDto.CategoryName,
+                    IsActive = true,
                     CreatedDate = DateTime.UtcNow,
                     SubCategories = new List<SubCategories>()
                 };
 
                 await _categoryRepository.AddAsync(category, cancellationToken);
-                await _categoryRepository.SaveChangesAsync(cancellationToken);
+                await _categoryRepository.SaveChangesAsync(cancellationToken); 
 
-                if (createCategoryDto.SubCategoryNames != null && createCategoryDto.SubCategoryNames.Any())
+                if (createCategoryDto.SubCategories != null && createCategoryDto.SubCategories.Any())
                 {
-                    var subCategoryCounter = 1;
-
-                    foreach (var name in createCategoryDto.SubCategoryNames)
+                    int counter = 1;
+                    foreach (var subDto in createCategoryDto.SubCategories)
                     {
-                        if (string.IsNullOrWhiteSpace(name)) continue;
-
-                        var subCategoryCode = $"{newCode}S{subCategoryCounter:D2}";
+                        if (string.IsNullOrWhiteSpace(subDto.SubCategoryName)) continue;
 
                         var subCategory = new SubCategories
                         {
-                            SubCategoryCode = subCategoryCode,
-                            SubCategoryName = name.Trim(),
+                            SubCategoryCode = $"{newCode}S{counter:D2}",
+                            SubCategoryName = subDto.SubCategoryName.Trim(),
                             IsActive = true,
                             CreatedDate = DateTime.UtcNow,
-                            CategoryId = category.Id,
-                            Category = category 
+                            CategoryId = category.Id
                         };
 
-                        category.SubCategories.Add(subCategory);
-                        subCategoryCounter++;
+                        await _subCategoryRepository.AddAsync(subCategory, cancellationToken);
+                        counter++;
                     }
 
-                    await _categoryRepository.SaveChangesAsync(cancellationToken);
+                    await _subCategoryRepository.SaveChangesAsync(cancellationToken);
                 }
 
-                var categoryDto = _mapper.Map<CategoryResponseDto>(category);
+                var createdCategory = await _categoryRepository.GetByIdWithSubCategoriesAsync(category.Id, cancellationToken);
+                var categoryDto = _mapper.Map<CategoryResponseDto>(createdCategory);
+
                 return ApiResponse<CategoryResponseDto>.Ok(
                     categoryDto,
                     "Category created successfully.",
@@ -323,6 +322,7 @@ namespace ProjectDemoWebApi.Services
         }
 
 
+
         public async Task<ApiResponse<CategoryResponseDto?>> UpdateCategoryAsync(
       int id,
       UpdateCategoryDto updateCategoryDto,
@@ -333,7 +333,6 @@ namespace ProjectDemoWebApi.Services
                 if (id <= 0)
                     return ApiResponse<CategoryResponseDto?>.Fail("Invalid category ID.", null, 400);
 
-                // L?y category kèm subcategories
                 var category = await _categoryRepository.GetByIdWithSubCategoriesAsync(id, cancellationToken);
                 if (category == null)
                     return ApiResponse<CategoryResponseDto?>.Fail("Category not found.", null, 404);
@@ -439,7 +438,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // EF Core s? xóa cascade SubCategories
+                // EF Core s? xÃ³a cascade SubCategories
                 _categoryRepository.Delete(category);
                 await _categoryRepository.SaveChangesAsync(cancellationToken);
 

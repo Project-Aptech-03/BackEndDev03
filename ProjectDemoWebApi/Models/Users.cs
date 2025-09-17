@@ -32,6 +32,9 @@ namespace ProjectDemoWebApi.Models
         [PersonalData]
         public DateTime? CreatedAt { get; set; }
 
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
         public ICollection<AdminReplies>? AdminReplies { get; set; }
         public ICollection<CustomerQueries>? CustomerQueries { get; set; }
         public ICollection<CustomerAddresses>? CustomerAddresses { get; set; }

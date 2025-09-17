@@ -1,3 +1,4 @@
+using ProjectDemoWebApi.DTOs.SubCategory;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjectDemoWebApi.DTOs.Category
@@ -13,6 +14,6 @@ namespace ProjectDemoWebApi.DTOs.Category
         [StringLength(100, ErrorMessage = "Category name cannot exceed 100 characters.")]
         public string CategoryName { get; set; } = string.Empty;
 
-        public List<string>? SubCategoryNames { get; set; } = null;
+        public List<CreateSubCategoryDto>? SubCategories { get; set; }
     }
 }

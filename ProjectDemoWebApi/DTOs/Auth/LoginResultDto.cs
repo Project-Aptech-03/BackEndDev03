@@ -10,6 +10,7 @@
         public string? Role { get; set; }
         public string? ErrorMessage { get; set; }
         public TokenResultDto Token { get; set; }
-   
+        public string RefreshToken { get; set; }
+
     }
 }

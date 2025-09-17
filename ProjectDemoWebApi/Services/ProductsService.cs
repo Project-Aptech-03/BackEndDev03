@@ -53,64 +53,6 @@ namespace ProjectDemoWebApi.Services
             _applicationDbContext = applicationDbContext;
         }
 
-        // public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
-        //int pageNumber,
-        //int pageSize,
-        //string? keyword = null,
-        //CancellationToken cancellationToken = default)
-        // {
-        //     try
-        //     {
-        //         if (pageNumber <= 0)
-        //             pageNumber = 1;
-
-        //         if (pageSize <= 0 || pageSize > 100)
-        //             pageSize = 20;
-        //         Expression<Func<Products, bool>>? predicate = p => p.IsActive;
-        //         if (!string.IsNullOrEmpty(keyword))
-        //         {
-        //             predicate = p => p.IsActive && p.ProductName.Contains(keyword)
-        //                             || p.IsActive && p.ProductCode.Contains(keyword);
-        //         }
-
-        //         var (products, totalCount) = await _productsRepository
-        //             .GetPagedIncludeAsync(
-        //                 pageNumber,
-        //                 pageSize,
-        //                 predicate,
-        //                 cancellationToken,
-        //                 p => p.Category,
-        //                 p => p.Manufacturer,
-        //                 p => p.Publisher,
-        //                 p => p.ProductPhotos
-        //             );
-
-        //         var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
-
-        //         var response = new PagedResponseDto<ProductsResponseDto>
-        //         {
-        //             Items = productDtos,
-        //             TotalCount = totalCount,
-        //             PageIndex = pageNumber,
-        //             PageSize = pageSize
-        //         };
-
-        //         return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Ok(
-        //             response,
-        //             "Products retrieved successfully.",
-        //             200
-        //         );
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error while retrieving products with pagination");
-        //         return ApiResponse<PagedResponseDto<ProductsResponseDto>>.Fail(
-        //             "An error occurred while retrieving products.",
-        //             new PagedResponseDto<ProductsResponseDto>(),
-        //             500
-        //         );
-        //     }
-        // }
 
 
         public async Task<ApiResponse<PagedResponseDto<ProductsResponseDto>>> GetProductsPagedAsync(
@@ -156,7 +98,8 @@ namespace ProjectDemoWebApi.Services
                         p => p.Category,
                         p => p.Manufacturer,
                         p => p.Publisher,
-                        p => p.ProductPhotos
+                        p => p.ProductPhotos,
+                        p => p.Category.SubCategories
                     );
 
                 var productDtos = _mapper.Map<List<ProductsResponseDto>>(products);
@@ -237,9 +180,7 @@ namespace ProjectDemoWebApi.Services
                     _logger.LogWarning(ex, "Unique constraint violated when saving product with code {ProductCode}", createProductDto.ProductCode);
                     return ApiResponse<ProductsResponseDto>.Fail("Product code already exists.", null, 409);
                 }
-                var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                _logger.LogInformation("CreatedByUserId resolved: {UserId}", createdByUserId);
-
+                var createdByUserId = _httpContectAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(createdByUserId))
                 {
                     return ApiResponse<ProductsResponseDto>.Fail("Unable to determine current user for stock movement.", null, 500);

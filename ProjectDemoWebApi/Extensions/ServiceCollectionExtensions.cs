@@ -56,7 +56,11 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICustomerAddressService, CustomerAddressService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICouponService, CouponService>();
+            services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<IPublishersService, PublishersService>();
+            services.AddScoped<IBlogCommentService, BlogCommentService>();
+            services.AddScoped<IAuthorFollowService, AuthorFollowService>();
+
 
             // Payment Services - Register HttpClient for SePayService
             services.AddHttpClient<ISePayService, SePayService>((serviceProvider, client) =>

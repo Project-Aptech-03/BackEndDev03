@@ -40,23 +40,29 @@ namespace ProjectDemoWebApi.Mappings
                 .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count));
             CreateMap<CreateCategoryDto, Categories>()
                 .ForMember(dest => dest.SubCategories, opt => opt.Ignore());
+            CreateMap<SubCategories, SubCategoryResponseDto>();
+
+            CreateMap<Categories, CategoryResponseDto>()
+                .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories));
 
             // SubCategory mappings
-            // Create
             CreateMap<SubCategories, SubCategoryResponseDto>();
             CreateMap<Categories, CategoryResponseDto>()
             .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count))
-            .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories)); 
+            .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src => src.SubCategories));
 
             CreateMap<CreateCategoryDto, Categories>()
              .ForMember(dest => dest.SubCategories, opt => opt.MapFrom(src =>
-                 src.SubCategoryNames.Select(name => new SubCategories
-                 {
-                     SubCategoryName = name,
-                     IsActive = true,
-                     CreatedDate = DateTime.UtcNow
-                 }).ToList()
+                 src.SubCategories != null
+                     ? src.SubCategories.Select(sub => new SubCategories
+                     {
+                         SubCategoryName = sub.SubCategoryName.Trim(),
+                         IsActive = true,
+                         CreatedDate = DateTime.UtcNow
+                     }).ToList()
+                     : new List<SubCategories>()
              ));
+
             CreateMap<UpdateCategoryDto, Categories>()
              .ForMember(dest => dest.SubCategories, opt => opt.Ignore()); 
 
@@ -82,6 +88,8 @@ namespace ProjectDemoWebApi.Mappings
             .ForMember(dest => dest.Photos, opt => opt.MapFrom(src => src.ProductPhotos));
 
             CreateMap<ProductPhotos, ProductPhotoResponseDto>();
+
+
 
             // Shopping Cart mappings
             CreateMap<AddToCartDto, ShoppingCart>();
