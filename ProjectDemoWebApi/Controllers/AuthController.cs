@@ -27,7 +27,7 @@ namespace ProjectDemoWebApi.Controllers
             _authService = userService;
             _jwtTokenService = jwtTokenService;
         }
-
+        [AllowAnonymous]
         [HttpPost("register/send-otp")]
         public async Task<IActionResult> SendOtp([FromBody] RegisterRequest request)
         {
@@ -44,7 +44,7 @@ namespace ProjectDemoWebApi.Controllers
             }
         }
 
-
+        [AllowAnonymous]
         [HttpPost("register/verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyRegisterRequest request)
         {
@@ -61,6 +61,7 @@ namespace ProjectDemoWebApi.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -83,8 +84,8 @@ namespace ProjectDemoWebApi.Controllers
 
             return Ok(ApiResponse<LoginResultDto>.Ok(result, "Đăng nhập thành công!"));
         }
-        
 
+        [AllowAnonymous]
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
@@ -125,7 +126,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
 
-
+        [AllowAnonymous]
         [HttpPost("resend-otp")]
         public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request)
         {
@@ -165,7 +166,7 @@ namespace ProjectDemoWebApi.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("reset-password")]
-        [AllowAnonymous]
+        
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
         {
             var result = await _authService.ResetPasswordAsync(dto);

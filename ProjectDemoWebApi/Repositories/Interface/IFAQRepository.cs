@@ -1,12 +1,14 @@
-using ProjectDemoWebApi.Models;
+﻿using ProjectDemoWebApi.Models;
 
 namespace ProjectDemoWebApi.Repositories.Interface
 {
-    public interface IFAQRepository : IBaseRepository<FAQ>
+    public interface IFaqRepository
     {
-        Task<IEnumerable<FAQ>> GetActiveFAQsAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<FAQ>> GetFAQsByOrderAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<FAQ>> SearchFAQsAsync(string searchTerm, CancellationToken cancellationToken = default);
-        Task ReorderFAQsAsync(List<(int Id, int SortOrder)> faqOrders, CancellationToken cancellationToken = default);
+        Task<IEnumerable<FAQ>> GetAllFaqsAsync();
+        Task<IEnumerable<FAQ>> GetActiveFaqsAsync();
+        Task<FAQ> GetFaqByIdAsync(int id);
+        Task<FAQ> CreateFaqAsync(FAQ faq);
+        Task<FAQ> UpdateFaqAsync(FAQ faq);
+        Task<bool> DeleteFaqAsync(int id);
     }
 }

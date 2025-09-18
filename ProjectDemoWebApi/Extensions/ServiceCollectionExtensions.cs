@@ -3,6 +3,7 @@ using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories;
 using ProjectDemoWebApi.Repositories.Interface;
 using ProjectDemoWebApi.Services;
+using ProjectDemoWebApi.Services.Implementations;
 using ProjectDemoWebApi.Services.Interface;
 
 namespace ProjectDemoWebApi.Extensions
@@ -28,7 +29,7 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICouponRepository, CouponRepository>();
             services.AddScoped<ICustomerQueryRepository, CustomerQueryRepository>();
             services.AddScoped<IAdminReplyRepository, AdminReplyRepository>();
-            services.AddScoped<IFAQRepository, FAQRepository>();
+            services.AddScoped<IFaqRepository, FaqRepository>();
             services.AddScoped<ISystemSettingsRepository, SystemSettingsRepository>();
             services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
             services.AddScoped<IBlogRepository, BlogRepository>();
@@ -60,6 +61,7 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IPublishersService, PublishersService>();
             services.AddScoped<IBlogCommentService, BlogCommentService>();
             services.AddScoped<IAuthorFollowService, AuthorFollowService>();
+            services.AddScoped<IFaqService, FaqService>();
 
 
             // Payment Services - Register HttpClient for SePayService

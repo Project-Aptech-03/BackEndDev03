@@ -7,6 +7,7 @@ namespace ProjectDemoWebApi.Models
     public class FAQ
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
@@ -22,8 +23,12 @@ namespace ProjectDemoWebApi.Models
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
+
+        public int DisplayOrder { get; set; }
 
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
+    
 }

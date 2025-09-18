@@ -62,12 +62,10 @@ builder.Services.AddAutoMapper(config =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Identity configuration
 builder.Services.AddIdentity<Users, Roles>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Register all repositories and services using extension method
 builder.Services.AddApplicationServices();
 
 // Jwt
@@ -89,7 +87,6 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 
-    // Custom error handling
     options.Events = new JwtBearerEvents
     {
         OnChallenge = context =>
@@ -112,21 +109,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Controller configuration with global authorization
-builder.Services.AddControllers(config =>
-{
-    var policy = new AuthorizationPolicyBuilder()
-                     .RequireAuthenticatedUser()
-                     .Build();
-    config.Filters.Add(new AuthorizeFilter(policy));
-});
+builder.Services.AddControllers();
 
-// OpenAPI configuration
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Seed roles
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleSeederService>();

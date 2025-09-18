@@ -4,6 +4,7 @@ using ProjectDemoWebApi.DTOs.Blog;
 using ProjectDemoWebApi.DTOs.Category;
 using ProjectDemoWebApi.DTOs.Coupon;
 using ProjectDemoWebApi.DTOs.CustomerAddress;
+using ProjectDemoWebApi.DTOs.Faq.ProjectDemoWebApi.DTOs;
 using ProjectDemoWebApi.DTOs.Manufacturer;
 using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.DTOs.Products;
@@ -114,9 +115,9 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<Coupons, CouponResponseDto>();
 
             //=============faq===============
-            //CreateMap<Faq, FaqDto>();
-            //CreateMap<CreateFaqDto, Faq>();
-            //CreateMap<UpdateFaqDto, Faq>();
+            CreateMap<FAQ, FaqDto>();
+            CreateMap<CreateFaqDto, FAQ>();
+            CreateMap<UpdateFaqDto, FAQ>();
 
             CreateMap<CreateBlogDto, Blogs>();
             CreateMap<UpdateBlogDto, Blogs>();
