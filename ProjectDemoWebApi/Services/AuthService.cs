@@ -31,12 +31,11 @@ public class AuthService : IAuthService
         _userManager = userManager;
         _configuration = configuration;
     }
-
     public async Task<OtpResultDto> SendRegisterOtpAsync(RegisterRequest request)
     {
         var existingUser = await _authRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
-            throw new Exception("Email đã được sử dụng.");
+            throw new Exception("Email is already in use.");
 
         var key = $"register:{request.Email}";
         var attemptKey = $"otp_attempt:{request.Email}";
@@ -44,19 +43,19 @@ public class AuthService : IAuthService
         var attemptsRaw = await _cache.GetStringAsync(attemptKey);
         var attempts = string.IsNullOrEmpty(attemptsRaw) ? 0 : int.Parse(attemptsRaw);
         if (attempts >= 5)
-            throw new Exception("Bạn đã gửi quá nhiều OTP. Vui lòng thử lại sau 10 phút.");
+            throw new Exception("You have requested too many OTPs. Please try again after 10 minutes.");
 
         var otp = new Random().Next(100000, 999999).ToString();
 
         var pendingUserId = Guid.NewGuid().ToString();
-        var expiresIn = 300; 
+        var expiresIn = 300;
 
         var pendingUser = new PendingUser
         {
             Request = request,
             Otp = otp,
             ExpireAt = DateTime.UtcNow.AddSeconds(expiresIn),
-            Id = pendingUserId 
+            Id = pendingUserId
         };
 
         var json = JsonSerializer.Serialize(pendingUser);
@@ -71,42 +70,42 @@ public class AuthService : IAuthService
         });
 
         string body = $@"
-        <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
-            <div style='text-align:center; margin-bottom:24px;'>
-                <h2 style='color:#0d6efd; font-size:24px;'>Xác minh địa chỉ Email</h2>
+    <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
+        <div style='text-align:center; margin-bottom:24px;'>
+            <h2 style='color:#0d6efd; font-size:24px;'>Verify Email Address</h2>
+        </div>
+
+        <p style='font-size:16px; color:#333;'>Hello,</p>
+
+        <p style='font-size:16px; color:#333;'>
+            We have received a registration request using this email address.<br/>
+            Please use the OTP below to verify:
+        </p>
+
+        <div style='margin:24px auto; text-align:center;'>
+            <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
+                {otp}
             </div>
-    
-            <p style='font-size:16px; color:#333;'>Xin chào,</p>
+        </div>
 
-            <p style='font-size:16px; color:#333;'>
-                Chúng tôi đã nhận được yêu cầu đăng ký tài khoản với địa chỉ email này.<br/>
-                Vui lòng sử dụng mã OTP bên dưới để xác minh:
-            </p>
+        <p style='font-size:15px; color:#555;'>
+            This verification code will expire in <strong>5 minutes</strong>. If you did not request this, you can ignore this email.
+        </p>
 
-            <div style='margin:24px auto; text-align:center;'>
-                <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
-                    {otp}
-                </div>
-            </div>
+        <p style='font-size:15px; color:#555; margin-top:32px;'>
+            Regards,<br/>
+            <strong>Project03 Team</strong>
+        </p>
 
-            <p style='font-size:15px; color:#555;'>
-                Mã xác minh này sẽ hết hạn sau <strong>5 phút</strong>. Nếu bạn không yêu cầu, bạn có thể bỏ qua email này.
-            </p>
+        <hr style='margin-top:32px; border:none; border-top:1px solid #ddd;' />
 
-            <p style='font-size:15px; color:#555; margin-top:32px;'>
-                Trân trọng,<br/>
-                <strong>Đội ngũ Project03</strong>
-            </p>
-
-            <hr style='margin-top:32px; border:none; border-top:1px solid #ddd;' />
-
-            <p style='font-size:12px; color:#999; text-align:center;'>
-                Email này được gửi tự động. Vui lòng không trả lời email này.
-            </p>
-        </div>";
+        <p style='font-size:12px; color:#999; text-align:center;'>
+            This email was sent automatically. Please do not reply to this email.
+        </p>
+    </div>";
 
 
-        await _emailSender.SendEmailAsync(request.Email, "Mã OTP xác minh", body);
+        await _emailSender.SendEmailAsync(request.Email, "OTP Verification Code", body);
 
         return new OtpResultDto
         {
@@ -116,7 +115,6 @@ public class AuthService : IAuthService
         };
     }
 
-    //auth-me
     public async Task<LoginResultDto?> GetCurrentUserAsync(string userId)
     {
         if (string.IsNullOrEmpty(userId))
@@ -126,6 +124,15 @@ public class AuthService : IAuthService
         if (user == null) return null;
 
         var roles = await _userManager.GetRolesAsync(user);
+        var tokenResult = new TokenResultDto
+        {
+            Token = "", 
+            RefreshToken = user.RefreshToken,
+            ExpiresAt = user.RefreshTokenExpiryTime ?? DateTime.UtcNow,
+            ExpiresIn = user.RefreshTokenExpiryTime.HasValue
+                ? (int)(user.RefreshTokenExpiryTime.Value - DateTime.UtcNow).TotalSeconds
+                : 0
+        };
 
         return new LoginResultDto
         {
@@ -134,16 +141,12 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = user.UserName ?? "",
             Role = roles.FirstOrDefault() ?? "",
-            Token = new TokenResultDto
-            {
-                Token = "",      // frontend đã có token
-                RefreshToken = "",
-                ExpiresAt = DateTime.MinValue,
-                ExpiresIn = 0
-            },
-            RefreshToken = ""
+            Token = tokenResult,
+            RefreshToken = user.RefreshToken
         };
     }
+
+
 
     // resend OTP
     public async Task<OtpResultDto> ResendRegisterOtpAsync(string email)
@@ -153,17 +156,15 @@ public class AuthService : IAuthService
 
         var json = await _cache.GetStringAsync(key);
         if (string.IsNullOrEmpty(json))
-            throw new Exception("Không tìm thấy yêu cầu đăng ký hoặc OTP đã hết hạn.");
-
+            throw new Exception("Registration request not found or OTP has expired.");
         var pendingUser = JsonSerializer.Deserialize<PendingUser>(json);
 
         var attemptsRaw = await _cache.GetStringAsync(attemptKey);
         var attempts = string.IsNullOrEmpty(attemptsRaw) ? 0 : int.Parse(attemptsRaw);
         if (attempts >= 5)
-            throw new Exception("Bạn đã gửi lại OTP quá nhiều lần. Vui lòng thử lại sau 10 phút.");
-
+            throw new Exception("You have requested OTP too many times. Please try again after 10 minutes.");
         var otp = new Random().Next(100000, 999999).ToString();
-        var expiresIn = 300; // 5 phút
+        var expiresIn = 300;
 
         pendingUser.Otp = otp;
         pendingUser.ExpireAt = DateTime.UtcNow.AddSeconds(expiresIn);
@@ -178,29 +179,27 @@ public class AuthService : IAuthService
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         });
-
-        // Gửi Email OTP mới
         string body = $@"
-    <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
-        <div style='text-align:center; margin-bottom:24px;'>
-            <h2 style='color:#0d6efd; font-size:24px;'>Xác minh lại Email</h2>
-        </div>
-
-        <p style='font-size:16px; color:#333;'>Xin chào,</p>
-        <p style='font-size:16px; color:#333;'>Mã OTP mới của bạn là:</p>
-
-        <div style='margin:24px auto; text-align:center;'>
-            <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
-                {otp}
+        <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
+            <div style='text-align:center; margin-bottom:24px;'>
+                <h2 style='color:#0d6efd; font-size:24px;'>Xác minh lại Email</h2>
             </div>
-        </div>
 
-        <p style='font-size:15px; color:#555;'>
-            Mã OTP này sẽ hết hạn sau <strong>5 phút</strong>.
-        </p>
-    </div>";
+            <p style='font-size:16px; color:#333;'>Xin chào,</p>
+            <p style='font-size:16px; color:#333;'>Mã OTP mới của bạn là:</p>
 
-        await _emailSender.SendEmailAsync(email, "Mã OTP mới", body);
+            <div style='margin:24px auto; text-align:center;'>
+                <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
+                    {otp}
+                </div>
+            </div>
+
+            <p style='font-size:15px; color:#555;'>
+                Mã OTP này sẽ hết hạn sau <strong>5 phút</strong>.
+            </p>
+        </div>";
+
+        await _emailSender.SendEmailAsync(email, "New OTP code", body);
 
         return new OtpResultDto
         {
@@ -210,21 +209,22 @@ public class AuthService : IAuthService
         };
     }
 
+
     public async Task<RegisterResultDto> VerifyRegisterAsync(VerifyRegisterRequest request)
     {
         var key = $"register:{request.Email}";
         var json = await _cache.GetStringAsync(key);
 
         if (string.IsNullOrEmpty(json))
-            throw new Exception("OTP không tồn tại hoặc đã hết hạn.");
+            throw new Exception("OTP does not exist or has expired.");
 
         var pendingUser = JsonSerializer.Deserialize<PendingUser>(json);
 
         if (pendingUser.Otp != request.OTP)
-            throw new Exception("OTP không chính xác.");
+            throw new Exception("Invalid OTP.");
 
         if (pendingUser.ExpireAt < DateTime.UtcNow)
-            throw new Exception("OTP đã hết hạn.");
+            throw new Exception("OTP has expired.");
 
         var user = _mapper.Map<Users>(pendingUser.Request);
         user.UserName = user.Email;
@@ -233,64 +233,62 @@ public class AuthService : IAuthService
         var result = await _userManager.CreateAsync(user, pendingUser.Request.Password);
 
         if (!result.Succeeded)
-            throw new Exception("Tạo tài khoản thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+            throw new Exception("Account creation failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
 
         await _userManager.AddToRoleAsync(user, "Admin");
         await _cache.RemoveAsync(key);
         await _cache.RemoveAsync($"otp_attempt:{request.Email}");
 
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
+        var refreshToken = await _ijwtTokenService.GenerateRefreshTokenAsync(user);
+        token.RefreshToken = refreshToken;
         var userRoles = await _userManager.GetRolesAsync(user);
         if (result.Succeeded)
         {
-            var subject = "📚 Chào mừng bạn đến với Nhà Sách Project03!";
+            var subject = "📚 Welcome to Shradha Bookstore!";
 
             var body = $@"
-        <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
-            <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
-                
-                <h1 style='color:#2c3e50; text-align:center;'>✨ Chào mừng bạn, {user.FirstName} {user.LastName}! ✨</h1>
-                
-                <p style='font-size:16px; color:#444;'>
-                    Cảm ơn bạn đã đăng ký tài khoản tại <b>Nhà Sách Project03</b>. 
-                    Chúng tôi rất vui khi được đồng hành cùng bạn trên hành trình khám phá tri thức và niềm vui đọc sách.
-                </p>
+            <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
+                <div style='max-width:600px; margin:0 auto; background:#ffffff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); padding:30px;'>
+                    <h1 style='color:#2c3e50; text-align:center;'>✨ Welcome, {user.FirstName} {user.LastName}! ✨</h1>
+                    <p style='font-size:16px; color:#444;'>
+                        Thank you for registering an account at <b>Shradha Bookstore</b>. 
+                        We are delighted to accompany you on your journey of exploring knowledge and the joy of reading.
+                    </p>
+                    <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; border-radius:6px; margin:20px 0;'>
+                        <p style='margin:5px 0; font-size:15px;'><b>Login Email:</b> {user.Email}</p>
+                        <p style='margin:5px 0; font-size:15px;'><b>Password:</b> {pendingUser.Request.Password}</p>
+                    </div>
+                    <p style='font-size:15px; color:#555;'>
+                        Log in now to begin your journey with wonderful books for you and your little ones! 📖👶
+                    </p>
 
-                <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; border-radius:6px; margin:20px 0;'>
-                    <p style='margin:5px 0; font-size:15px;'><b>Email đăng nhập:</b> {user.Email}</p>
-                    <p style='margin:5px 0; font-size:15px;'><b>Mật khẩu:</b> {pendingUser.Request.Password}</p>
+                    <div style='text-align:center; margin:30px 0;'>
+                        <a href='http://localhost:3000/login' 
+                           style='background:#4CAF50; color:#fff; text-decoration:none; padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
+                            Log In Now
+                        </a>
+                    </div>
+
+                    <hr style='margin:30px 0; border:none; border-top:1px solid #eee;'/>
+        
+                    <p style='font-size:13px; color:#888; text-align:center;'>
+                        This is an automated email, please do not reply.<br/>
+                        © {DateTime.Now.Year} Shradha Bookstore. All rights reserved.
+                    </p>
                 </div>
-
-                <p style='font-size:15px; color:#555;'>
-                    Hãy đăng nhập để bắt đầu hành trình cùng những cuốn sách hay dành cho bạn và bé! 📖👶
-                </p>
-
-                <div style='text-align:center; margin:30px 0;'>
-                    <a href='http://localhost:3000/login' 
-                       style='background:#4CAF50; color:#fff; text-decoration:none; padding:12px 25px; border-radius:6px; font-size:16px; display:inline-block;'>
-                        Đăng nhập ngay
-                    </a>
-                </div>
-
-                <hr style='margin:30px 0; border:none; border-top:1px solid #eee;'/>
-                
-                <p style='font-size:13px; color:#888; text-align:center;'>
-                    Đây là email tự động, vui lòng không trả lời lại.<br/>
-                    © {DateTime.Now.Year} Nhà Sách Project03. Tất cả các quyền được bảo lưu.
-                </p>
-            </div>
-        </div>";
+            </div>";
 
             await _emailSender.SendEmailAsync(user.Email, subject, body);
         }
-
-
         return new RegisterResultDto
         {
             UserId = user.Id,
             Email = user.Email!,
             Role = userRoles.FirstOrDefault(),
-            Token = token
+            Token = token,
+            RefreshToken = refreshToken
+
         };
     }
 
@@ -304,7 +302,7 @@ public class AuthService : IAuthService
             return new LoginResultDto
             {
                 Success = false,
-                ErrorMessage = "Email chưa được đăng ký."
+                ErrorMessage = "Email is not registered."
             };
         }
 
@@ -314,13 +312,15 @@ public class AuthService : IAuthService
             return new LoginResultDto
             {
                 Success = false,
-                ErrorMessage = "Mật khẩu không đúng."
+                ErrorMessage = "Incorrect password."
             };
         }
 
         var roles = await _userManager.GetRolesAsync(user); 
         var role = roles.FirstOrDefault() ?? "User";
         var token = await _ijwtTokenService.GenerateTokenAsync(user);
+        var refreshToken = await _ijwtTokenService.GenerateRefreshTokenAsync(user); 
+        token.RefreshToken = refreshToken;
 
         return new LoginResultDto
         {
@@ -329,7 +329,8 @@ public class AuthService : IAuthService
             Role = role,
             UserId = user.Id,
             Email = user.Email,
-            FullName = user.FirstName + " " + user.LastName
+            FullName = user.FirstName + " " + user.LastName,
+            RefreshToken = refreshToken
 
         };
 
@@ -338,7 +339,7 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
-        var responseMessage = "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.";
+        var responseMessage = "If the email exists, we have sent password reset instructions.";
 
         if (user == null)
         {
@@ -351,25 +352,25 @@ public class AuthService : IAuthService
 
         var resetLink = $"{frontendUrl}/reset-password?email={WebUtility.UrlEncode(user.Email)}&token={encodedToken}";
 
-        var subject = "Yêu cầu đặt lại mật khẩu";
+        var subject = "Password Reset Request";
         var body = $@"
-    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
-        <h2 style='color: #1a73e8;'>Xin chào {user.UserName},</h2>
-        <p>Bạn vừa gửi yêu cầu <strong>đặt lại mật khẩu</strong> cho tài khoản của mình.</p>
-        <p>Vui lòng nhấn vào nút bên dưới để tiếp tục:</p>
+            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; background-color: #fafafa;'>
+                <h2 style='color: #1a73e8;'>Hello {user.UserName},</h2>
+                <p>You have submitted a <strong>password reset</strong> request for your account.</p>
+                <p>Please click the button below to continue:</p>
 
-        <div style='text-align: center; margin: 32px 0;'>
-            <a href='{resetLink}' 
-               style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
-                Đặt lại mật khẩu
-            </a>
-        </div>
+                <div style='text-align: center; margin: 32px 0;'>
+                    <a href='{resetLink}' 
+                       style='display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: #fff; background-color: #1a73e8; border-radius: 6px; text-decoration: none;'>
+                        Reset Password
+                    </a>
+                </div>
 
-        <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn sẽ vẫn an toàn.</p>
-        <br/>
-        <p style='color: #555;'>Trân trọng,<br/><strong>Đội ngũ hỗ trợ</strong></p>
-    </div>
-    ";
+                <p>If you did not make this request, please ignore this email. Your account will remain secure.</p>
+                <br/>
+                <p style='color: #555;'>Best regards,<br/><strong>Support Team</strong></p>
+            </div>
+            ";
 
         await _emailSender.SendEmailAsync(dto.Email, subject, body);
         return ApiResponse<string>.Ok(responseMessage);
@@ -380,19 +381,20 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
-            return ApiResponse<string>.Fail("Email không tồn tại");
+            return ApiResponse<string>.Fail("Email does not exist");
 
         if (dto.NewPassword != dto.ConfirmPassword)
-            return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp");
+            return ApiResponse<string>.Fail("Password confirmation does not match");
         var token = dto.Token;
 
         var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
 
         if (!result.Succeeded)
-            return ApiResponse<string>.Fail("Đặt lại mật khẩu thất bại", result.Errors.Select(e => e.Description).ToList());
+            return ApiResponse<string>.Fail("Password reset failed", result.Errors.Select(e => e.Description).ToList());
 
-        return ApiResponse<string>.Ok(null, "Đặt lại mật khẩu thành công");
+        return ApiResponse<string>.Ok(null, "Password reset successful");
     }
+
 
 
 }

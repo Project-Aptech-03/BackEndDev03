@@ -34,12 +34,12 @@ namespace ProjectDemoWebApi.Controllers
             try
             {
                 var result = await _authService.SendRegisterOtpAsync(request);
-                var response = ApiResponse<OtpResultDto>.Ok(result, "Gửi OTP thành công", 200);
+                var response = ApiResponse<OtpResultDto>.Ok(result, "OTP sent successfully", 200);
                 return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)
             {
-                var response = ApiResponse<object>.Fail("Gửi OTP thất bại", new { error = ex.Message }, 400);
+                var response = ApiResponse<object>.Fail("Failed to send OTP", new { error = ex.Message }, 400);
                 return StatusCode(response.StatusCode, response);
             }
         }
@@ -51,12 +51,12 @@ namespace ProjectDemoWebApi.Controllers
             try
             {
                 var result = await _authService.VerifyRegisterAsync(request);
-                var response = ApiResponse<RegisterResultDto>.Ok(result, "Đăng ký thành công", 200);
+                var response = ApiResponse<RegisterResultDto>.Ok(result, "Registration successful", 200);
                 return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)
             {
-                var response = ApiResponse<object>.Fail("Xác minh OTP thất bại", new { error = ex.Message }, 400);
+                var response = ApiResponse<object>.Fail("OTP verification failed", new { error = ex.Message }, 400);
                 return StatusCode(response.StatusCode, response);
             }
         }
@@ -66,7 +66,7 @@ namespace ProjectDemoWebApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<string>.Fail("Yêu cầu không hợp lệ."));
+                return BadRequest(ApiResponse<string>.Fail("Invalid request."));
 
             var result = await _authService.LoginAsync(request);
 
@@ -82,7 +82,7 @@ namespace ProjectDemoWebApi.Controllers
             result.RefreshToken = tokenResult.RefreshToken;
 
 
-            return Ok(ApiResponse<LoginResultDto>.Ok(result, "Đăng nhập thành công!"));
+            return Ok(ApiResponse<LoginResultDto>.Ok(result, "Login successful !"));
         }
 
         [AllowAnonymous]
@@ -90,7 +90,7 @@ namespace ProjectDemoWebApi.Controllers
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
             if (string.IsNullOrEmpty(request.Token))
-                return BadRequest(ApiResponse<string>.Fail("Refresh token không hợp lệ."));
+                return BadRequest(ApiResponse<string>.Fail("Invalid refresh token."));
 
             try
             {
@@ -100,13 +100,13 @@ namespace ProjectDemoWebApi.Controllers
                 {
                     AccessToken = tokenResult.Token,  
                     RefreshToken = tokenResult.RefreshToken
-                }, "Lấy token mới thành công"));
+                }, "New token generated successfully"));
 
 
             }
             catch (Exception ex)
             {
-                return Unauthorized(ApiResponse<string>.Fail($"Refresh token thất bại: {ex.Message}"));
+                return Unauthorized(ApiResponse<string>.Fail($"Refresh token failed: {ex.Message}"));
             }
         }
 
@@ -122,7 +122,7 @@ namespace ProjectDemoWebApi.Controllers
             if (userDto == null)
                 return NotFound(ApiResponse<string>.Fail("User not found"));
 
-            return Ok(ApiResponse<LoginResultDto>.Ok(userDto, "Lấy thông tin user thành công"));
+            return Ok(ApiResponse<LoginResultDto>.Ok(userDto, "User information retrieved successfully"));
         }
 
 
@@ -136,7 +136,7 @@ namespace ProjectDemoWebApi.Controllers
                 return Ok(new ApiResponse<OtpResultDto>
                 {
                     Success = true,
-                    Message = "Đã gửi lại OTP thành công.",
+                    Message = "OTP resent successfully.",
                     Data = result
                 });
             }

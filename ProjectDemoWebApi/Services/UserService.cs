@@ -188,7 +188,7 @@ namespace ProjectDemoWebApi.Services
 
             var account = await _userManager.FindByIdAsync(id);
             if (account == null)
-                return IdentityResult.Failed(new IdentityError { Description = "Tài khoản không tồn tại" });
+                return IdentityResult.Failed(new IdentityError { Description = "Account does not exist" });
 
             _mapper.Map(userDto, account);
 
@@ -205,12 +205,12 @@ namespace ProjectDemoWebApi.Services
 
                 if (currentUserId == id)
                 {
-                    return IdentityResult.Failed(new IdentityError { Description = "Bạn không thể thay đổi vai trò của chính mình." });
+                    return IdentityResult.Failed(new IdentityError { Description = "You cannot change your own role" });
                 }
 
                 var roleExists = await _roleManager.RoleExistsAsync(userDto.Role);
                 if (!roleExists)
-                    return IdentityResult.Failed(new IdentityError { Description = "Vai trò không tồn tại" });
+                    return IdentityResult.Failed(new IdentityError { Description = "Role does not exist" });
 
                 var isCurrentlyAdmin = await _userManager.IsInRoleAsync(account, "Admin");
                 if (isCurrentlyAdmin && userDto.Role != "User")
@@ -218,7 +218,7 @@ namespace ProjectDemoWebApi.Services
                     var adminCount = (await _userManager.GetUsersInRoleAsync("Admin")).Count;
                     if (adminCount <= 1)
                     {
-                        return IdentityResult.Failed(new IdentityError { Description = "Không thể thay đổi vai trò vì hệ thống cần ít nhất một Admin." });
+                        return IdentityResult.Failed(new IdentityError { Description = "Cannot change role because the system requires at least one Admin" });
                     }
                 }
 
@@ -233,11 +233,12 @@ namespace ProjectDemoWebApi.Services
         }
 
 
+
         public async Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
         {
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user == null)
-                return IdentityResult.Failed(new IdentityError { Description = "Người dùng không tồn tại" });
+                return IdentityResult.Failed(new IdentityError { Description = "Account does not exist" });
 
             return await _userRepository.DeleteUserAsync(userId, cancellationToken);
         }
@@ -303,7 +304,7 @@ namespace ProjectDemoWebApi.Services
 
             var account = await _userManager.FindByIdAsync(id);
             if (account == null)
-                return IdentityResult.Failed(new IdentityError { Description = "Tài khoản không tồn tại" });
+                return IdentityResult.Failed(new IdentityError { Description = "Account does not exist" });
 
             _mapper.Map(userDto, account);
 
