@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using ProjectDemoWebApi.DTOs.Blog;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
@@ -13,17 +14,20 @@ namespace ProjectDemoWebApi.Services
         private readonly IBlogLikeRepository _blogLikeRepository;
         private readonly IBlogCommentRepository _blogCommentRepository;
         private readonly IMapper _mapper;
+        private readonly UserManager<Users> _userManager;
 
         public BlogService(
             IBlogRepository blogRepository,
             IBlogLikeRepository blogLikeRepository,
             IBlogCommentRepository blogCommentRepository,
-            IMapper mapper)
+            IMapper mapper,
+            UserManager<Users> userManager)
         {
             _blogRepository = blogRepository;
             _blogLikeRepository = blogLikeRepository;
             _blogCommentRepository = blogCommentRepository;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
         public async Task<BlogResponseDto?> GetByIdAsync(int id, string? currentUserId = null)
@@ -66,7 +70,7 @@ namespace ProjectDemoWebApi.Services
                 var dto = _mapper.Map<BlogListResponseDto>(blog);
                 dto.AuthorName = $"{blog.Author.FirstName} {blog.Author.LastName}";
                 dto.AuthorAvatar = blog.Author.AvatarUrl;
-                dto.CategoryName = blog.Category?.CategoryName; 
+                dto.CategoryName = blog.Category?.CategoryName;
                 dto.IsLikedByCurrentUser = !string.IsNullOrEmpty(currentUserId) &&
                     await _blogLikeRepository.ExistsAsync(blog.Id, currentUserId);
                 dtos.Add(dto);
@@ -187,8 +191,10 @@ namespace ProjectDemoWebApi.Services
             if (blog == null)
                 throw new ArgumentException("Blog not found");
 
-            if (blog.AuthorId != currentUserId)
-                throw new UnauthorizedAccessException("You can only update your own blogs");
+            // Check if user is admin or blog owner
+            var isAdmin = await IsUserAdminAsync(currentUserId);
+            if (!isAdmin && blog.AuthorId != currentUserId)
+                throw new UnauthorizedAccessException("You can only update your own blogs or be an admin");
 
             _mapper.Map(dto, blog);
             blog.UpdatedDate = DateTime.UtcNow;
@@ -209,8 +215,10 @@ namespace ProjectDemoWebApi.Services
             var blog = await _blogRepository.GetByIdAsync(id);
             if (blog == null) return false;
 
-            if (blog.AuthorId != currentUserId)
-                throw new UnauthorizedAccessException("You can only delete your own blogs");
+            // Check if user is admin or blog owner
+            var isAdmin = await IsUserAdminAsync(currentUserId);
+            if (!isAdmin && blog.AuthorId != currentUserId)
+                throw new UnauthorizedAccessException("You can only delete your own blogs or be an admin");
 
             return await _blogRepository.DeleteAsync(id);
         }
@@ -300,6 +308,14 @@ namespace ProjectDemoWebApi.Services
             }
 
             return slug;
+        }
+
+        private async Task<bool> IsUserAdminAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return false;
+
+            return await _userManager.IsInRoleAsync(user, "Admin");
         }
     }
 }
