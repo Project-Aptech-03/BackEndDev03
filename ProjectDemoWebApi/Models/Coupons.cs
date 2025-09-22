@@ -30,18 +30,14 @@ namespace ProjectDemoWebApi.Models
 
         [Column("min_order_amount", TypeName = "decimal(10,2)")]
         public decimal MinOrderAmount { get; set; } = 0;
-
         [Column("max_discount_amount", TypeName = "decimal(8,2)")]
         public decimal MaxDiscountAmount { get; set; } = 0;
-
         [Required]
         [Column("quantity")]
         public int Quantity { get; set; } = 1;
-
         [Required]
         [Column("start_date")]
         public DateTime StartDate { get; set; }
-
         [Required]
         [Column("end_date")]
         public DateTime EndDate { get; set; }

@@ -25,6 +25,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetCart()
         {
             var userId = GetUserId();

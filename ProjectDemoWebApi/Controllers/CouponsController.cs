@@ -16,11 +16,9 @@ namespace ProjectDemoWebApi.Controllers
             _couponService = couponService;
         }
 
-        /// <summary>
-        /// Get a list of all coupons (Admin only)
-        /// </summary>
+
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetAllCoupons()
         {
             var result = await _couponService.GetAllCouponsAsync();

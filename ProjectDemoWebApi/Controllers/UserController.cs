@@ -60,9 +60,6 @@ namespace ProjectDemoWebApi.Controllers
                 ApiResponse<UsersResponseDto>.Ok(userDto, "User created successfully", 201));
         }
 
-
-
-
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
@@ -109,7 +106,7 @@ namespace ProjectDemoWebApi.Controllers
 
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -120,14 +117,14 @@ namespace ProjectDemoWebApi.Controllers
             if (!result.Succeeded)
             {
                 return BadRequest(ApiResponse<UsersResponseDto>.Fail(
-                    "Cập nhật thất bại",
+                    "Update failed",
                     result.Errors.Select(e => e.Description).ToList()
                 ));
             }
 
             var updatedUserResponse = await _userService.GetUserByIdAsync(id, cancellationToken);
             if (updatedUserResponse == null)
-                return NotFound(ApiResponse<UsersResponseDto>.Fail("Không tìm thấy user sau khi cập nhật"));
+                return NotFound(ApiResponse<UsersResponseDto>.Fail("User not found after update"));
 
             return Ok(updatedUserResponse);
         }
@@ -142,7 +139,7 @@ namespace ProjectDemoWebApi.Controllers
             if (!result.Succeeded)
             {
                 return BadRequest(ApiResponse<string>.Fail(
-                    message: "Xóa người dùng không thành công",
+                    message: "Failed to delete user",
                     statusCode: 400,
                     errors: result.Errors.Select(e => e.Description).ToList()
                 ));
@@ -150,7 +147,7 @@ namespace ProjectDemoWebApi.Controllers
 
             return Ok(ApiResponse<string>.Ok(
                 data: null,
-                message: "Xóa người dùng thành công",
+                message: "User deleted successfully",
                 statusCode: 200
             ));
         }
@@ -163,36 +160,37 @@ namespace ProjectDemoWebApi.Controllers
 
             var result = await _userService.GetProfile(id);
             if (result.Data == null)
-                return NotFound(ApiResponse<ProfileResponseDto>.Fail("Người dùng không tồn tại"));
+                return NotFound(ApiResponse<ProfileResponseDto>.Fail("User does not exist"));
             return Ok(result);
         }
 
 
-            [HttpPut("profile")]
-            public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateDto dto, CancellationToken cancellationToken)
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
 
-                var userId = GetUserId();
-                var updateResult = await _userService.UpdateProfileAsync(userId, dto, cancellationToken);
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateDto dto, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                if (!updateResult.Succeeded)
-                    return BadRequest(ApiResponse<ProfileResponseDto>.Fail(
-                        "Cập nhật thất bại",
-                        updateResult.Errors.Select(e => e.Description).ToList()
-                    ));
+            var userId = GetUserId();
+            var updateResult = await _userService.UpdateProfileAsync(userId, dto, cancellationToken);
 
-                var updatedUserResponse = await _userService.GetProfile(userId, cancellationToken);
-
-                if (updatedUserResponse.Data == null)
-                    return NotFound(ApiResponse<ProfileResponseDto>.Fail("Người dùng không tồn tại sau khi cập nhật"));
-
-                return Ok(ApiResponse<ProfileResponseDto>.Ok(
-                    _mapper.Map<ProfileResponseDto>(updatedUserResponse.Data),
-                    "Cập nhật thành công"
+            if (!updateResult.Succeeded)
+                return BadRequest(ApiResponse<ProfileResponseDto>.Fail(
+                    "Update failed",
+                    updateResult.Errors.Select(e => e.Description).ToList()
                 ));
-            }
+
+            var updatedUserResponse = await _userService.GetProfile(userId, cancellationToken);
+
+            if (updatedUserResponse.Data == null)
+                return NotFound(ApiResponse<ProfileResponseDto>.Fail("User does not exist after update"));
+
+            return Ok(ApiResponse<ProfileResponseDto>.Ok(
+                _mapper.Map<ProfileResponseDto>(updatedUserResponse.Data),
+                "Update successful"
+            ));
+        }
 
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
@@ -201,18 +199,18 @@ namespace ProjectDemoWebApi.Controllers
                 return BadRequest(ModelState);
 
             if (dto.NewPassword != dto.ConfirmPassword)
-                return BadRequest(ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp"));
+                return BadRequest(ApiResponse<string>.Fail("Password confirmation does not match"));
 
             var userId = GetUserId();
             var result = await _userService.ChangePasswordAsync(userId, dto.CurrentPassword, dto.NewPassword);
 
             if (!result.Succeeded)
                 return BadRequest(ApiResponse<string>.Fail(
-                    "Đổi mật khẩu thất bại",
+                    "Password change failed",
                     result.Errors.Select(e => e.Description).ToList()
                 ));
 
-            return Ok(ApiResponse<string>.Ok(null,"Đổi mật khẩu thành công"));
+            return Ok(ApiResponse<string>.Ok(null, "Password changed successfully"));
         }
 
 
