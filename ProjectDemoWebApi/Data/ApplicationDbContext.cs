@@ -284,11 +284,11 @@ namespace ProjectDemoWebApi.Data
 
                 entity.Property(e => e.UpdatedDate)
                     .HasDefaultValueSql("GETUTCDATE()");
-
                 entity.HasOne(d => d.DeliveryAddress)
-                    .WithMany()
-                    .HasForeignKey(d => d.DeliveryAddressId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                   .WithMany()
+                   .HasForeignKey(d => d.DeliveryAddressId)
+                   .OnDelete(DeleteBehavior.SetNull);
+
 
                 // Configure Customer relationship
                 entity.HasOne(o => o.Customer)

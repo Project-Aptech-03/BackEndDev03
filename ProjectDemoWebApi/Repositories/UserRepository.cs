@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.User;
 using ProjectDemoWebApi.Models;
 using ProjectDemoWebApi.Repositories.Interface;
@@ -14,12 +15,15 @@ namespace ProjectDemoWebApi.Repositories
         readonly UserManager<Users> _userManager;
         readonly IConfiguration _config;
         readonly IEmailService _emailService;
-    
-        public UserRepository(UserManager<Users> userManager, IConfiguration config,IEmailService emailService)
+        private readonly ApplicationDbContext _context;
+
+        public UserRepository(UserManager<Users> userManager, IConfiguration config,IEmailService emailService, ApplicationDbContext context)
         {
             _emailService = emailService;
             _userManager = userManager;
             _config = config;
+            _context = context;
+
 
         }
 
@@ -63,7 +67,6 @@ namespace ProjectDemoWebApi.Repositories
             return result;
         }
 
-        //delete user by id
         public async Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -72,23 +75,40 @@ namespace ProjectDemoWebApi.Repositories
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "UserNotFound",
-                    Description = "Người dùng không tồn tại."
+                    Description = "User does not exist."
                 });
             }
-            var role = await _userManager.GetRolesAsync(user);
-            if (role.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Any(r => r.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
             {
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "CannotDeleteAdmin",
-                    Description = "Không thể xóa người dùng với vai trò Admin."
+                    Description = "Cannot delete a user with the Admin role."
                 });
             }
+
+            var hasOrders = await _context.Orders.AnyAsync(o => o.CustomerId == user.Id, cancellationToken);
+            var hasAddresses = await _context.CustomerAddresses.AnyAsync(a => a.UserId == user.Id, cancellationToken);
+
+            if (hasOrders || hasAddresses)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "HasRelatedData",
+                    Description = "Cannot delete the user because related data (orders or addresses) still exist."
+                });
+            }
+
+            // If no related data → allow deletion
             var result = await _userManager.DeleteAsync(user);
             return result;
         }
 
-        
+
+
+
         public async Task<Users?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
         {
             return await _userManager.FindByIdAsync(userId);
