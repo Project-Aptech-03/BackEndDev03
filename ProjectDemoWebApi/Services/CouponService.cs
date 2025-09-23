@@ -45,7 +45,6 @@ namespace ProjectDemoWebApi.Services
         {
             try
             {
-                // Check if coupon code already exists
                 var existingCoupon = await _couponRepository.IsCouponCodeExistsAsync(createCouponDto.CouponCode, null, cancellationToken);
                 if (existingCoupon)
                 {
@@ -55,8 +54,6 @@ namespace ProjectDemoWebApi.Services
                         400
                     );
                 }
-
-                // Validate date range
                 if (createCouponDto.EndDate <= createCouponDto.StartDate)
                 {
                     return ApiResponse<CouponResponseDto>.Fail(
@@ -66,7 +63,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Validate percentage discount
                 if (createCouponDto.DiscountType == "percentage" && createCouponDto.DiscountValue > 100)
                 {
                     return ApiResponse<CouponResponseDto>.Fail(
@@ -115,7 +111,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Validate date range
                 if (updateCouponDto.EndDate <= updateCouponDto.StartDate)
                 {
                     return ApiResponse<CouponResponseDto?>.Fail(
@@ -125,7 +120,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Validate percentage discount
                 if (updateCouponDto.DiscountType == "percentage" && updateCouponDto.DiscountValue > 100)
                 {
                     return ApiResponse<CouponResponseDto?>.Fail(
@@ -261,7 +255,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Check if the coupon has quantity left
                 if (coupon.Quantity == 0)
                 {
                     return ApiResponse<bool>.Fail(
@@ -271,8 +264,7 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Decrease the coupon quantity
-                if (coupon.Quantity > 0) // Do not decrease if it is unlimited (-1)
+                if (coupon.Quantity > 0) 
                 {
                     coupon.Quantity -= 1;
                     _couponRepository.Update(coupon);
@@ -299,7 +291,6 @@ namespace ProjectDemoWebApi.Services
         {
             var currentDate = DateTime.UtcNow;
 
-            // Check if coupon is active
             if (!coupon.IsActive)
             {
                 return new CouponDiscountResultDto
@@ -311,7 +302,6 @@ namespace ProjectDemoWebApi.Services
                 };
             }
 
-            // Check date validity
             if (currentDate < coupon.StartDate)
             {
                 return new CouponDiscountResultDto
@@ -334,7 +324,6 @@ namespace ProjectDemoWebApi.Services
                 };
             }
 
-            // Check quantity
             if (coupon.Quantity == 0)
             {
                 return new CouponDiscountResultDto
@@ -346,7 +335,6 @@ namespace ProjectDemoWebApi.Services
                 };
             }
 
-            // Check minimum order amount
             if (orderAmount < coupon.MinOrderAmount)
             {
                 return new CouponDiscountResultDto
@@ -358,7 +346,6 @@ namespace ProjectDemoWebApi.Services
                 };
             }
 
-            // Calculate discount
             decimal discountAmount;
             if (coupon.DiscountType == "percentage")
             {

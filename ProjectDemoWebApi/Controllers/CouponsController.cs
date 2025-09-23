@@ -29,7 +29,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Create a new coupon (Admin only)
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreateCoupon(CreateCouponDto createCouponDto)
         {
             var result = await _couponService.CreateCouponAsync(createCouponDto);
@@ -40,7 +40,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Update coupon information (Admin only)
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> UpdateCoupon(int id, UpdateCouponDto updateCouponDto)
         {
             var result = await _couponService.UpdateCouponAsync(id, updateCouponDto);
@@ -51,7 +51,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Delete a coupon (Admin only)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteCoupon(int id)
         {
             var result = await _couponService.DeleteCouponAsync(id);

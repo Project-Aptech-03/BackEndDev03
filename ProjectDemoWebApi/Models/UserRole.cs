@@ -4,6 +4,6 @@ namespace ProjectDemoWebApi.Models
 {
     public class UserRole : IdentityUserRole<string>
     {
-        public string? EmployeeId { get; set; }
+        //public string? EmployeeId { get; set; }
     }
 }

@@ -191,15 +191,12 @@ namespace ProjectDemoWebApi.Services
             if (blog == null)
                 throw new ArgumentException("Blog not found");
 
-            // Check if user is admin or blog owner
             var isAdmin = await IsUserAdminAsync(currentUserId);
             if (!isAdmin && blog.AuthorId != currentUserId)
                 throw new UnauthorizedAccessException("You can only update your own blogs or be an admin");
 
             _mapper.Map(dto, blog);
             blog.UpdatedDate = DateTime.UtcNow;
-
-            // Update published date if publishing for the first time
             if (blog.IsPublished && !blog.PublishedDate.HasValue)
             {
                 blog.PublishedDate = DateTime.UtcNow;
@@ -215,7 +212,6 @@ namespace ProjectDemoWebApi.Services
             var blog = await _blogRepository.GetByIdAsync(id);
             if (blog == null) return false;
 
-            // Check if user is admin or blog owner
             var isAdmin = await IsUserAdminAsync(currentUserId);
             if (!isAdmin && blog.AuthorId != currentUserId)
                 throw new UnauthorizedAccessException("You can only delete your own blogs or be an admin");

@@ -43,6 +43,31 @@ namespace ProjectDemoWebApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
+
+        //    //role
+        //    modelBuilder.Entity<Roles>().HasData(
+        //    new Roles
+        //    {
+        //        Id = "1",
+        //        Name = "Admin",
+        //        NormalizedName = "ADMIN"
+        //    },
+        //    new Roles
+        //    {
+        //        Id = "2",
+        //        Name = "User",
+        //        NormalizedName = "USER"
+        //    },
+        //    new Roles
+        //    {
+        //        Id = "3",
+        //        Name = "Employee",
+        //        NormalizedName = "EMPLOYEE"
+        //    }
+        //);
+
+
+
             // Configure UserRole relationships properly
             modelBuilder.Entity<UserRole>(entity =>
             {

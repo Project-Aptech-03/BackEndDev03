@@ -55,7 +55,7 @@ namespace ProjectDemoWebApi.Controllers
 
 
         [HttpPost("create")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductsDto createProductDto)
         {
             var result = await _productsService.CreateProductAsync(createProductDto);
@@ -63,14 +63,14 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductsDto updateProductDto)
         {
             var result = await _productsService.UpdateProductAsync(id, updateProductDto);
             return StatusCode(result.StatusCode, result);
         }
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await _productsService.DeleteProductAsync(id);
@@ -79,7 +79,7 @@ namespace ProjectDemoWebApi.Controllers
 
         [HttpDelete]
         [Route("batch")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteProducts([FromBody] List<int> ids)
         {
             var result = await _productsService.DeleteProductsAsync(ids);
@@ -140,7 +140,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet("low-stock")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetLowStockProducts([FromQuery] int threshold = 10)
         {
             var result = await _productsService.GetLowStockProductsAsync(threshold);

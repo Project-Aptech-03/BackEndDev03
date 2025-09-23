@@ -26,7 +26,6 @@ namespace ProjectDemoWebApi.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
-            // Get basic dashboard data
             var allOrders = await _orderService.GetAllOrdersAsync();
             var lowStockProducts = await _productsService.GetLowStockProductsAsync(5);
 

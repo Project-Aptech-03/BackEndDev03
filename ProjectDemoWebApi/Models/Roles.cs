@@ -4,5 +4,6 @@ namespace ProjectDemoWebApi.Models
 {
     public class Roles : IdentityRole
     {
+
     }
 }

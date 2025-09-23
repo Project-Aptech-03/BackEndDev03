@@ -110,7 +110,7 @@ namespace ProjectDemoWebApi.Controllers
             }
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet("me")]
         public async Task<IActionResult> Me()
         {

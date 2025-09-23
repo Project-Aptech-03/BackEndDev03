@@ -38,7 +38,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Get all orders - Admin only
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetAllOrders()
         {
             var result = await _orderService.GetAllOrdersAsync();
@@ -49,7 +49,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Update order status - Admin only
         /// </summary>
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> UpdateOrderStatus(int id, UpdateOrderDto updateOrderDto)
         {
             var result = await _orderService.UpdateOrderStatusAsync(id, updateOrderDto);

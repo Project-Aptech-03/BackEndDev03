@@ -124,15 +124,10 @@ public class AuthService : IAuthService
         if (user == null) return null;
 
         var roles = await _userManager.GetRolesAsync(user);
-        var tokenResult = new TokenResultDto
-        {
-            Token = "", 
-            RefreshToken = user.RefreshToken,
-            ExpiresAt = user.RefreshTokenExpiryTime ?? DateTime.UtcNow,
-            ExpiresIn = user.RefreshTokenExpiryTime.HasValue
-                ? (int)(user.RefreshTokenExpiryTime.Value - DateTime.UtcNow).TotalSeconds
-                : 0
-        };
+
+        var token = await _ijwtTokenService.GenerateTokenAsync(user);
+        var refreshToken = await _ijwtTokenService.GenerateRefreshTokenAsync(user);
+        token.RefreshToken = refreshToken;
 
         return new LoginResultDto
         {
@@ -141,10 +136,11 @@ public class AuthService : IAuthService
             Email = user.Email,
             FullName = user.UserName ?? "",
             Role = roles.FirstOrDefault() ?? "",
-            Token = tokenResult,
-            RefreshToken = user.RefreshToken
+            Token = token,
+            RefreshToken = refreshToken
         };
     }
+
 
 
 
@@ -180,25 +176,24 @@ public class AuthService : IAuthService
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         });
         string body = $@"
-        <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
-            <div style='text-align:center; margin-bottom:24px;'>
-                <h2 style='color:#0d6efd; font-size:24px;'>Xác minh lại Email</h2>
-            </div>
-
-            <p style='font-size:16px; color:#333;'>Xin chào,</p>
-            <p style='font-size:16px; color:#333;'>Mã OTP mới của bạn là:</p>
-
-            <div style='margin:24px auto; text-align:center;'>
-                <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
-                    {otp}
+            <div style='font-family:Segoe UI, Arial, sans-serif; max-width:600px; margin:auto; padding:24px; background-color:#ffffff; border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05);'>
+                <div style='text-align:center; margin-bottom:24px;'>
+                    <h2 style='color:#0d6efd; font-size:24px;'>Email Verification</h2>
                 </div>
-            </div>
 
-            <p style='font-size:15px; color:#555;'>
-                Mã OTP này sẽ hết hạn sau <strong>5 phút</strong>.
-            </p>
-        </div>";
+                <p style='font-size:16px; color:#333;'>Hello,</p>
+                <p style='font-size:16px; color:#333;'>Your new OTP code is:</p>
 
+                <div style='margin:24px auto; text-align:center;'>
+                    <div style='display:inline-block; background-color:#f0f4f8; color:#212529; padding:20px 32px; font-size:32px; font-weight:bold; letter-spacing:8px; border-radius:8px;'>
+                        {otp}
+                    </div>
+                </div>
+
+                <p style='font-size:15px; color:#555;'>
+                    This OTP will expire in <strong>5 minutes</strong>.
+                </p>
+            </div>";
         await _emailSender.SendEmailAsync(email, "New OTP code", body);
 
         return new OtpResultDto
@@ -235,7 +230,7 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
             throw new Exception("Account creation failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
 
-        await _userManager.AddToRoleAsync(user, "User");
+        await _userManager.AddToRoleAsync(user, "Admin");
         await _cache.RemoveAsync(key);
         await _cache.RemoveAsync($"otp_attempt:{request.Email}");
 
@@ -394,7 +389,4 @@ public class AuthService : IAuthService
 
         return ApiResponse<string>.Ok(null, "Password reset successful");
     }
-
-
-
 }

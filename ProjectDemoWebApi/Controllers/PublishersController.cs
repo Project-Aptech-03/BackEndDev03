@@ -38,7 +38,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreatePublisher([FromBody] CreatePublisherDto dto)
         {
             if (!ModelState.IsValid)
@@ -49,7 +49,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
 
         public async Task<IActionResult> UpdatePublisher(int id, [FromBody] UpdatePublisherDto dto)
         {
@@ -61,7 +61,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
 
         public async Task<IActionResult> DeletePublisher(int id)
         {

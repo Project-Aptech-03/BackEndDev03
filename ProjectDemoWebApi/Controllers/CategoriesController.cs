@@ -56,7 +56,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreateCategory(CreateCategoryDto createCategoryDto)
         {
             var result = await _categoryService.CreateCategoryAsync(createCategoryDto);
@@ -64,7 +64,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto)
         {
             var result = await _categoryService.UpdateCategoryAsync(id, updateCategoryDto);
@@ -72,7 +72,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await _categoryService.DeleteCategoryAsync(id);

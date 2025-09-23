@@ -50,7 +50,7 @@ namespace ProjectDemoWebApi.Controllers
 
         // POST: api/faq
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<ActionResult<FaqDto>> PostFaq(CreateFaqDto createFaqDto)
         {
             var faq = await _faqService.CreateFaqAsync(createFaqDto);
@@ -59,7 +59,7 @@ namespace ProjectDemoWebApi.Controllers
 
         // PUT: api/faq/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         [AllowAnonymous]
         public async Task<IActionResult> PutFaq(int id, UpdateFaqDto updateFaqDto)
         {
@@ -75,7 +75,7 @@ namespace ProjectDemoWebApi.Controllers
 
         // DELETE: api/faq/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         [AllowAnonymous]
         public async Task<IActionResult> DeleteFaq(int id)
         {

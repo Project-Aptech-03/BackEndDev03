@@ -15,7 +15,7 @@ namespace ProjectDemoWebApi.Services
 
         public async Task SeedAsync()
         {
-            string[] roles = { "Admin", "User" };
+            string[] roles = { "Admin", "User", "Employee" };
 
             foreach (var role in roles)
             {

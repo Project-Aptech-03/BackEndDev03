@@ -61,7 +61,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _userService.GetAllUsersAsync(pageIndex, pageSize);
@@ -70,7 +70,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> GetUserById(string id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
         {
             var user = await _userService.GetUserByIdAsync(id, cancellationToken);

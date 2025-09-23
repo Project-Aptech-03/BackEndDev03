@@ -256,9 +256,8 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Map sang entity
                 var manufacturer = _mapper.Map<Manufacturers>(createManufacturerDto);
-                manufacturer.ManufacturerCode = finalCode; // gán code auto-gen
+                manufacturer.ManufacturerCode = finalCode; 
                 manufacturer.CreatedDate = DateTime.UtcNow;
 
                 await _manufacturerRepository.AddAsync(manufacturer, cancellationToken);
@@ -306,7 +305,6 @@ namespace ProjectDemoWebApi.Services
                     );
                 }
 
-                // Update only provided fields
                 if (!string.IsNullOrWhiteSpace(updateManufacturerDto.ManufacturerName))
                     manufacturer.ManufacturerName = updateManufacturerDto.ManufacturerName;
                 

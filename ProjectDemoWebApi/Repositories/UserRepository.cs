@@ -50,22 +50,18 @@ namespace ProjectDemoWebApi.Repositories
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "DuplicateEmail",
-                    Description = "Email đã được sử dụng."
+                    Description = "Email is already in use. "
                 });
             }
+
             if (string.IsNullOrWhiteSpace(user.UserName))
             {
                 user.UserName = user.Email;
             }
-            var result = await _userManager.CreateAsync(user, password);
 
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(user, "User");
-            }
-
-            return result;
+            return await _userManager.CreateAsync(user, password);
         }
+
 
         public async Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
         {

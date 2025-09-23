@@ -58,12 +58,11 @@ public class JwtTokenService : IJwtTokenService
         };
     }
 
-    // Tạo refresh token và lưu vào user
     public async Task<string> GenerateRefreshTokenAsync(Users user)
     {
         var refreshToken = Guid.NewGuid().ToString();
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 ngày
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await _userManager.UpdateAsync(user);
         return refreshToken;
     }
@@ -72,12 +71,9 @@ public class JwtTokenService : IJwtTokenService
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
         if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
-            throw new Exception("Refresh token không hợp lệ hoặc hết hạn.");
-
-        // Tạo access token mới
+            throw new Exception("Invalid or expired refresh token.");
         var tokenResult = await GenerateTokenAsync(user);
 
-        // Tạo refresh token mới
         var newRefreshToken = await GenerateRefreshTokenAsync(user);
         tokenResult.RefreshToken = newRefreshToken;
 

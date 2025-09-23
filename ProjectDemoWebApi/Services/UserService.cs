@@ -37,7 +37,18 @@ namespace ProjectDemoWebApi.Services
             var result = await _userRepository.CreateUserAsync(user, generatedPassword, cancellationToken);
 
             if (result.Succeeded)
-            {
+            {        
+                if (!string.IsNullOrEmpty(dto.Role))
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(user, dto.Role);
+                    if (!roleResult.Succeeded)
+                        return roleResult;
+                }
+                else
+                {
+                    await _userManager.AddToRoleAsync(user, "User");
+                }
+
                 var subject = "📚 Welcome to Project03 Bookstore!";
 
                 var body = $@"

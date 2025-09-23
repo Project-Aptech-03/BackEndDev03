@@ -53,7 +53,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> CreateManufacturer(CreateManufacturerDto createManufacturerDto)
         {
             var result = await _manufacturerService.CreateManufacturerAsync(createManufacturerDto);
@@ -61,7 +61,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> UpdateManufacturer(int id, UpdateManufacturerDto updateManufacturerDto)
         {
             var result = await _manufacturerService.UpdateManufacturerAsync(id, updateManufacturerDto);
@@ -69,7 +69,7 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employee")]
         public async Task<IActionResult> DeleteManufacturer(int id)
         {
             var result = await _manufacturerService.DeleteManufacturerAsync(id);
