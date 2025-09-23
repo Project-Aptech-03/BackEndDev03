@@ -39,6 +39,21 @@ namespace ProjectDemoWebApi.Data
         public DbSet<CommentLikes> CommentLikes { get; set; } = null!;
         public DbSet<AuthorFollows> AuthorFollows { get; set; } = null!;
 
+        //=========================SinhND-Review  ========================//
+
+        public DbSet<ProductReviews> ProductReviews { get; set; } = null!;
+        public DbSet<ReviewImages> ReviewImages { get; set; } = null!;
+        public DbSet<ReviewReplies> ReviewReplies { get; set; } = null!;
+
+
+
+
+
+
+        //====================================================
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -655,6 +670,130 @@ namespace ProjectDemoWebApi.Data
                     .HasForeignKey(d => d.AuthorId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+
+            //=========================SinhND-Review  ========================//
+
+            modelBuilder.Entity<ProductReviews>(entity =>
+            {
+                entity.HasIndex(e => new { e.OrderId, e.ProductId, e.CustomerId })
+                    .IsUnique()
+                    .HasDatabaseName("idx_reviews_order_product_customer");
+
+                entity.HasIndex(e => e.Rating)
+                    .HasDatabaseName("idx_reviews_rating");
+
+                entity.HasIndex(e => e.IsApproved)
+                    .HasDatabaseName("idx_reviews_approved");
+
+                entity.Property(e => e.IsApproved)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.ReviewDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.UpdatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure relationships
+                entity.HasOne(d => d.Order)
+                    .WithMany()
+                    .HasForeignKey(d => d.OrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.Product)
+                    .WithMany()
+                    .HasForeignKey(d => d.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.Customer)
+                    .WithMany()
+                    .HasForeignKey(d => d.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure ReviewImages
+            modelBuilder.Entity<ReviewImages>(entity =>
+            {
+                entity.HasIndex(e => e.ReviewId)
+                    .HasDatabaseName("idx_review_images_review");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(d => d.Review)
+                    .WithMany(p => p.ReviewImages)
+                    .HasForeignKey(d => d.ReviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure ReviewReplies
+            modelBuilder.Entity<ReviewReplies>(entity =>
+            {
+                entity.HasIndex(e => e.ReviewId)
+                    .HasDatabaseName("idx_review_replies_review");
+
+                entity.HasIndex(e => e.ParentReplyId)
+                    .HasDatabaseName("idx_review_replies_parent");
+
+                entity.HasIndex(e => e.UserId)
+                    .HasDatabaseName("idx_review_replies_user");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.ReplyDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // Configure relationships
+                entity.HasOne(d => d.Review)
+                    .WithMany(p => p.ReviewReplies)
+                    .HasForeignKey(d => d.ReviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.ParentReply)
+                    .WithMany(p => p.ChildReplies)
+                    .HasForeignKey(d => d.ParentReplyId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.User)
+                    .WithMany()
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+
+            //====cạp nhật quan hệ giữa các bảng để tránh lỗi khi xóa dữ liệu=====//
+            modelBuilder.Entity<Orders>()
+                .HasMany(o => o.ProductReviews)
+                .WithOne(pr => pr.Order)
+                .HasForeignKey(pr => pr.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+          
+            modelBuilder.Entity<Products>()
+                .HasMany(p => p.ProductReviews)
+                .WithOne(pr => pr.Product)
+                .HasForeignKey(pr => pr.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //============================================================
+
+
+
         }
     }
 }

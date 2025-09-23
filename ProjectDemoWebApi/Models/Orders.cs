@@ -87,5 +87,10 @@ namespace ProjectDemoWebApi.Models
         [ForeignKey("CustomerId")]
         public virtual Users? Customer { get; set; }
 
+
+        //=========SinhND-Cập nhật Orders.cs để thêm navigation property cho reviews=========
+        public virtual ICollection<ProductReviews> ProductReviews { get; set; } = new List<ProductReviews>();
+
+        //=====================
     }
 }

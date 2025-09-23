@@ -9,6 +9,7 @@ using ProjectDemoWebApi.DTOs.Manufacturer;
 using ProjectDemoWebApi.DTOs.Order;
 using ProjectDemoWebApi.DTOs.Products;
 using ProjectDemoWebApi.DTOs.Publisher;
+using ProjectDemoWebApi.DTOs.Review;
 using ProjectDemoWebApi.DTOs.ShoppingCart;
 using ProjectDemoWebApi.DTOs.SubCategory;
 using ProjectDemoWebApi.DTOs.User;
@@ -126,6 +127,15 @@ namespace ProjectDemoWebApi.Mappings
             CreateMap<CreateCommentDto, BlogComments>();
             CreateMap<UpdateCommentDto, BlogComments>();
             CreateMap<BlogComments, CommentResponseDto>();
+
+
+            ////===sinhnd---- Review mappings======================
+            CreateMap<ProductReviews, ReviewResponseDto>();
+            CreateMap<ReviewImages, ReviewImageDto>();
+            CreateMap<ReviewReplies, ReviewReplyDto>();
+
+
+            //==============================================
         }
     }
 }

@@ -108,6 +108,8 @@ namespace ProjectDemoWebApi.Migrations
                     answer = table.Column<string>(type: "text", nullable: false),
                     sort_order = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>

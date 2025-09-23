@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
@@ -67,7 +69,21 @@ builder.Services.AddIdentity<Users, Roles>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddApplicationServices();
+//=================sinhnd=======================
+// Đăng ký CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
+
+//============================================
 // Jwt
 builder.Services.AddAuthentication(options =>
 {
@@ -127,11 +143,66 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseDeveloperExceptionPage();
 }
+//=======================sinhnd=================
+// Configure Static Files
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
+    RequestPath = ""
+});
+app.UseCors(policy => policy
+    .WithOrigins("http://localhost:3000", "https://localhost:3000") // Frontend URL
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials());
+//=====================sinhnd======================
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+//================sinhnd  :Khi khách hàng upload ảnh review, ảnh được lưu trong thư mục wwwroot/uploads/reviews/.Middleware này cho phép trình duyệt/client truy cập và hiển thị những ảnh này qua URL
+app.UseMiddleware<StaticFileMiddleware>();
+
+//===============================================
+// Seed Admin + Roles
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var userManager = services.GetRequiredService<UserManager<Users>>();
+    var roleManager = services.GetRequiredService<RoleManager<Roles>>();
+
+    if (!await roleManager.RoleExistsAsync("Admin"))
+        await roleManager.CreateAsync(new Roles { Name = "Admin" });
+
+    var adminEmail = "sinhndhcmr@gmail.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        var admin = new Users
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "Sinh",
+            LastName = "Nguyen",
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow,
+            AvatarUrl = string.Empty
+        };
+
+        var result = await userManager.CreateAsync(admin, "Sinhnd@89");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
+    }
+
+    var seeder = services.GetService<IRoleSeederService>();
+    if (seeder != null)
+        await seeder.SeedAsync();
+}
 
 app.Run();

@@ -12,7 +12,7 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250917063206_v1")]
+    [Migration("20250919120201_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -718,6 +718,9 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnName("created_date")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -734,6 +737,9 @@ namespace ProjectDemoWebApi.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0)
                         .HasColumnName("sort_order");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

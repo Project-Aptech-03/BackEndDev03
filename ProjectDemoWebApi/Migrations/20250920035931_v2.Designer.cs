@@ -12,8 +12,8 @@ using ProjectDemoWebApi.Data;
 namespace ProjectDemoWebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250918091525_v3")]
-    partial class v3
+    [Migration("20250920035931_v2")]
+    partial class v2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1124,6 +1124,85 @@ namespace ProjectDemoWebApi.Migrations
                     b.ToTable("ProductReturns");
                 });
 
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ProductReviews", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("customer_id");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_approved");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("order_id");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int")
+                        .HasColumnName("rating");
+
+                    b.Property<DateTime>("ReviewDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("review_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsApproved")
+                        .HasDatabaseName("idx_reviews_approved");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("Rating")
+                        .HasDatabaseName("idx_reviews_rating");
+
+                    b.HasIndex("OrderId", "ProductId", "CustomerId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_reviews_order_product_customer");
+
+                    b.ToTable("ProductReviews");
+                });
+
             modelBuilder.Entity("ProjectDemoWebApi.Models.Products", b =>
                 {
                     b.Property<int>("Id")
@@ -1270,6 +1349,107 @@ namespace ProjectDemoWebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Publishers");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ReviewImages", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int")
+                        .HasColumnName("review_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId")
+                        .HasDatabaseName("idx_review_images_review");
+
+                    b.ToTable("ReviewImages");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ReviewReplies", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsAdminReply")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_admin_reply");
+
+                    b.Property<int?>("ParentReplyId")
+                        .HasColumnType("int")
+                        .HasColumnName("parent_reply_id");
+
+                    b.Property<DateTime>("ReplyDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("reply_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int")
+                        .HasColumnName("review_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentReplyId")
+                        .HasDatabaseName("idx_review_replies_parent");
+
+                    b.HasIndex("ReviewId")
+                        .HasDatabaseName("idx_review_replies_review");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("idx_review_replies_user");
+
+                    b.ToTable("ReviewReplies");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Roles", b =>
@@ -1885,6 +2065,33 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ProductReviews", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Orders", "Order")
+                        .WithMany("ProductReviews")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Products", "Product")
+                        .WithMany("ProductReviews")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ProjectDemoWebApi.Models.Products", b =>
                 {
                     b.HasOne("ProjectDemoWebApi.Models.Categories", "Category")
@@ -1909,6 +2116,43 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("Manufacturer");
 
                     b.Navigation("Publisher");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ReviewImages", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.ProductReviews", "Review")
+                        .WithMany("ReviewImages")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ReviewReplies", b =>
+                {
+                    b.HasOne("ProjectDemoWebApi.Models.ReviewReplies", "ParentReply")
+                        .WithMany("ChildReplies")
+                        .HasForeignKey("ParentReplyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ProjectDemoWebApi.Models.ProductReviews", "Review")
+                        .WithMany("ReviewReplies")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjectDemoWebApi.Models.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentReply");
+
+                    b.Navigation("Review");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.ShoppingCart", b =>
@@ -2018,6 +2262,15 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("ProductReturns");
+
+                    b.Navigation("ProductReviews");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ProductReviews", b =>
+                {
+                    b.Navigation("ReviewImages");
+
+                    b.Navigation("ReviewReplies");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Products", b =>
@@ -2025,6 +2278,8 @@ namespace ProjectDemoWebApi.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("ProductPhotos");
+
+                    b.Navigation("ProductReviews");
 
                     b.Navigation("ShoppingCartItems");
 
@@ -2034,6 +2289,11 @@ namespace ProjectDemoWebApi.Migrations
             modelBuilder.Entity("ProjectDemoWebApi.Models.Publishers", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("ProjectDemoWebApi.Models.ReviewReplies", b =>
+                {
+                    b.Navigation("ChildReplies");
                 });
 
             modelBuilder.Entity("ProjectDemoWebApi.Models.Users", b =>
