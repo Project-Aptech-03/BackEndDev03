@@ -1523,6 +1523,9 @@ namespace ProjectDemoWebApi.Migrations
                     b.Property<string>("RoleId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("EmployeeId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("UsersId")
                         .HasColumnType("nvarchar(450)");
 

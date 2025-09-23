@@ -287,7 +287,7 @@ namespace ProjectDemoWebApi.Data
                 entity.HasOne(d => d.DeliveryAddress)
                    .WithMany()
                    .HasForeignKey(d => d.DeliveryAddressId)
-                   .OnDelete(DeleteBehavior.SetNull);
+                   .OnDelete(DeleteBehavior.Restrict);
 
 
                 // Configure Customer relationship

@@ -28,10 +28,17 @@ namespace ProjectDemoWebApi.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetCart()
         {
-            var userId = GetUserId();
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Ok(new { Items = Array.Empty<object>(), Message = "Your cart is empty " });
+            }
+
             var result = await _cartService.GetUserCartAsync(userId);
             return StatusCode(result.StatusCode, result);
         }
+
 
         [HttpGet("summary")]
         public async Task<IActionResult> GetCartSummary()
