@@ -24,7 +24,6 @@ namespace ProjectDemoWebApi.Controllers
                 ?? throw new UnauthorizedAccessException("User not authenticated");
         }
 
-        // Top 3 sản phẩm bán chạy nhất
         [HttpGet("top-products")]
         public async Task<IActionResult> GetTop3Products(CancellationToken cancellationToken)
         {
