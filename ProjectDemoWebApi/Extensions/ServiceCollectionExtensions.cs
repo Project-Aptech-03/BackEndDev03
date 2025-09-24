@@ -39,6 +39,17 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
             services.AddScoped<IAuthorFollowRepository, AuthorFollowRepository>();
 
+
+
+
+            //===========Sinhnd-Added Repositories===========//
+            services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
+            services.AddScoped<IReviewImageRepository, ReviewImageRepository>();
+            services.AddScoped<IReviewReplyRepository, ReviewReplyRepository>();
+
+
+            //===============================================//
+
             return services;
         }
 
@@ -64,6 +75,12 @@ namespace ProjectDemoWebApi.Extensions
             services.AddScoped<IBlogCommentService, BlogCommentService>();
             services.AddScoped<IAuthorFollowService, AuthorFollowService>();
             services.AddScoped<IFaqService, FaqService>();
+
+
+            //===========Sinhnd-Added Services===========//
+
+            services.AddScoped<IReviewService, ReviewService>();
+            //============================================//
 
 
             // Payment Services - Register HttpClient for SePayService

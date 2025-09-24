@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Shared;
@@ -130,11 +132,24 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseDeveloperExceptionPage();
 }
+//=======================sinhnd=================
+// Configure Static Files
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
+    RequestPath = ""
+});
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+//================sinhnd  :Khi khách hàng upload ảnh review, ảnh được lưu trong thư mục wwwroot/uploads/reviews/.Middleware này cho phép trình duyệt/client truy cập và hiển thị những ảnh này qua URL
+app.UseMiddleware<StaticFileMiddleware>();
+
+
 
 app.Run();

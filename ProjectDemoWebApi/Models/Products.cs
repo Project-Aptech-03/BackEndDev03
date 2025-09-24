@@ -83,5 +83,10 @@ namespace ProjectDemoWebApi.Models
         public virtual ICollection<ProductPhotos> ProductPhotos { get; set; } = new List<ProductPhotos>();
         public virtual ICollection<ShoppingCart> ShoppingCartItems { get; set; } = new List<ShoppingCart>();
         public virtual ICollection<StockMovements> StockMovements { get; set; } = new List<StockMovements>();
+
+
+        //====Sinhnd-Cập nhật Products.cs để thêm navigation property cho reviews=============
+        public virtual ICollection<ProductReviews> ProductReviews { get; set; } = new List<ProductReviews>();
+        //=====================================================================
     }
 }
