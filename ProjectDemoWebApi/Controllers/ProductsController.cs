@@ -19,17 +19,6 @@ namespace ProjectDemoWebApi.Controllers
             _productsService = productsService;
         }
 
-
-        //[HttpGet]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> GetProducts(
-        //[FromQuery] int page = 1,
-        //[FromQuery] int size = 20,
-        //[FromQuery] string? keyword = null) 
-        //    {
-        //    var result = await _productsService.GetProductsPagedAsync(page, size, keyword);
-        //    return StatusCode(result.StatusCode, result);
-        //}
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetProducts(

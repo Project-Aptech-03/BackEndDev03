@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using ProjectDemoWebApi.Controllers;
 using ProjectDemoWebApi.Data;
 using ProjectDemoWebApi.DTOs.Review;
 using ProjectDemoWebApi.DTOs.Shared;
@@ -21,6 +22,7 @@ namespace ProjectDemoWebApi.Services.Implementations
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IMapper _mapper;
+        private readonly ILogger<ReviewService> _logger;
 
         public ReviewService(
             IProductReviewRepository reviewRepository,
@@ -30,7 +32,8 @@ namespace ProjectDemoWebApi.Services.Implementations
             IProductsRepository productsRepository,
             ApplicationDbContext context,
             IWebHostEnvironment webHostEnvironment,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<ReviewService> logger)
         {
             _reviewRepository = reviewRepository;
             _reviewImageRepository = reviewImageRepository;
@@ -40,6 +43,7 @@ namespace ProjectDemoWebApi.Services.Implementations
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<ReviewResponseDto>> CreateReviewAsync(string userId, CreateReviewDto createReviewDto, CancellationToken cancellationToken = default)
@@ -405,8 +409,10 @@ namespace ProjectDemoWebApi.Services.Implementations
             }
             catch (Exception ex)
             {
-                return ApiResponse<object>.Fail($"An error occurred while retrieving review statistics: {ex.Message}", null, 500);
+                _logger.LogError(ex, "Error while retrieving review stats for product {ProductId}", productId);
+                return ApiResponse<object>.Fail($"An error occurred: {ex.Message}", null, 500);
             }
+
         }
 
         #region Private Helper Methods
