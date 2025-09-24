@@ -25,7 +25,7 @@ namespace ProjectDemoWebApi.Services
                     if (!result.Succeeded)
                     {
                         var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                        throw new Exception($"Không thể tạo role '{role}': {errors}");
+                        throw new Exception($"Unable to create role '{role}': {errors}");
                     }
                 }
             }

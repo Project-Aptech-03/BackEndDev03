@@ -58,7 +58,10 @@ namespace ProjectDemoWebApi.Services
             }
         }
 
-        public async Task<ApiResponse<OrderResponseDto?>> UpdateOrderStatusAsync(int id, UpdateOrderDto updateOrderDto, CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<OrderResponseDto?>> UpdateOrderStatusAsync(
+            int id,
+            UpdateOrderDto updateOrderDto,
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -68,23 +71,24 @@ namespace ProjectDemoWebApi.Services
                 var order = await _orderRepository.GetByIdAsync(id, cancellationToken);
                 if (order == null)
                     return ApiResponse<OrderResponseDto?>.Fail("Order not found.", null, 404);
-
-                // Update order status
                 if (!string.IsNullOrWhiteSpace(updateOrderDto.OrderStatus))
                     order.OrderStatus = updateOrderDto.OrderStatus;
-                
-                if (!string.IsNullOrWhiteSpace(updateOrderDto.PaymentStatus))
+                if (updateOrderDto.OrderStatus?.Equals("Delivered", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    order.PaymentStatus = "Paid";
+                }
+                else if (!string.IsNullOrWhiteSpace(updateOrderDto.PaymentStatus))
+                {
                     order.PaymentStatus = updateOrderDto.PaymentStatus;
+                }
 
                 order.UpdatedDate = DateTime.UtcNow;
 
                 _orderRepository.Update(order);
                 await _orderRepository.SaveChangesAsync(cancellationToken);
-
-                // Get updated order with details for response
                 var updatedOrder = await _orderRepository.GetByIdWithDetailsAsync(order.Id, cancellationToken);
                 var orderDto = _mapper.Map<OrderResponseDto>(updatedOrder);
-                
+
                 return ApiResponse<OrderResponseDto?>.Ok(orderDto, "Order status updated successfully.");
             }
             catch (Exception)
