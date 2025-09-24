@@ -33,9 +33,9 @@ namespace ProjectDemoWebApi.DTOs.CustomerAddress
             if (DistanceKm < 3)
                 return 0;
 
-            // For distance >= 3km: 15,000 VND base + 5,000 VND per km
-            decimal baseFee = 15000;
-            decimal additionalFee = (decimal)(DistanceKm-3) * 5000;
+            // 
+            decimal baseFee = 1;
+            decimal additionalFee = (decimal)(DistanceKm - 3) * 1;
 
             return baseFee + additionalFee;
         }

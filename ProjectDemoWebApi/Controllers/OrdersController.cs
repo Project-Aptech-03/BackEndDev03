@@ -25,10 +25,13 @@ namespace ProjectDemoWebApi.Controllers
         }
 
         [HttpGet("top-products")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetTop3Products(CancellationToken cancellationToken)
         {
             var response = await _orderService.GetTop3ProductsAsync(cancellationToken);
-            if (!response.Success) return StatusCode(response.StatusCode, response);
+            if (!response.Success)
+                return StatusCode(response.StatusCode, response);
+
             return Ok(response);
         }
         #region Admin Functions
