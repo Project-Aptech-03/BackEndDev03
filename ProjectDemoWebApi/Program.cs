@@ -117,8 +117,11 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var seeder = scope.ServiceProvider.GetRequiredService<IRoleSeederService>();
-    await seeder.SeedAsync();
+    var roleSeeder = scope.ServiceProvider.GetRequiredService<IRoleSeederService>();
+    await roleSeeder.SeedAsync();
+
+    var adminSeeder = scope.ServiceProvider.GetRequiredService<IAdminSeederService>();
+    await adminSeeder.SeedAdminAsync();
 }
 
 // Configure the HTTP request pipeline

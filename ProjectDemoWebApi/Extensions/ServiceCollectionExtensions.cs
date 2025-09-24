@@ -13,6 +13,7 @@ namespace ProjectDemoWebApi.Extensions
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             // Repository registrations
+
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -44,6 +45,7 @@ namespace ProjectDemoWebApi.Extensions
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
             // Core Auth & User Services
+            services.AddScoped<IAdminSeederService, AdminSeederService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();

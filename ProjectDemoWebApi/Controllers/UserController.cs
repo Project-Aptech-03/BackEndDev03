@@ -51,8 +51,6 @@ namespace ProjectDemoWebApi.Controllers
                     errors: errors
                 ));
             }
-
-            // lấy user để trả về
             var createdUser = await _userService.GetUserByEmailAsync(createUserRequestDto.Email);
             var userDto = _mapper.Map<UsersResponseDto>(createdUser);
 

@@ -49,7 +49,7 @@ namespace ProjectDemoWebApi.Services
                     await _userManager.AddToRoleAsync(user, "User");
                 }
 
-                var subject = "📚 Welcome to Project03 Bookstore!";
+                var subject = "📚 Welcome to Shradha Book Store!";
 
                 var body = $@"
         <div style='font-family: Arial, sans-serif; background:#fafafa; padding:20px;'>
@@ -59,7 +59,7 @@ namespace ProjectDemoWebApi.Services
                 <h1 style='color:#2c3e50; text-align:center;'>✨ Welcome, {user.FirstName} {user.LastName}! ✨</h1>
 
                 <p style='font-size:16px; color:#444;'>
-                    Your account has been successfully created at <b>Project03 Bookstore</b>. 
+                    Your account has been successfully created at <b>Shradha Book Store</b>. 
                 </p>
 
                 <div style='background:#f0f8ff; padding:15px; border-left:5px solid #4CAF50; 
@@ -94,9 +94,6 @@ namespace ProjectDemoWebApi.Services
 
             return result;
         }
-
-
-
 
         public async Task<ApiResponse<PagedResponseDto<UsersResponseDto>>> GetAllUsersAsync(
          int pageIndex = 1,
