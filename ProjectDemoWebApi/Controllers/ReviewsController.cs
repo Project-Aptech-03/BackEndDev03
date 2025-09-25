@@ -155,11 +155,8 @@ namespace ProjectDemoWebApi.Controllers
 
         #region Admin Functions
 
-        /// <summary>
-        /// Get pending reviews (Admin only)
-        /// </summary>
         [HttpGet("pending")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Employee")]
         public async Task<IActionResult> GetPendingReviews(CancellationToken cancellationToken)
         {
             var result = await _reviewService.GetPendingReviewsAsync(cancellationToken);
@@ -170,7 +167,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Approve a review (Admin only)
         /// </summary>
         [HttpPost("{id}/approve")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Employee")]
         public async Task<IActionResult> ApproveReview(int id, CancellationToken cancellationToken)
         {
             var result = await _reviewService.ApproveReviewAsync(id, cancellationToken);
@@ -181,7 +178,7 @@ namespace ProjectDemoWebApi.Controllers
         /// Reject a review (Admin only)
         /// </summary>
         [HttpPost("{id}/reject")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Employee")]
         public async Task<IActionResult> RejectReview(int id, [FromBody] string reason, CancellationToken cancellationToken)
         {
             var result = await _reviewService.RejectReviewAsync(id, reason, cancellationToken);

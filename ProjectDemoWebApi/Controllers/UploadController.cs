@@ -40,7 +40,6 @@ namespace ProjectDemoWebApi.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Error uploading files: {ex.Message}");
             }
         }
-
         [HttpPost]
         [Route("single")]
         [AllowAnonymous]
