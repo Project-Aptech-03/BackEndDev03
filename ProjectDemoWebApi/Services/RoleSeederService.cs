@@ -12,7 +12,6 @@ namespace ProjectDemoWebApi.Services
         {
             _roleManager = roleManager;
         }
-
         public async Task SeedAsync()
         {
             string[] roles = { "Admin", "User", "Employee" };
